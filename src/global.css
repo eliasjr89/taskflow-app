@@ -1,0 +1,7 @@
+/* Tailwind v4: solo importar preflight */
+@import "tailwindcss";
+
+/* Estilos globales */
+body {
+    @apply font-sans;
+}
