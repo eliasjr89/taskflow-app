@@ -3,18 +3,16 @@ import { ref, computed } from "vue";
 import type { Task } from "../types/global";
 
 const props = defineProps<{ tasks: Task[] }>();
-
-const active = ref<"all" | "pending" | "completed">("all");
-const searchQuery = ref("");
-
-// Emitimos al padre
 const emit = defineEmits<{
   (e: "filter", value: "all" | "pending" | "completed"): void;
   (e: "search", value: string): void;
   (e: "selectTask", task: Task): void;
 }>();
 
-// Autocompletado basado en todas las tareas
+const active = ref<"all" | "pending" | "completed">("all");
+const searchQuery = ref("");
+const isOpen = ref(false);
+
 const suggestions = computed(() =>
   props.tasks.filter((task) =>
     task.title.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -24,6 +22,7 @@ const suggestions = computed(() =>
 function selectFilter(value: "all" | "pending" | "completed") {
   active.value = value;
   emit("filter", value);
+  if (window.innerWidth < 768) isOpen.value = false;
 }
 
 function onSearch(e: Event) {
@@ -36,13 +35,26 @@ function selectSuggestion(task: Task) {
   searchQuery.value = task.title;
   emit("search", task.title);
   emit("selectTask", task);
+  if (window.innerWidth < 768) isOpen.value = false;
+}
+
+function toggleSidebar() {
+  isOpen.value = !isOpen.value;
 }
 </script>
 
 <template>
+  <button
+    class="md:hidden p-2 fixed top-4 left-4 bg-indigo-500 text-white rounded z-50 shadow-md"
+    @click="toggleSidebar">
+    ☰
+  </button>
+
   <aside
-    class="hidden md:flex flex-col w-64 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-lg gap-3 relative">
-    <!-- Buscador -->
+    :class="[
+      'flex flex-col w-64 p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-lg gap-3 transition-transform duration-300 fixed md:static z-40 h-full md:h-auto',
+      isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+    ]">
     <div class="relative">
       <input
         type="text"
@@ -63,7 +75,6 @@ function selectSuggestion(task: Task) {
       </ul>
     </div>
 
-    <!-- Filtros -->
     <button
       @click="selectFilter('all')"
       :class="[
@@ -74,7 +85,6 @@ function selectSuggestion(task: Task) {
       ]">
       Todas
     </button>
-
     <button
       @click="selectFilter('pending')"
       :class="[
@@ -85,7 +95,6 @@ function selectSuggestion(task: Task) {
       ]">
       Pendientes
     </button>
-
     <button
       @click="selectFilter('completed')"
       :class="[
@@ -97,4 +106,9 @@ function selectSuggestion(task: Task) {
       Completadas
     </button>
   </aside>
+
+  <div
+    v-if="isOpen"
+    class="fixed inset-0 bg-black/30 z-30 md:hidden"
+    @click="toggleSidebar"></div>
 </template>

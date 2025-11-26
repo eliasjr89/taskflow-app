@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import Sidebar from "./Sidebar.vue";
 import Navbar from "./Navbar.vue";
+import type { Task } from "../types/global";
 
-// Reenviamos eventos al padre
+const props = defineProps<{ tasks: Task[] }>();
+
 const emit = defineEmits<{
   (e: "filter", value: "all" | "pending" | "completed"): void;
   (e: "search", value: string): void;
-  (e: "selectTask", task: any): void;
+  (e: "selectTask", task: Task): void;
 }>();
 
 function forwardFilter(value: "all" | "pending" | "completed") {
@@ -17,7 +19,7 @@ function forwardSearch(value: string) {
   emit("search", value);
 }
 
-function forwardSelectTask(task: any) {
+function forwardSelectTask(task: Task) {
   emit("selectTask", task);
 }
 </script>
@@ -27,14 +29,13 @@ function forwardSelectTask(task: any) {
     class="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-500">
     <Navbar />
 
-    <div class="flex flex-1 gap-6 p-6">
+    <div class="flex flex-1 flex-col md:flex-row gap-6 p-4 md:p-6">
       <Sidebar
         @filter="forwardFilter"
         @search="forwardSearch"
         @selectTask="forwardSelectTask"
-        :tasks="$slots.default ? [] : []" />
-
-      <main class="flex-1 flex flex-col items-center">
+        :tasks="props.tasks" />
+      <main class="flex-1 flex flex-col items-center w-full md:max-w-3xl">
         <slot />
       </main>
     </div>

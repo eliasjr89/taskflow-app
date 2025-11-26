@@ -12,8 +12,10 @@ const { loadTask } = useTasks();
 
 onMounted(loadTask);
 
+// Estado local para filtros y búsqueda
 const activeFilter = ref<"all" | "pending" | "completed">("all");
 const searchQuery = ref("");
+const selectedTask = ref<(typeof tasks.value)[0] | null>(null);
 
 // Computed: listas filtradas según filtro y búsqueda
 const filteredPendingTasks = computed(() =>
@@ -36,17 +38,25 @@ function handleFilter(value: "all" | "pending" | "completed") {
 function handleSearch(value: string) {
   searchQuery.value = value;
 }
+
+function handleSelectTask(task: (typeof tasks.value)[0]) {
+  selectedTask.value = task;
+}
 </script>
 
 <template>
-  <MainLayout @filter="handleFilter" @search="handleSearch">
+  <MainLayout
+    :tasks="tasks"
+    @filter="handleFilter"
+    @search="handleSearch"
+    @selectTask="handleSelectTask">
+    <!-- Formulario de nueva tarea -->
     <AddTaskForm
       class="w-full max-w-md mb-8 backdrop-blur-md bg-white/30 dark:bg-gray-800/30 rounded-2xl p-6 shadow-lg hover:scale-[1.02] transition-transform duration-300" />
 
-    <!-- Pasamos todas las tareas al Sidebar para predicción -->
-    <Sidebar :tasks="tasks" @filter="handleFilter" @search="handleSearch" />
-
+    <!-- Lista de tareas filtradas -->
     <div class="w-full max-w-md space-y-8">
+      <!-- Pendientes -->
       <div
         v-if="activeFilter === 'all' || activeFilter === 'pending'"
         class="animate-fadeInUp">
@@ -57,6 +67,7 @@ function handleSearch(value: string) {
           </h2>
           <TaskList
             :tasks="filteredPendingTasks"
+            :selectedTaskId="selectedTask?.id"
             class="backdrop-blur-md bg-white/30 dark:bg-gray-800/30 rounded-2xl p-4 shadow-md hover:shadow-xl transition-shadow duration-300" />
         </template>
         <template v-else>
@@ -66,6 +77,7 @@ function handleSearch(value: string) {
         </template>
       </div>
 
+      <!-- Completadas -->
       <div
         v-if="activeFilter === 'all' || activeFilter === 'completed'"
         class="animate-fadeInUp delay-150">
@@ -76,6 +88,7 @@ function handleSearch(value: string) {
           </h2>
           <TaskList
             :tasks="filteredCompletedTasks"
+            :selectedTaskId="selectedTask?.id"
             class="backdrop-blur-md bg-white/30 dark:bg-gray-800/30 rounded-2xl p-4 shadow-md hover:shadow-xl transition-shadow duration-300" />
         </template>
         <template v-else>
