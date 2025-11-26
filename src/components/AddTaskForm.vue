@@ -22,7 +22,7 @@ function handleSubmit() {
       id="new-task"
       type="text"
       v-model="newTask"
-      placeholder="Add new task..."
+      placeholder="Agregar nueva tarea..."
       class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
     <button
       type="submit"
