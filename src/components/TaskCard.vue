@@ -85,7 +85,7 @@ watch(isEditing, async (editing) => {
           class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400" />
 
         <p class="text-xs mt-1 text-gray-500 dark:text-gray-400">
-          Created: {{ formattedDate }}
+          Creada: {{ formattedDate }}
         </p>
       </div>
     </div>
@@ -94,7 +94,7 @@ watch(isEditing, async (editing) => {
     <button
       @click="() => removeTask(task.id)"
       class="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-600 transition-colors cursor-pointer">
-      Delete
+      Eliminar
     </button>
   </div>
 </template>
