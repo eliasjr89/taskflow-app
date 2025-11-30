@@ -34,7 +34,7 @@ watch(
 
 <template>
   <div class="flex flex-col gap-3 w-full">
-    <div v-for="task in tasks" :key="task.id" ref="el => taskRefs[index] = el">
+    <div v-for="(task, index) in tasks" :key="task.id" :ref="(el: any) => taskRefs[index] = el as HTMLElement">
       <TaskCard :task="task" />
     </div>
   </div>

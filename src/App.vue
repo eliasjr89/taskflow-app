@@ -51,8 +51,7 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
     @search="handleSearch"
     @selectTask="handleSelectTask">
     <!-- Formulario de nueva tarea -->
-    <AddTaskForm
-      class="w-full max-w-md mb-8 backdrop-blur-md bg-white/30 dark:bg-gray-800/30 rounded-2xl p-6 shadow-lg hover:scale-[1.02] transition-transform duration-300" />
+    <AddTaskForm class="w-full max-w-md mb-8" />
 
     <!-- Lista de tareas filtradas -->
     <div class="w-full max-w-md space-y-8">
@@ -62,17 +61,17 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
         class="animate-fadeInUp">
         <template v-if="filteredPendingTasks.length">
           <h2
-            class="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-            Tareas pendientes
+            class="text-2xl font-bold mb-5 text-gray-800 dark:text-gray-100">
+            📝 Tareas pendientes
           </h2>
           <TaskList
             :tasks="filteredPendingTasks"
             :selectedTaskId="selectedTask?.id"
-            class="backdrop-blur-md bg-white/30 dark:bg-gray-800/30 rounded-2xl p-4 shadow-md hover:shadow-xl transition-shadow duration-300" />
+            class="space-y-3" />
         </template>
         <template v-else>
-          <div class="text-center text-gray-600 dark:text-gray-300 p-4">
-            <p>No hay tareas pendientes. ¡Agrega una nueva tarea!</p>
+          <div class="text-center text-gray-600 dark:text-gray-300 p-8 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-200/30 dark:border-gray-700/30">
+            <p class="text-lg">✨ No hay tareas pendientes. ¡Agrega una nueva tarea!</p>
           </div>
         </template>
       </div>
@@ -83,17 +82,17 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
         class="animate-fadeInUp delay-150">
         <template v-if="filteredCompletedTasks.length">
           <h2
-            class="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-            Tareas completadas
+            class="text-2xl font-bold mb-5 text-gray-800 dark:text-gray-100">
+            ✅ Tareas completadas
           </h2>
           <TaskList
             :tasks="filteredCompletedTasks"
             :selectedTaskId="selectedTask?.id"
-            class="backdrop-blur-md bg-white/30 dark:bg-gray-800/30 rounded-2xl p-4 shadow-md hover:shadow-xl transition-shadow duration-300" />
+            class="space-y-3" />
         </template>
         <template v-else>
-          <div class="text-center text-gray-600 dark:text-gray-300 p-4">
-            <p>No hay tareas completadas</p>
+          <div class="text-center text-gray-600 dark:text-gray-300 p-8 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-200/30 dark:border-gray-700/30">
+            <p class="text-lg">🎯 No hay tareas completadas</p>
           </div>
         </template>
       </div>
