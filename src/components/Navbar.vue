@@ -6,9 +6,8 @@ const { isDark, toggleTheme } = useTheme();
 
 <template>
   <nav
-    class="flex justify-between items-center px-6 py-4 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-sm">
-    <h1
-      class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+    class="flex justify-center gap-6 items-center px-6 py-4 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-sm">
+    <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading whitespace-nowrap">
       TaskFlow
     </h1>
 

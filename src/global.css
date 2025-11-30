@@ -1,21 +1,33 @@
-/* Tailwind v4 */
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 /* Configuración de Tailwind v4 */
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  
+  --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+
   /* Variables de color personalizadas */
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;
 }
 
+/* Glassmorphism Utilities */
+@utility glass-panel {
+  @apply bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 shadow-xl;
+}
+
+@utility glass-card {
+  @apply bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-white/10 dark:border-gray-700/20 shadow-lg hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-300;
+}
+
+@utility glass-input {
+  @apply bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 focus:bg-white/80 dark:focus:bg-gray-900/80 transition-all duration-200;
+}
+
 /* Estilos globales */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  overflow-x: hidden;
+
 }
 
 html {
@@ -26,6 +38,15 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
 }
 
 /* Imagen de fondo con overlay */

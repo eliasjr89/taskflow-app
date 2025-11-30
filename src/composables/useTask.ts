@@ -16,12 +16,13 @@ export function useTasks() {
     }
   }
 
-  function addTask(title: string) {
+  function addTask(title: string, projectId?: string) {
     const task: Task = {
       id: Date.now(),
       title,
       completed: false,
       createdAt: new Date(),
+      projectId,
     };
 
     tasks.value.push(task);
