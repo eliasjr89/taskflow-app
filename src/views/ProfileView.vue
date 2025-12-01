@@ -1,25 +1,252 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useTaskState } from '../composables/useTaskState';
+import { useTheme } from '../composables/usThemes';
+import { User, CheckCircle2, Target, TrendingUp, Zap, Moon, Sun } from 'lucide-vue-next';
+
+const { tasks, projects } = useTaskState();
+const { isDark, toggleTheme } = useTheme();
+
+// Estadísticas del usuario
+const totalTasks = computed(() => tasks.value.length);
+const completedTasks = computed(() => tasks.value.filter(t => t.completed).length);
+const completionRate = computed(() => {
+  if (totalTasks.value === 0) return 0;
+  return Math.round((completedTasks.value / totalTasks.value) * 100);
+});
+
+const totalProjects = computed(() => projects.value.length);
+
+// Racha de tareas completadas (placeholder - calculado por días consecutivos)
+const currentStreak = computed(() => {
+  // Simplificado: contar tareas completadas en los últimos 7 días
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  
+  return tasks.value.filter(t => {
+    return t.completed && new Date(t.createdAt) >= sevenDaysAgo;
+  }).length;
+});
+
+// Proyecto más productivo
+const mostProductiveProject = computed(() => {
+  if (projects.value.length === 0) return null;
+  
+  const projectStats = projects.value.map(project => {
+    const projectTasks = tasks.value.filter(t => t.projectId === project.id);
+    const completed = projectTasks.filter(t => t.completed).length;
+    return {
+      project,
+      completedTasks: completed,
+      totalTasks: projectTasks.length
+    };
+  });
+  
+  return projectStats.sort((a, b) => b.completedTasks - a.completedTasks)[0];
+});
+
+const stats = computed(() => [
+  {
+    label: 'Tareas Totales',
+    value: totalTasks.value,
+    icon: Target,
+    color: 'indigo',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
+    textColor: 'text-indigo-600 dark:text-indigo-400'
+  },
+  {
+    label: 'Completadas',
+    value: completedTasks.value,
+    icon: CheckCircle2,
+    color: 'green',
+    bgColor: 'bg-green-100 dark:bg-green-900/30',
+    textColor: 'text-green-600 dark:text-green-400'
+  },
+  {
+    label: 'Tasa de Completitud',
+    value: `${completionRate.value}%`,
+    icon: TrendingUp,
+    color: 'purple',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    textColor: 'text-purple-600 dark:text-purple-400'
+  },
+  {
+    label: 'Racha (7 días)',
+    value: currentStreak.value,
+    icon: Zap,
+    color: 'orange',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+    textColor: 'text-orange-600 dark:text-orange-400'
+  }
+]);
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
-    <div class="text-center py-16">
-      <div class="mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      </div>
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-        Perfil
+  <div class="flex-1 p-6 md:p-10 max-w-5xl mx-auto w-full animate-fade-in">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-heading">
+        👤 Mi Perfil
       </h1>
-      <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+      <p class="text-gray-600 dark:text-gray-400">
         Gestiona tu cuenta y preferencias
       </p>
-      <div class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-md p-8 border border-gray-200/30 dark:border-gray-700/30 max-w-md mx-auto">
-        <p class="text-gray-700 dark:text-gray-300">
-          🚧 ¡Próximamente! Esta funcionalidad está en desarrollo.
-        </p>
+    </div>
+
+    <div class="space-y-6">
+      <!-- Profile Card -->
+      <div class="glass-card rounded-2xl p-8">
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+          <!-- Avatar -->
+          <div class="relative">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+              <User class="w-12 h-12 text-white" />
+            </div>
+            <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-white dark:border-gray-900 flex items-center justify-center">
+              <CheckCircle2 class="w-4 h-4 text-white" />
+            </div>
+          </div>
+
+          <!-- User Info -->
+          <div class="flex-1 text-center md:text-left">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+              Usuario TaskFlow
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+              Gestión de Productividad
+            </p>
+            <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+              <span class="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
+                {{ totalProjects }} Proyectos
+              </span>
+              <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                {{ completedTasks }} Tareas Completadas
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Grid -->
+      <div>
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          📊 Estadísticas
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            v-for="stat in stats"
+            :key="stat.label"
+            class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
+            <div class="flex items-start justify-between mb-3">
+              <div :class="[stat.bgColor, 'p-3 rounded-xl']">
+                <component :is="stat.icon" :class="[stat.textColor, 'w-6 h-6']" />
+              </div>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              {{ stat.label }}
+            </p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {{ stat.value }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Most Productive Project -->
+      <div v-if="mostProductiveProject && mostProductiveProject.project" class="glass-card rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+          <TrendingUp class="w-5 h-5 text-green-600 dark:text-green-400" />
+          Proyecto Más Productivo
+        </h3>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+            <CheckCircle2 class="w-6 h-6 text-white" />
+          </div>
+          <div class="flex-1">
+            <p class="font-semibold text-gray-900 dark:text-gray-100">
+              {{ mostProductiveProject.project.title }}
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {{ mostProductiveProject.completedTasks }} de {{ mostProductiveProject.totalTasks }} tareas completadas
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+              {{ mostProductiveProject.totalTasks > 0 
+                ? Math.round((mostProductiveProject.completedTasks / mostProductiveProject.totalTasks) * 100) 
+                : 0 }}%
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="glass-card rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
+          ⚙️ Preferencias
+        </h3>
+        
+        <div class="space-y-4">
+          <!-- Theme Toggle -->
+          <div class="flex items-center justify-between p-4 rounded-xl bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+                <component :is="isDark ? Moon : Sun" class="w-5 h-5 text-gray-700 dark:text-gray-300" />
+              </div>
+              <div>
+                <p class="font-medium text-gray-900 dark:text-gray-100">
+                  Tema
+                </p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  {{ isDark ? 'Modo Oscuro' : 'Modo Claro' }}
+                </p>
+              </div>
+            </div>
+            <button
+              @click="toggleTheme"
+              class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors"
+              :class="isDark ? 'bg-indigo-600' : 'bg-gray-300'">
+              <span
+                class="inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform"
+                :class="isDark ? 'translate-x-7' : 'translate-x-1'">
+              </span>
+            </button>
+          </div>
+
+          <!-- Placeholder Settings -->
+          <div class="p-4 rounded-xl bg-white/50 dark:bg-gray-800/50 opacity-60">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
+                  <Zap class="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                </div>
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-gray-100">
+                    Notificaciones
+                  </p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Próximamente
+                  </p>
+                </div>
+              </div>
+              <div class="px-3 py-1 text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
+                Próximamente
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+</style>

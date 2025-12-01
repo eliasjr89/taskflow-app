@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { 
   Home, 
@@ -13,38 +13,41 @@ import {
   ChevronRight 
 } from 'lucide-vue-next';
 
+import { useI18n } from 'vue-i18n';
+
 const route = useRoute();
+const { t } = useI18n();
 const isCollapsed = ref(false);
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
-const navItems = [
-  { name: 'Inicio', path: '/', icon: Home },
-  { name: 'Tareas', path: '/tasks', icon: CheckSquare },
-  { name: 'Proyectos', path: '/projects', icon: FolderKanban },
-  { name: 'Calendario', path: '/calendar', icon: Calendar },
-  { name: 'Etiquetas', path: '/tags', icon: Tags },
-  { name: 'Estadísticas', path: '/analytics', icon: BarChart2 },
-  { name: 'Perfil', path: '/profile', icon: User },
-];
+const navItems = computed(() => [
+  { name: t('nav.home'), path: '/', icon: Home },
+  { name: t('nav.tasks'), path: '/tasks', icon: CheckSquare },
+  { name: t('nav.projects'), path: '/projects', icon: FolderKanban },
+  { name: t('nav.calendar'), path: '/calendar', icon: Calendar },
+  { name: t('nav.tags'), path: '/tags', icon: Tags },
+  { name: t('nav.analytics'), path: '/analytics', icon: BarChart2 },
+  { name: t('nav.profile'), path: '/profile', icon: User },
+]);
 </script>
 
 <template>
   <aside
-    class="hidden md:flex flex-col  glass-panel rounded-2xl gap-4 transition-all duration-300 h-[calc(100vh-6rem)] sticky top-10"
-    :class="[isCollapsed ? 'w-15' : 'w-40']">
+    class="hidden md:flex flex-col p-2 gap-2 glass-panel rounded-2xl  transition-all duration-300 h-[calc(100vh-6rem)] sticky top-24"
+    :class="[isCollapsed ? 'w-15' : 'w-50']">
     
     <!-- Header with Toggle -->
     <div class="flex items-center justify-between mb-2 pb-4 border-b border-gray-200/30 dark:border-gray-700/30 relative">
       <div 
         class="flex flex-col overflow-hidden transition-all duration-300"
         :class="[isCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto']">
-        <h2 class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading whitespace-nowrap">
-          Menú
-        </h2>
-        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 whitespace-nowrap">Gestión de Productividad</p>
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading whitespace-nowrap">
+          {{ t('nav.menu') }}
+        </h1>
+        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 whitespace-nowrap">{{ t('nav.subtitle') }}</p>
       </div>
       
       <button 

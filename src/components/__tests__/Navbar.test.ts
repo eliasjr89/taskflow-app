@@ -45,10 +45,6 @@ describe('Navbar', () => {
     const wrapper = mount(Navbar);
     const button = wrapper.find('button');
 
-    // Obtener el estado inicial
-    const initialSvgs = wrapper.findAll('svg');
-    const initialCount = initialSvgs.length;
-
     await button.trigger('click');
 
     // Después del clic, debe haber un SVG (el icono cambia)

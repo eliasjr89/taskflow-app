@@ -1,5 +1,8 @@
-@import "tailwindcss";
+/* Google Fonts - debe estar primero */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* Tailwind CSS */
+@import "tailwindcss";
 
 /* Configuración de Tailwind v4 */
 @theme {
@@ -26,8 +29,7 @@
 
 /* Estilos globales */
 * {
-  overflow-x: hidden;
-
+  box-sizing: border-box;
 }
 
 html {
@@ -38,6 +40,7 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 h1,

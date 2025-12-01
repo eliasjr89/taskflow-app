@@ -52,6 +52,9 @@ const deleteProject = (projectId: string) => {
   );
 };
 
+const getTasksByProject = (projectId: string) =>
+  tasks.value.filter(t => t.projectId === projectId);
+
 const getProjectProgress = (projectId: string) => {
   const projectTasks = tasks.value.filter(t => t.projectId === projectId);
   if (projectTasks.length === 0) return 0;
@@ -84,6 +87,7 @@ export function useTaskState() {
     completedTasks,
     addProject,
     deleteProject,
-    getProjectProgress
+    getProjectProgress,
+    getTasksByProject,
   };
 }

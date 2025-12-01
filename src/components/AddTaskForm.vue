@@ -1,17 +1,30 @@
+```vue
 <script setup lang="ts">
 import { ref } from "vue";
+import type { Component } from "vue";
 import { useTasks } from "../composables/useTask";
 import { useTaskState } from "../composables/useTaskState";
-import { Folder, Briefcase, Star, Heart, Zap, Coffee, Music, ChevronDown } from 'lucide-vue-next';
+import { useTagState } from "../composables/useTagState";
+import { useI18n } from 'vue-i18n';
+import { Folder, Briefcase, Star, Heart, Zap, Coffee, Music, ChevronDown, Plus, Hash, Flag, Calendar } from 'lucide-vue-next';
+import type { Priority } from '../types/global';
+
+const { t } = useI18n();
 
 const newTask = ref("");
 const selectedProjectId = ref<string | undefined>(undefined);
+const selectedTags = ref<string[]>([]);
+const selectedPriority = ref<Priority | undefined>(undefined);
+const selectedDueDate = ref<string>("");
 const isDropdownOpen = ref(false);
+const isTagDropdownOpen = ref(false);
+const isPriorityDropdownOpen = ref(false);
 
 const { addTask } = useTasks();
 const { projects } = useTaskState();
+const { tags } = useTagState();
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, Component> = {
   Folder, Briefcase, Star, Heart, Zap, Coffee, Music
 };
 
@@ -19,10 +32,22 @@ function handleSubmit() {
   const trimmed = newTask.value.trim();
   if (!trimmed) return;
 
-  addTask(trimmed, selectedProjectId.value);
+  addTask(
+    trimmed, 
+    selectedProjectId.value, 
+    selectedTags.value.length > 0 ? selectedTags.value : undefined,
+    selectedPriority.value,
+    selectedDueDate.value ? new Date(selectedDueDate.value) : undefined
+  );
+  
   newTask.value = "";
   selectedProjectId.value = undefined;
+  selectedTags.value = [];
+  selectedPriority.value = undefined;
+  selectedDueDate.value = "";
   isDropdownOpen.value = false;
+  isTagDropdownOpen.value = false;
+  isPriorityDropdownOpen.value = false;
 }
 
 function toggleDropdown() {
@@ -53,95 +78,261 @@ const getColorClass = (color: string) => {
   };
   return colors[color] || colors.indigo;
 };
+
+function toggleTagDropdown() {
+  isTagDropdownOpen.value = !isTagDropdownOpen.value;
+}
+
+function toggleTag(tagId: string) {
+  const index = selectedTags.value.indexOf(tagId);
+  if (index > -1) {
+    selectedTags.value.splice(index, 1);
+  } else {
+    selectedTags.value.push(tagId);
+  }
+}
+
+const getTagColorClass = (color: string) => {
+  const colors: Record<string, string> = {
+    indigo: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300',
+    purple: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+    pink: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300',
+    rose: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300',
+    orange: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+    amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
+    green: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+    teal: 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300',
+    cyan: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300',
+    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+  };
+  return colors[color] || colors.indigo;
+};
+
+const priorities = [
+  { value: 'low', label: 'Baja', color: 'text-blue-500 bg-blue-100 dark:bg-blue-900/30' },
+  { value: 'medium', label: 'Media', color: 'text-orange-500 bg-orange-100 dark:bg-orange-900/30' },
+  { value: 'high', label: 'Alta', color: 'text-red-500 bg-red-100 dark:bg-red-900/30' },
+];
+
+function getPriorityColor(priority: string) {
+  const p = priorities.find(p => p.value === priority);
+  return p ? p.color : 'text-gray-500';
+}
+
+function getPriorityLabel(priority: string) {
+  const p = priorities.find(p => p.value === priority);
+  return p ? p.label : 'Prioridad';
+}
 </script>
 
 <template>
   <form
     @submit.prevent="handleSubmit"
-    class="relative flex gap-3 bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl p-4 md:p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 w-full max-w-2xl border border-gray-200/30 dark:border-gray-700/30">
+    class="relative w-full glass-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/30 dark:border-gray-700/30 z-[100]">
     
-    <!-- Project Selector -->
-    <div class="relative">
-      <button
-        type="button"
-        @click="toggleDropdown"
-        class="h-full px-3 py-2.5 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[140px]"
-        :class="getSelectedProject() ? '' : 'text-gray-500 dark:text-gray-400'">
-        <template v-if="getSelectedProject()">
-          <div 
-            class="p-1 rounded-md"
-            :class="getColorClass(getSelectedProject()!.color)">
-            <component :is="iconMap[getSelectedProject()!.icon] || Folder" class="w-4 h-4" />
-          </div>
-          <span class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-[100px]">
-            {{ getSelectedProject()!.title }}
-          </span>
-        </template>
-        <template v-else>
-          <Folder class="w-4 h-4" />
-          <span class="text-sm font-medium">Sin Proyecto</span>
-        </template>
-        <ChevronDown class="w-4 h-4 ml-auto opacity-50" />
-      </button>
-
-      <!-- Dropdown Menu -->
-      <div 
-        v-if="isDropdownOpen"
-        class="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-50 animate-fade-in">
-        <div class="p-2 space-y-1 max-h-60 overflow-y-auto">
-          <button
-            type="button"
-            @click="selectProject(undefined)"
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
-            <div class="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-500">
-              <Folder class="w-4 h-4" />
-            </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Sin Proyecto</span>
-            <div v-if="!selectedProjectId" class="ml-auto w-2 h-2 rounded-full bg-indigo-500"></div>
-          </button>
-
-          <button
-            v-for="project in projects"
-            :key="project.id"
-            type="button"
-            @click="selectProject(project.id)"
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
+    <div class="flex flex-col md:flex-row gap-3 p-4 md:p-5">
+      <!-- Project Selector -->
+      <div class="relative flex-shrink-0 w-full md:w-auto">
+        <button
+          type="button"
+          @click="toggleDropdown"
+          class="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-200/50 shadow-lg dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 md:min-w-[180px]"
+          :class="getSelectedProject() ? '' : 'text-gray-500 dark:text-gray-400'">
+          <template v-if="getSelectedProject()">
             <div 
-              class="p-1.5 rounded-md"
-              :class="getColorClass(project.color)">
-              <component :is="iconMap[project.icon] || Folder" class="w-4 h-4" />
+              class="p-1.5 rounded-md flex-shrink-0"
+              :class="getColorClass(getSelectedProject()!.color)">
+              <component :is="iconMap[getSelectedProject()!.icon] || Folder" class="w-4 h-4" />
             </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{{ project.title }}</span>
-            <div v-if="selectedProjectId === project.id" class="ml-auto w-2 h-2 rounded-full bg-indigo-500"></div>
+            <span class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex-1 text-left">
+              {{ getSelectedProject()!.title }}
+            </span>
+          </template>
+          <template v-else>
+            <Folder class="w-4 h-4 flex-shrink-0" />
+            <span class="text-sm font-medium flex-1 text-left">Sin Proyecto</span>
+          </template>
+          <ChevronDown class="w-4 h-4 opacity-50 flex-shrink-0" />
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div 
+          v-if="isDropdownOpen"
+          class="absolute top-full left-0 mt-2 w-full md:w-72 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-[10000] animate-fade-in">
+          <div class="p-2 space-y-1 max-h-60 overflow-y-auto">
+            <button
+              type="button"
+              @click="selectProject(undefined)"
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
+              <div class="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-500 flex-shrink-0">
+                <Folder class="w-4 h-4" />
+              </div>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">Sin Proyecto</span>
+              <div v-if="!selectedProjectId" class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></div>
+            </button>
+
+            <button
+              v-for="project in projects"
+              :key="project.id"
+              type="button"
+              @click="selectProject(project.id)"
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
+              <div 
+                class="p-1.5 rounded-md flex-shrink-0"
+                :class="getColorClass(project.color)">
+                <component :is="iconMap[project.icon] || Folder" class="w-4 h-4" />
+              </div>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate flex-1">{{ project.title }}</span>
+              <div v-if="selectedProjectId === project.id" class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tag Selector -->
+      <div v-if="tags.length > 0" class="relative flex-shrink-0 w-full md:w-auto">
+        <button
+          type="button"
+          @click="toggleTagDropdown"
+          class="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-200/50 shadow-lg dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 md:min-w-[140px] cursor-pointer"
+          :class="selectedTags.length > 0 ? '' : 'text-gray-500 dark:text-gray-400'">
+          <Hash class="w-4 h-4 flex-shrink-0" />
+          <span class="text-sm font-medium flex-1 text-left">
+            {{ selectedTags.length > 0 ? `${selectedTags.length} ${t('tasks.tags')}` : t('tasks.tags') }}
+          </span>
+          <ChevronDown class="w-4 h-4 flex-shrink-0 transition-transform duration-200" :class="{ 'rotate-180': isTagDropdownOpen }" />
+        </button>
+
+        <!-- Tag Dropdown -->
+        <div 
+          v-if="isTagDropdownOpen"
+          class="absolute top-full left-0 mt-2 w-full md:w-72 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-[10000] animate-fade-in">
+          <div class="p-2 space-y-1 max-h-60 overflow-y-auto">
+            <button
+              v-for="tag in tags"
+              :key="tag.id"
+              type="button"
+              @click="toggleTag(tag.id)"
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
+              <div class="p-1.5 rounded-md flex-shrink-0" :class="getTagColorClass(tag.color)">
+                <Hash class="w-4 h-4" />
+              </div>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">{{ tag.name }}</span>
+              <div v-if="selectedTags.includes(tag.id)" class="w-5 h-5 rounded bg-indigo-500 flex items-center justify-center flex-shrink-0">
+                <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority Selector -->
+      <div class="relative flex-shrink-0 w-full md:w-auto">
+        <button
+          type="button"
+          @click="isPriorityDropdownOpen = !isPriorityDropdownOpen"
+          class="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-200/50 shadow-lg dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 md:min-w-[140px] cursor-pointer"
+          :class="selectedPriority ? getPriorityColor(selectedPriority) : 'text-gray-500 dark:text-gray-400'">
+          <Flag class="w-4 h-4 flex-shrink-0" :class="{ 'fill-current': selectedPriority }" />
+          <span class="text-sm font-medium flex-1 text-left">
+            {{ selectedPriority ? getPriorityLabel(selectedPriority) : t('tasks.priority') }}
+          </span>
+          <ChevronDown class="w-4 h-4 flex-shrink-0 transition-transform duration-200" :class="{ 'rotate-180': isPriorityDropdownOpen }" />
+        </button>
+
+        <!-- Priority Dropdown -->
+        <div 
+          v-if="isPriorityDropdownOpen"
+          class="absolute top-full left-0 mt-2 w-full md:w-48 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-[10000] animate-fade-in">
+          <div class="p-2 space-y-1">
+            <button
+              type="button"
+              @click="selectedPriority = undefined; isPriorityDropdownOpen = false"
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left text-gray-500">
+              <Flag class="w-4 h-4" />
+              <span class="text-sm font-medium flex-1">{{ t('tasks.no_priority') }}</span>
+              <div v-if="!selectedPriority" class="w-2 h-2 rounded-full bg-indigo-500"></div>
+            </button>
+            <button
+              v-for="p in priorities"
+              :key="p.value"
+              type="button"
+              @click="selectedPriority = p.value as Priority; isPriorityDropdownOpen = false"
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+              :class="p.color">
+              <Flag class="w-4 h-4 fill-current" />
+              <span class="text-sm font-medium flex-1">{{ p.label }}</span>
+              <div v-if="selectedPriority === p.value" class="w-2 h-2 rounded-full bg-current"></div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Due Date Selector -->
+      <div class="relative flex-shrink-0 w-full md:w-auto">
+        <div class="relative">
+          <input
+            type="date"
+            v-model="selectedDueDate"
+            class="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+            @click="(e) => (e.target as HTMLInputElement).showPicker && (e.target as HTMLInputElement).showPicker()"
+          />
+          <button
+            type="button"
+            class="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-200/50 shadow-lg dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 cursor-pointer"
+            :class="selectedDueDate ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-500 dark:text-gray-400'">
+            <Calendar class="w-4 h-4 flex-shrink-0" />
+            <span class="text-sm font-medium whitespace-nowrap">
+              {{ selectedDueDate ? new Date(selectedDueDate).toLocaleDateString() : t('tasks.due_date') }}
+            </span>
           </button>
         </div>
       </div>
+
+      <!-- Input and Button Container -->
+      <div class="flex gap-3 flex-1 items-center">
+        <!-- Input -->
+        <input
+          id="new-task"
+          type="text"
+          v-model="newTask"
+          @keyup.enter="handleSubmit"
+          :placeholder="t('tasks.placeholder')"
+          class="w-full bg-transparent text-lg placeholder-gray-400 dark:placeholder-gray-500 border-none focus:ring-0 p-0 text-gray-900 dark:text-gray-100" />
+
+        <!-- Submit Button -->
+        <button
+          type="button"
+          @click="handleSubmit"
+          :disabled="!newTask.trim()"
+          class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-5 py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-medium text-sm md:text-base flex-shrink-0 z-10 relative cursor-pointer">
+          <Plus class="w-5 h-5" />
+          <span class="hidden md:inline">{{ t('common.add') }}</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Input -->
-    <input
-      id="new-task"
-      type="text"
-      v-model="newTask"
-      placeholder="¿Qué tienes que hacer hoy?"
-      class="flex-1 bg-transparent border-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 text-lg" 
-    />
-
-    <!-- Submit Button -->
-    <button
-      type="submit"
-      :disabled="!newTask.trim()"
-      class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-      </svg>
-    </button>
-
-    <!-- Backdrop for dropdown -->
+    <!-- Backdrop for project dropdown -->
     <div 
       v-if="isDropdownOpen" 
-      class="fixed inset-0 z-40" 
+      class="fixed inset-0 z-[9999]" 
       @click="isDropdownOpen = false">
+    </div>
+
+    <!-- Backdrop for tag dropdown -->
+    <div 
+      v-if="isTagDropdownOpen" 
+      class="fixed inset-0 z-[9999]" 
+      @click="isTagDropdownOpen = false">
+    </div>
+
+    <!-- Backdrop for priority dropdown -->
+    <div 
+      v-if="isPriorityDropdownOpen" 
+      class="fixed inset-0 z-[9999]" 
+      @click="isPriorityDropdownOpen = false">
     </div>
   </form>
 </template>

@@ -16,13 +16,16 @@ export function useTasks() {
     }
   }
 
-  function addTask(title: string, projectId?: string) {
+  function addTask(title: string, projectId?: string, tags?: string[], priority?: 'low' | 'medium' | 'high', dueDate?: Date) {
     const task: Task = {
       id: Date.now(),
       title,
       completed: false,
       createdAt: new Date(),
       projectId,
+      tags,
+      priority,
+      dueDate,
     };
 
     tasks.value.push(task);

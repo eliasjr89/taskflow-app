@@ -2,11 +2,14 @@
 import TaskCard from "./TaskCard.vue";
 import type { Task } from "../types/global";
 import { ref, watch, nextTick } from "vue";
+import { useTasks } from "../composables/useTask";
 
 const { tasks, selectedTaskId } = defineProps<{
   tasks: Task[];
   selectedTaskId?: string | number;
 }>();
+
+const { removeTask, toggleTaskCompletion, updateTask } = useTasks();
 
 const taskRefs = ref<HTMLElement[]>([]);
 
@@ -30,12 +33,29 @@ watch(
     }
   }
 );
+
+function handleToggleComplete(id: number) {
+  toggleTaskCompletion(id);
+}
+
+function handleDeleteTask(id: number) {
+  removeTask(id);
+}
+
+function handleEditTask(task: Task) {
+  updateTask(task.id, { title: task.title });
+}
 </script>
 
 <template>
   <div class="flex flex-col gap-3 w-full">
     <div v-for="(task, index) in tasks" :key="task.id" :ref="(el: any) => taskRefs[index] = el as HTMLElement">
-      <TaskCard :task="task" />
+      <TaskCard 
+        :task="task"
+        @toggle-complete="handleToggleComplete"
+        @delete-task="handleDeleteTask"
+        @edit-task="handleEditTask"
+      />
     </div>
   </div>
 </template>

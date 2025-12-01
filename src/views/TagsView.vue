@@ -1,25 +1,213 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useTagState } from '../composables/useTagState';
+import { useTaskState } from '../composables/useTaskState';
+import AddTagModal from '../components/AddTagModal.vue';
+import { Tags, Plus, Edit2, Trash2, Hash } from 'lucide-vue-next';
+import type { Tag } from '../types/global';
+
+const { tags, addTag, updateTag, deleteTag } = useTagState();
+const { tasks } = useTaskState();
+
+const isModalOpen = ref(false);
+const editingTag = ref<Tag | null>(null);
+
+// Get tasks count for each tag
+function getTaskCount(tagId: string) {
+  return tasks.value.filter(t => t.tags?.includes(tagId)).length;
+}
+
+// Get completed tasks count for each tag
+function getCompletedCount(tagId: string) {
+  return tasks.value.filter(t => t.tags?.includes(tagId) && t.completed).length;
+}
+
+// Calculate completion percentage
+function getCompletionPercentage(tagId: string) {
+  const total = getTaskCount(tagId);
+  if (total === 0) return 0;
+  const completed = getCompletedCount(tagId);
+  return Math.round((completed / total) * 100);
+}
+
+// Sort tags by task count
+const sortedTags = computed(() => {
+  return [...tags.value].sort((a, b) => getTaskCount(b.id) - getTaskCount(a.id));
+});
+
+function openCreateModal() {
+  editingTag.value = null;
+  isModalOpen.value = true;
+}
+
+function openEditModal(tag: Tag) {
+  editingTag.value = tag;
+  isModalOpen.value = true;
+}
+
+function handleSaveTag(tag: Tag) {
+  if (editingTag.value) {
+    updateTag(tag.id, tag);
+  } else {
+    addTag(tag);
+  }
+  isModalOpen.value = false;
+  editingTag.value = null;
+}
+
+function handleDeleteTag(tagId: string) {
+  if (confirm('¿Estás seguro de eliminar esta etiqueta? Las tareas no se eliminarán, solo se removerá la etiqueta.')) {
+    deleteTag(tagId);
+  }
+}
+
+const getColorClass = (color: string) => {
+  const colors: Record<string, string> = {
+    indigo: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+    purple: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+    pink: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800',
+    rose: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+    orange: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+    amber: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+    green: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800',
+    teal: 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+    cyan: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
+    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+  };
+  return colors[color] || colors.indigo;
+};
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
-    <div class="text-center py-16">
-      <div class="mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-        </svg>
-      </div>
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-        Etiquetas
-      </h1>
-      <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
-        Organiza tareas con etiquetas personalizadas
-      </p>
-      <div class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-xl shadow-md p-8 border border-gray-200/30 dark:border-gray-700/30 max-w-md mx-auto">
-        <p class="text-gray-700 dark:text-gray-300">
-          🚧 ¡Próximamente! Esta funcionalidad está en desarrollo.
+  <div class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-heading">
+          🏷️ Etiquetas
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+          Organiza tus tareas con etiquetas personalizadas
         </p>
       </div>
+
+      <button
+        @click="openCreateModal"
+        class="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 font-medium cursor-pointer">
+        <Plus class="w-5 h-5" />
+        Nueva Etiqueta
+      </button>
     </div>
+
+    <!-- Tags Grid -->
+    <div v-if="sortedTags.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div
+        v-for="tag in sortedTags"
+        :key="tag.id"
+        class="glass-card rounded-2xl p-6 hover:-translate-y-1 transition-all duration-300 group">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <div class="p-2 rounded-lg" :class="getColorClass(tag.color)">
+              <Hash class="w-5 h-5" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                {{ tag.name }}
+              </h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                {{ getTaskCount(tag.id) }} tarea{{ getTaskCount(tag.id) !== 1 ? 's' : '' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+            <button
+              @click.stop="openEditModal(tag)"
+              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer relative z-20"
+              title="Editar">
+              <Edit2 class="w-4 h-4" />
+            </button>
+            <button
+              @click.stop="handleDeleteTag(tag.id)"
+              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors relative z-20 cursor-pointer"
+              title="Eliminar">
+              <Trash2 class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600 dark:text-gray-400">Progreso</span>
+            <span class="font-semibold text-gray-900 dark:text-gray-100">
+              {{ getCompletionPercentage(tag.id) }}%
+            </span>
+          </div>
+          <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              :class="`bg-${tag.color}-500`"
+              :style="{ width: `${getCompletionPercentage(tag.id)}%` }">
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <span>{{ getCompletedCount(tag.id) }} completadas</span>
+            <span>{{ getTaskCount(tag.id) - getCompletedCount(tag.id) }} pendientes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else class="text-center py-16">
+      <div class="glass-card rounded-2xl p-12 max-w-md mx-auto">
+        <div class="mb-6 inline-flex p-6 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl">
+          <Tags class="w-16 h-16 text-indigo-600 dark:text-indigo-400" />
+        </div>
+        
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          No hay etiquetas
+        </h2>
+        
+        <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+          Crea tu primera etiqueta para organizar tus tareas de manera más eficiente.
+        </p>
+
+        <button
+          @click="openCreateModal"
+          class="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 font-medium">
+          <Plus class="w-5 h-5" />
+          Crear Primera Etiqueta
+        </button>
+      </div>
+    </div>
+
+    <!-- Add/Edit Tag Modal -->
+    <AddTagModal
+      :is-open="isModalOpen"
+      :editing-tag="editingTag"
+      @close="isModalOpen = false"
+      @save="handleSaveTag"
+    />
   </div>
 </template>
+
+<style scoped>
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+</style>
+(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}

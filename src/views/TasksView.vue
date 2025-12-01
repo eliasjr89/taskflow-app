@@ -2,11 +2,13 @@
 import { onMounted, ref, computed } from 'vue';
 import { useTaskState } from '../composables/useTaskState';
 import { useTasks } from '../composables/useTask';
+import { useI18n } from 'vue-i18n';
 
 import AddTaskForm from '../components/AddTaskForm.vue';
 import TaskList from '../components/TaskList.vue';
 import Sidebar from '../components/Sidebar.vue';
 
+const { t } = useI18n();
 const { pendingTasks, completedTasks, tasks } = useTaskState();
 const { loadTask } = useTasks();
 
@@ -52,12 +54,12 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
       @selectTask="handleSelectTask"
       :tasks="tasks" />
     
-    <div class="flex-1 flex flex-col items-center w-full md:max-w-4xl mx-auto px-4 md:px-0">
+    <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8">
       <!-- Formulario de nueva tarea -->
-      <AddTaskForm class="w-full max-w-md mb-8" />
+      <AddTaskForm class="w-full mb-8" />
 
       <!-- Lista de tareas filtradas -->
-      <div class="w-full max-w-md space-y-8">
+      <div class="w-full space-y-8">
         <!-- Pendientes -->
         <div
           v-if="activeFilter === 'all' || activeFilter === 'pending'"
@@ -73,8 +75,11 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
               class="space-y-3" />
           </template>
           <template v-else>
-            <div class="text-center text-gray-600 dark:text-gray-300 p-8 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-200/30 dark:border-gray-700/30">
-              <p class="text-lg">✨ No hay tareas pendientes. ¡Agrega una nueva tarea!</p>
+            <div class="flex flex-col gap-2 mb-8 text-center">
+              <h1 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading">
+                {{ t('tasks.title') }}
+              </h1>
+              <p class="text-gray-600 dark:text-gray-400 text-lg">{{ t('tasks.subtitle') }}</p>
             </div>
           </template>
         </div>

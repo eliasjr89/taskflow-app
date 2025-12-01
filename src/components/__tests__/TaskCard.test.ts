@@ -91,7 +91,7 @@ describe('TaskCard', () => {
     });
 
     const container = wrapper.find('div');
-    expect(container.classes()).toContain('backdrop-blur-md');
-    expect(container.classes()).toContain('rounded-xl');
+    expect(container.classes()).toContain('glass-card');
+    expect(container.classes()).toContain('rounded-2xl');
   });
 });

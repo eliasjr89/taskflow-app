@@ -2,13 +2,19 @@
 import { ref } from 'vue';
 import { useTaskState } from '../composables/useTaskState';
 import { Plus, Folder, Briefcase, Star, Heart, Zap, Coffee, Music, Trash2 } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 import AddProjectModal from '../components/AddProjectModal.vue';
+import ConfirmationModal from '../components/ConfirmationModal.vue';
 import type { Project } from '../types/global';
 
-const { projects, addProject, deleteProject, getProjectProgress } = useTaskState();
+const { t } = useI18n();
+const { projects, addProject, deleteProject, getProjectProgress, getTasksByProject } = useTaskState();
 const isModalOpen = ref(false);
+const projectToDelete = ref<string | null>(null);
 
-const iconMap: Record<string, any> = {
+import type { Component } from 'vue';
+
+const iconMap: Record<string, Component> = {
   Folder, Briefcase, Star, Heart, Zap, Coffee, Music
 };
 
@@ -18,8 +24,13 @@ const handleCreateProject = (project: Project) => {
 };
 
 const handleDeleteProject = (id: string) => {
-  if (confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
-    deleteProject(id);
+  projectToDelete.value = id;
+};
+
+const confirmDeleteProject = () => {
+  if (projectToDelete.value) {
+    deleteProject(projectToDelete.value);
+    projectToDelete.value = null;
   }
 };
 
@@ -57,73 +68,69 @@ const getProgressColor = (color: string) => {
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
-    <!-- Header -->
+  <div class="flex-1 flex flex-col w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 animate-fade-in">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-heading">
-          Proyectos
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading">
+          {{ t('projects.title') }}
         </h1>
-        <p class="text-gray-600 dark:text-gray-400 text-lg">
-          Organiza y gestiona tus grandes objetivos
-        </p>
+        <p class="text-gray-600 dark:text-gray-400 text-lg">{{ t('projects.subtitle') }}</p>
       </div>
       
       <button 
         @click="isModalOpen = true"
-        class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5">
+        class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5 cursor-pointer">
         <Plus class="w-5 h-5" />
-        Nuevo Proyecto
+        {{ t('projects.new_project') }}
       </button>
     </div>
 
-    <!-- Projects Grid -->
     <div v-if="projects.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div 
         v-for="project in projects" 
         :key="project.id"
-        class="glass-card p-6 rounded-2xl group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+        class="group bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700/50 relative overflow-hidden">
         
-        <!-- Background Gradient Blob -->
-        <div 
-          class="absolute -right-10 -top-10 w-32 h-32 rounded-full opacity-10 blur-2xl transition-all group-hover:scale-150"
-          :class="getProgressColor(project.color)">
+        <div class="absolute top-0 right-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
+          <component :is="iconMap[project.icon] || Folder" class="w-24 h-24" :class="project.color" />
         </div>
 
-        <!-- Card Header -->
-        <div class="flex items-start justify-between mb-4 relative z-10">
-          <div 
-            class="p-3 rounded-xl transition-transform group-hover:scale-110 duration-300"
-            :class="getColorClass(project.color)">
-            <component :is="iconMap[project.icon] || Folder" class="w-6 h-6" />
-          </div>
-          
-          <button 
-            @click="handleDeleteProject(project.id)"
-            class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-            <Trash2 class="w-5 h-5" />
-          </button>
-        </div>
-
-        <!-- Card Content -->
-        <div class="mb-6 relative z-10">
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1 font-heading">{{ project.title }}</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 min-h-[2.5em]">
-            {{ project.description || 'Sin descripción' }}
-          </p>
-        </div>
-
-        <!-- Progress -->
         <div class="relative z-10">
-          <div class="flex justify-between text-sm mb-2">
-            <span class="font-medium text-gray-600 dark:text-gray-300">Progreso</span>
-            <span class="font-bold text-gray-900 dark:text-white">{{ getProjectProgress(project.id) }}%</span>
+          <div class="flex items-start justify-between mb-4 relative z-10">
+            <div class="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 w-fit">
+              <component :is="iconMap[project.icon] || Folder" class="w-8 h-8" :class="getColorClass(project.color)" />
+            </div>
+            
+            <button 
+              @click.stop="handleDeleteProject(project.id)"
+              class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-20 cursor-pointer"
+              :title="t('projects.delete_project')">
+              <Trash2 class="w-5 h-5" />
+            </button>
           </div>
-          <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-            <div 
-              class="h-2.5 rounded-full transition-all duration-1000 ease-out"
-              :class="getProgressColor(project.color)"
-              :style="{ width: `${getProjectProgress(project.id)}%` }">
+
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ project.title }}</h3>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-2 h-10">
+            {{ project.description }}
+          </p>
+
+          <div class="space-y-3">
+            <div class="flex justify-between text-sm font-medium">
+              <span class="text-gray-600 dark:text-gray-300">{{ t('projects.progress') }}</span>
+              <span class="text-indigo-600 dark:text-indigo-400">{{ getProjectProgress(project.id) }}%</span>
+            </div>
+            <div class="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
+                :class="getProgressColor(project.color)"
+                :style="{ width: `${getProjectProgress(project.id)}%` }">
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+              <span class="text-xs text-gray-500 dark:text-gray-400 font-medium px-2.5 py-1 rounded-md bg-gray-100 dark:bg-gray-700/50">
+           {{ t('projects.tasks_count', { count: getTasksByProject(project.id).length }) }}
+
+              </span>
             </div>
           </div>
         </div>
@@ -142,7 +149,7 @@ const getProgressColor = (color: string) => {
       <button 
         @click="isModalOpen = true"
         class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5">
-        Crear Primer Proyecto
+        {{ t('projects.new_project') }}
       </button>
     </div>
 
@@ -151,6 +158,16 @@ const getProgressColor = (color: string) => {
       :is-open="isModalOpen"
       @close="isModalOpen = false"
       @create="handleCreateProject"
+    />
+
+    <ConfirmationModal
+      :is-open="!!projectToDelete"
+      :title="t('projects.delete_confirm_title')"
+      :message="t('projects.delete_confirm_msg')"
+      :confirm-text="t('common.yes_delete')"
+      :cancel-text="t('common.cancel')"
+      @close="projectToDelete = null"
+      @confirm="confirmDeleteProject"
     />
   </div>
 </template>
