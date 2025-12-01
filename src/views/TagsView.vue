@@ -83,11 +83,11 @@ const getColorClass = (color: string) => {
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-heading">
-          🏷️ Etiquetas
+        <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading mb-2">
+          {{ $t('tags.title') }}
         </h1>
         <p class="text-gray-600 dark:text-gray-400">
-          Organiza tus tareas con etiquetas personalizadas
+          {{ $t('tags.subtitle') }}
         </p>
       </div>
 
@@ -95,7 +95,7 @@ const getColorClass = (color: string) => {
         @click="openCreateModal"
         class="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 font-medium cursor-pointer">
         <Plus class="w-5 h-5" />
-        Nueva Etiqueta
+        {{ $t('tags.new_tag') }}
       </button>
     </div>
 
@@ -131,7 +131,7 @@ const getColorClass = (color: string) => {
             <button
               @click.stop="handleDeleteTag(tag.id)"
               class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors relative z-20 cursor-pointer"
-              title="Eliminar">
+              :title="$t('common.delete')">
               <Trash2 class="w-4 h-4" />
             </button>
           </div>
@@ -140,7 +140,7 @@ const getColorClass = (color: string) => {
         <!-- Progress Bar -->
         <div class="space-y-2">
           <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600 dark:text-gray-400">Progreso</span>
+            <span class="text-gray-600 dark:text-gray-400">{{ $t('projects.progress') }}</span>
             <span class="font-semibold text-gray-900 dark:text-gray-100">
               {{ getCompletionPercentage(tag.id) }}%
             </span>
@@ -153,8 +153,8 @@ const getColorClass = (color: string) => {
             </div>
           </div>
           <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-            <span>{{ getCompletedCount(tag.id) }} completadas</span>
-            <span>{{ getTaskCount(tag.id) - getCompletedCount(tag.id) }} pendientes</span>
+            <span>{{ getCompletedCount(tag.id) }} {{ $t('common.completed').toLowerCase() }}</span>
+            <span>{{ getTaskCount(tag.id) - getCompletedCount(tag.id) }} {{ $t('common.pending').toLowerCase() }}</span>
           </div>
         </div>
       </div>
@@ -168,18 +168,18 @@ const getColorClass = (color: string) => {
         </div>
         
         <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-          No hay etiquetas
+          {{ $t('tags.no_tags') || 'No hay etiquetas' }}
         </h2>
         
         <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-          Crea tu primera etiqueta para organizar tus tareas de manera más eficiente.
+          {{ $t('tags.create_first') || 'Crea tu primera etiqueta para organizar tus tareas de manera más eficiente.' }}
         </p>
 
         <button
           @click="openCreateModal"
           class="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 font-medium">
           <Plus class="w-5 h-5" />
-          Crear Primera Etiqueta
+          {{ $t('tags.new_tag') }}
         </button>
       </div>
     </div>

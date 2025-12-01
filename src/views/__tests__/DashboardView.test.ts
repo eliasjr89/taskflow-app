@@ -10,8 +10,19 @@ const i18n = createI18n({
   messages: {
     es: {
       dashboard: {
-        title: 'Dashboard',
-        overview: 'Resumen',
+        title: 'Panel Principal',
+        subtitle: 'Bienvenido',
+        total_tasks: 'Total Tareas',
+        completed: 'Completadas',
+        pending: 'Pendientes',
+        success_rate: 'Tasa de Éxito',
+        general_progress: 'Progreso General',
+        recent_tasks: 'Tareas Recientes',
+        view_all: 'Ver Todas',
+        no_tasks: 'No hay tareas',
+        start_creating: 'Crear tarea',
+        go_to_tasks: 'Ir a Tareas',
+        tasks_completed_of: '{completed} de {total} tareas completadas',
       },
     },
   },

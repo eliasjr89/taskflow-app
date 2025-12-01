@@ -30,9 +30,9 @@ describe('useTaskState', () => {
         { id: 3, title: 'Tarea 3', completed: false, createdAt: date3 },
       ];
 
-      expect(sortedTasks.value[0].createdAt).toEqual(date3);
-      expect(sortedTasks.value[1].createdAt).toEqual(date2);
-      expect(sortedTasks.value[2].createdAt).toEqual(date1);
+      expect(sortedTasks.value[0]?.createdAt).toEqual(date3);
+      expect(sortedTasks.value[1]?.createdAt).toEqual(date2);
+      expect(sortedTasks.value[2]?.createdAt).toEqual(date1);
     });
   });
 
@@ -47,8 +47,8 @@ describe('useTaskState', () => {
       ];
 
       expect(pendingTasks.value).toHaveLength(2);
-      expect(pendingTasks.value[0].title).toBe('Pendiente 1');
-      expect(pendingTasks.value[1].title).toBe('Pendiente 2');
+      expect(pendingTasks.value[0]?.title).toBe('Pendiente 1');
+      expect(pendingTasks.value[1]?.title).toBe('Pendiente 2');
     });
 
     it('debe retornar array vacío si no hay tareas pendientes', () => {
@@ -74,8 +74,8 @@ describe('useTaskState', () => {
       ];
 
       expect(completedTasks.value).toHaveLength(2);
-      expect(completedTasks.value[0].title).toBe('Completada 1');
-      expect(completedTasks.value[1].title).toBe('Completada 2');
+      expect(completedTasks.value[0]?.title).toBe('Completada 1');
+      expect(completedTasks.value[1]?.title).toBe('Completada 2');
     });
 
     it('debe retornar array vacío si no hay tareas completadas', () => {

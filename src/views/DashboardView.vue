@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue';
 import { useTaskState } from '../composables/useTaskState';
 import { useTasks } from '../composables/useTask';
+import { useI18n } from 'vue-i18n';
 import { RouterLink } from 'vue-router';
 import { 
   CheckCircle2, 
@@ -13,6 +14,7 @@ import {
 
 const { tasks, pendingTasks, completedTasks } = useTaskState();
 const { loadTask } = useTasks();
+const { t } = useI18n();
 
 onMounted(loadTask);
 
@@ -32,11 +34,11 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
   <div class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-heading">
-        Panel Principal
+      <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading mb-2">
+        {{ t('dashboard.title') }}
       </h1>
       <p class="text-gray-600 dark:text-gray-400 text-lg">
-        ¡Bienvenido de nuevo! Aquí tienes un resumen de tu productividad
+        {{ t('dashboard.subtitle') }}
       </p>
     </div>
 
@@ -46,7 +48,7 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
       <div class="glass-card p-6 rounded-2xl flex flex-col justify-center group hover:-translate-y-1 transition-transform duration-300">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tareas</p>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.total_tasks') }}</p>
             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2 font-heading">{{ totalTasks }}</p>
           </div>
           <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl group-hover:scale-110 transition-transform duration-300">
@@ -59,7 +61,7 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
       <div class="glass-card p-6 rounded-2xl flex flex-col justify-center group hover:-translate-y-1 transition-transform duration-300">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Completadas</p>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.completed') }}</p>
             <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2 font-heading">{{ completedCount }}</p>
           </div>
           <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl group-hover:scale-110 transition-transform duration-300">
@@ -72,7 +74,7 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
       <div class="glass-card p-6 rounded-2xl flex flex-col justify-center group hover:-translate-y-1 transition-transform duration-300">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pendientes</p>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.pending') }}</p>
             <p class="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-2 font-heading">{{ pendingCount }}</p>
           </div>
           <div class="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl group-hover:scale-110 transition-transform duration-300">
@@ -85,7 +87,7 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
       <div class="glass-card p-6 rounded-2xl flex flex-col justify-center group hover:-translate-y-1 transition-transform duration-300">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Tasa de Éxito</p>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.success_rate') }}</p>
             <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2 font-heading">{{ completionRate }}%</p>
           </div>
           <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl group-hover:scale-110 transition-transform duration-300">
@@ -97,7 +99,7 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
 
     <!-- Progress Bar -->
     <div class="glass-panel p-6 rounded-2xl mb-8">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 font-heading">Progreso General</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 font-heading">{{ t('dashboard.general_progress') }}</h3>
       <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
         <div 
           class="bg-gradient-to-r from-indigo-600 to-purple-600 h-4 rounded-full transition-all duration-1000 ease-out relative"
@@ -106,18 +108,18 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
         </div>
       </div>
       <p class="text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
-        {{ completedCount }} de {{ totalTasks }} tareas completadas
+        {{ t('dashboard.tasks_completed_of', { completed: completedCount, total: totalTasks }) }}
       </p>
     </div>
 
     <!-- Recent Tasks -->
     <div class="glass-panel p-6 rounded-2xl">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 font-heading">Tareas Recientes</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 font-heading">{{ t('dashboard.recent_tasks') }}</h3>
         <RouterLink 
           to="/tasks"
           class="flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors group">
-          Ver Todas 
+          {{ t('dashboard.view_all') }}
           <ArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </RouterLink>
       </div>
@@ -155,12 +157,12 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
         <div class="mb-4 bg-indigo-50 dark:bg-indigo-900/20 w-16 h-16 mx-auto rounded-full flex items-center justify-center">
           <ListTodo class="w-8 h-8 text-indigo-500" />
         </div>
-        <p class="text-lg font-medium mb-1">No hay tareas aún</p>
-        <p class="text-sm mb-6">¡Comienza creando tu primera tarea!</p>
+        <p class="text-lg font-medium mb-1">{{ t('dashboard.no_tasks') }}</p>
+        <p class="text-sm mb-6">{{ t('dashboard.start_creating') }}</p>
         <RouterLink 
           to="/tasks"
           class="inline-block px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5">
-          Ir a Tareas
+          {{ t('dashboard.go_to_tasks') }}
         </RouterLink>
       </div>
     </div>

@@ -76,7 +76,7 @@ const resetForm = () => {
     <div class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden animate-scale-in">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white font-heading">Nuevo Proyecto</h3>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white font-heading">{{ $t('projects.new_project') }}</h3>
         <button 
           @click="$emit('close')"
           class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors">
@@ -88,11 +88,11 @@ const resetForm = () => {
       <div class="p-6 space-y-6">
         <!-- Title -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre del Proyecto</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ $t('projects.project_name') }}</label>
           <input 
             v-model="title"
             type="text" 
-            placeholder="Ej. Rediseño Web"
+            :placeholder="$t('projects.project_name')"
             class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
             autofocus
           />
@@ -100,18 +100,18 @@ const resetForm = () => {
 
         <!-- Description -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción (Opcional)</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ $t('projects.description_optional') }}</label>
           <textarea 
             v-model="description"
             rows="2"
-            placeholder="Breve descripción..."
+            :placeholder="$t('projects.description_placeholder')"
             class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all resize-none"
           ></textarea>
         </div>
 
         <!-- Color Picker -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Color</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{{ $t('projects.color') }}</label>
           <div class="flex flex-wrap gap-3">
             <button
               v-for="color in colors"
@@ -128,7 +128,7 @@ const resetForm = () => {
 
         <!-- Icon Picker -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Icono</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{{ $t('projects.icon') }}</label>
           <div class="flex flex-wrap gap-3">
             <button
               v-for="icon in icons"
@@ -152,13 +152,13 @@ const resetForm = () => {
         <button 
           @click="$emit('close')"
           class="px-5 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors">
-          Cancelar
+          {{ $t('common.cancel') }}
         </button>
         <button 
           @click="handleSubmit"
           :disabled="!title.trim()"
           class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/30">
-          Crear Proyecto
+          {{ $t('common.create') }}
         </button>
       </div>
     </div>

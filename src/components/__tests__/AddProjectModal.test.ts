@@ -13,9 +13,10 @@ const i18n = createI18n({
         new_project: 'Nuevo Proyecto',
         edit_project: 'Editar Proyecto',
         project_name: 'Nombre del proyecto',
-        project_description: 'Descripción',
-        choose_icon: 'Elige un icono',
-        choose_color: 'Elige un color',
+        description_optional: 'Descripción (Opcional)',
+        description_placeholder: 'Breve descripción...',
+        color: 'Color',
+        icon: 'Icono',
       },
       common: {
         cancel: 'Cancelar',
@@ -24,6 +25,13 @@ const i18n = createI18n({
       },
     },
   },
+});
+
+// Mock crypto.randomUUID
+Object.defineProperty(global, 'crypto', {
+  value: {
+    randomUUID: () => 'test-uuid'
+  }
 });
 
 describe('AddProjectModal', () => {

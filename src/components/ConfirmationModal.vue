@@ -9,8 +9,6 @@ withDefaults(defineProps<{
   cancelText?: string;
   type?: 'danger' | 'warning' | 'info';
 }>(), {
-  confirmText: 'Confirmar',
-  cancelText: 'Cancelar',
   type: 'danger'
 });
 
@@ -46,12 +44,12 @@ const emit = defineEmits<{
             <button
               @click="emit('close')"
               class="px-4 py-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium transition-colors cursor-pointer">
-              {{ cancelText || 'Cancelar' }}
+              {{ cancelText || $t('common.cancel') }}
             </button>
             <button
               @click="emit('confirm')"
               class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium shadow-lg shadow-rose-500/30 transition-all hover:scale-105 active:scale-95 cursor-pointer">
-              {{ confirmText || 'Eliminar' }}
+              {{ confirmText || $t('common.delete') }}
             </button>
           </div>
         </div>

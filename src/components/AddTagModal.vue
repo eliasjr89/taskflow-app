@@ -70,7 +70,7 @@ function handleClose() {
         <!-- Modal -->
         <div class="relative glass-card rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scale-in">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-            {{ editingTag ? 'Editar Etiqueta' : 'Nueva Etiqueta' }}
+            {{ editingTag ? $t('tags.edit_tag') : $t('tags.new_tag') }}
           </h2>
 
           <form @submit.prevent="handleSave" class="space-y-6">
@@ -131,13 +131,13 @@ function handleClose() {
                 type="button"
                 @click="handleClose"
                 class="flex-1 px-4 py-3 rounded-xl border border-gray-200/50 dark:border-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium">
-                Cancelar
+                {{ $t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 :disabled="!isValid"
                 class="flex-1 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors font-medium shadow-lg shadow-indigo-500/30">
-                {{ editingTag ? 'Guardar' : 'Crear' }}
+                {{ editingTag ? $t('common.save') : $t('common.add') }}
               </button>
             </div>
           </form>

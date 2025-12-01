@@ -2,10 +2,12 @@
 import { computed } from 'vue';
 import { useTaskState } from '../composables/useTaskState';
 import { useTheme } from '../composables/usThemes';
+import { useI18n } from 'vue-i18n';
 import { User, CheckCircle2, Target, TrendingUp, Zap, Moon, Sun } from 'lucide-vue-next';
 
 const { tasks, projects } = useTaskState();
 const { isDark, toggleTheme } = useTheme();
+const { t } = useI18n();
 
 // Estadísticas del usuario
 const totalTasks = computed(() => tasks.value.length);
@@ -47,7 +49,7 @@ const mostProductiveProject = computed(() => {
 
 const stats = computed(() => [
   {
-    label: 'Tareas Totales',
+    label: t('profile.total_tasks'),
     value: totalTasks.value,
     icon: Target,
     color: 'indigo',
@@ -55,7 +57,7 @@ const stats = computed(() => [
     textColor: 'text-indigo-600 dark:text-indigo-400'
   },
   {
-    label: 'Completadas',
+    label: t('profile.completed'),
     value: completedTasks.value,
     icon: CheckCircle2,
     color: 'green',
@@ -63,7 +65,7 @@ const stats = computed(() => [
     textColor: 'text-green-600 dark:text-green-400'
   },
   {
-    label: 'Tasa de Completitud',
+    label: t('profile.completion_rate'),
     value: `${completionRate.value}%`,
     icon: TrendingUp,
     color: 'purple',
@@ -71,7 +73,7 @@ const stats = computed(() => [
     textColor: 'text-purple-600 dark:text-purple-400'
   },
   {
-    label: 'Racha (7 días)',
+    label: t('profile.streak'),
     value: currentStreak.value,
     icon: Zap,
     color: 'orange',
@@ -85,11 +87,11 @@ const stats = computed(() => [
   <div class="flex-1 p-6 md:p-10 max-w-5xl mx-auto w-full animate-fade-in">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-heading">
-        👤 Mi Perfil
+      <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading mb-2">
+        {{ t('profile.title') }}
       </h1>
       <p class="text-gray-600 dark:text-gray-400">
-        Gestiona tu cuenta y preferencias
+        {{ t('profile.subtitle') }}
       </p>
     </div>
 
@@ -110,17 +112,17 @@ const stats = computed(() => [
           <!-- User Info -->
           <div class="flex-1 text-center md:text-left">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-              Usuario TaskFlow
+              {{ t('profile.demo_user') }}
             </h2>
             <p class="text-gray-600 dark:text-gray-400 mb-4">
-              Gestión de Productividad
+              {{ t('nav.subtitle') }}
             </p>
             <div class="flex flex-wrap gap-2 justify-center md:justify-start">
               <span class="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
-                {{ totalProjects }} Proyectos
+                {{ totalProjects }} {{ t('nav.projects') }}
               </span>
               <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                {{ completedTasks }} Tareas Completadas
+                {{ completedTasks }} {{ t('profile.completed') }}
               </span>
             </div>
           </div>
@@ -130,7 +132,7 @@ const stats = computed(() => [
       <!-- Statistics Grid -->
       <div>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          📊 Estadísticas
+          📊 {{ t('analytics.title') }}
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div
@@ -156,7 +158,7 @@ const stats = computed(() => [
       <div v-if="mostProductiveProject && mostProductiveProject.project" class="glass-card rounded-2xl p-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
           <TrendingUp class="w-5 h-5 text-green-600 dark:text-green-400" />
-          Proyecto Más Productivo
+          {{ t('profile.most_productive') }}
         </h3>
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
@@ -167,7 +169,7 @@ const stats = computed(() => [
               {{ mostProductiveProject.project.title }}
             </p>
             <p class="text-sm text-gray-600 dark:text-gray-400">
-              {{ mostProductiveProject.completedTasks }} de {{ mostProductiveProject.totalTasks }} tareas completadas
+              {{ t('dashboard.tasks_completed_of', { completed: mostProductiveProject.completedTasks, total: mostProductiveProject.totalTasks }) }}
             </p>
           </div>
           <div class="text-right">

@@ -2,6 +2,16 @@ import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import AddTagModal from '../AddTagModal.vue';
 import type { Tag } from '../../types/global';
+import { createI18n } from 'vue-i18n';
+import es from '../../locales/es';
+
+const i18n = createI18n({
+  legacy: false,
+  locale: 'es',
+  messages: {
+    es
+  }
+});
 
 describe('AddTagModal', () => {
   const mountModal = (props = {}) => {
@@ -9,6 +19,9 @@ describe('AddTagModal', () => {
       props: {
         isOpen: true,
         ...props,
+      },
+      global: {
+        plugins: [i18n]
       },
       attachTo: document.body,
     });

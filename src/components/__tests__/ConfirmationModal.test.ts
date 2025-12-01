@@ -1,6 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import ConfirmationModal from '../ConfirmationModal.vue';
+import { createI18n } from 'vue-i18n';
+import es from '../../locales/es';
+
+const i18n = createI18n({
+  legacy: false,
+  locale: 'es',
+  messages: {
+    es
+  }
+});
 
 describe('ConfirmationModal', () => {
   const defaultProps = {
@@ -15,6 +25,9 @@ describe('ConfirmationModal', () => {
         ...defaultProps,
         ...props,
       },
+      global: {
+        plugins: [i18n]
+      }
     });
   };
 

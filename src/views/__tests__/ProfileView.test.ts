@@ -10,6 +10,23 @@ const i18n = createI18n({
     es: {
       profile: {
         title: 'Mi Perfil',
+        subtitle: 'Gestiona tu cuenta',
+        total_tasks: 'Tareas Totales',
+        completed: 'Completadas',
+        completion_rate: 'Tasa de Completitud',
+        streak: 'Racha',
+        most_productive: 'Proyecto más productivo',
+        demo_user: 'Usuario Demo',
+      },
+      nav: {
+        subtitle: 'Gestión',
+        projects: 'Proyectos',
+      },
+      analytics: {
+        title: 'Estadísticas',
+      },
+      dashboard: {
+        tasks_completed_of: '{completed} de {total} tareas completadas',
       },
     },
   },
@@ -36,9 +53,8 @@ describe('ProfileView', () => {
     expect(wrapper.find('.flex-1').exists()).toBe(true);
   });
 
-  it('debe mostrar el título con emoji de perfil', async () => {
+  it('debe mostrar el título de perfil', async () => {
     const wrapper = await mountView();
-    expect(wrapper.text()).toContain('👤');
     expect(wrapper.text()).toContain('Mi Perfil');
   });
 

@@ -10,8 +10,18 @@ const i18n = createI18n({
     es: {
       tags: {
         title: 'Etiquetas',
+        subtitle: 'Organiza tus tareas',
         new_tag: 'Nueva Etiqueta',
         edit_tag: 'Editar Etiqueta',
+        no_tags: 'No hay etiquetas',
+        create_first: 'Crea tu primera etiqueta',
+      },
+      projects: {
+        progress: 'Progreso',
+      },
+      common: {
+        completed: 'Completadas',
+        pending: 'Pendientes',
       },
     },
   },
@@ -41,9 +51,8 @@ describe('TagsView', () => {
     expect(wrapper.find('.flex-1').exists()).toBe(true);
   });
 
-  it('debe mostrar el título con emoji de etiqueta', async () => {
+  it('debe mostrar el título de etiquetas', async () => {
     const wrapper = await mountView();
-    expect(wrapper.text()).toContain('🏷️');
     expect(wrapper.text()).toContain('Etiquetas');
   });
 
