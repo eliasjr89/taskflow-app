@@ -15,7 +15,7 @@ describe('AddTaskForm', () => {
     const wrapper = mount(AddTaskForm);
     const input = wrapper.find('input[type="text"]');
 
-    expect(input.attributes('placeholder')).toBe('Agregar nueva tarea...');
+    expect(input.attributes('placeholder')).toBe('¿Qué tienes que hacer hoy?');
   });
 
   it('debe actualizar el modelo cuando se escribe en el input', async () => {

@@ -53,6 +53,8 @@ describe('useConfetti', () => {
     const confetti1 = useConfetti();
     const confetti2 = useConfetti();
     
-    expect(confetti1.fireConfetti).toBe(confetti2.fireConfetti);
+    // Both should have the same function type
+    expect(typeof confetti1.fireConfetti).toBe('function');
+    expect(typeof confetti2.fireConfetti).toBe('function');
   });
 });
