@@ -36,7 +36,7 @@ const navItems = computed(() => [
 
 <template>
   <aside
-    class="hidden md:flex flex-col p-2 gap-2 glass-panel rounded-2xl  transition-all duration-300 h-[calc(100vh-6rem)] sticky top-24"
+    class="hidden md:flex flex-col p-2 gap-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl transition-all duration-300 h-[calc(100vh-6rem)] sticky top-24 shadow-lg"
     :class="[isCollapsed ? 'w-15' : 'w-50']">
     
     <!-- Header with Toggle -->
@@ -44,7 +44,7 @@ const navItems = computed(() => [
       <div 
         class="flex flex-col overflow-hidden transition-all duration-300"
         :class="[isCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto']">
-        <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading whitespace-nowrap">
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading whitespace-nowrap">
           {{ t('nav.menu') }}
         </h1>
         <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 whitespace-nowrap">{{ t('nav.subtitle') }}</p>

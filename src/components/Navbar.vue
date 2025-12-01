@@ -24,7 +24,7 @@ const toggleLanguage = () => {
       class="p-2.5 rounded-lg hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-all duration-200 flex items-center gap-2 font-medium text-sm text-gray-700 dark:text-gray-300"
       title="Cambiar idioma / Change language">
       <Languages class="w-5 h-5" />
-      <span>{{ locale === 'es' ? 'ES' : 'EN' }}</span>
+      <span>{{ locale === 'es' ? 'EN' : 'ES' }}</span>
     </button>
 
     <button

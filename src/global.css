@@ -16,11 +16,11 @@
 
 /* Glassmorphism Utilities */
 @utility glass-panel {
-  @apply bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 shadow-xl;
+  @apply bg-gray-50/95 dark:bg-gray-900/70 backdrop-blur-xl border border-gray-200/40 dark:border-gray-700/30 shadow-xl;
 }
 
 @utility glass-card {
-  @apply bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-white/10 dark:border-gray-700/20 shadow-lg hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-300;
+  @apply bg-white dark:bg-gray-800 backdrop-blur-lg border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-xl transition-all duration-300;
 }
 
 @utility glass-input {
@@ -74,8 +74,8 @@ body::after {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
   z-index: -1;
   transition: background 0.3s ease;
 }

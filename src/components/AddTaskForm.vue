@@ -15,8 +15,11 @@ import {
   Plus,
   Hash,
   Flag,
-  Calendar,
 } from "lucide-vue-next";
+import { useI18n } from "vue-i18n";
+import DatePicker from "./DatePicker.vue";
+
+const { t } = useI18n();
 
 const newTask = ref("");
 const selectedProjectId = ref<string | undefined>(undefined);
@@ -133,17 +136,22 @@ const getTagColorClass = (color: string): string => {
 const priorities = [
   {
     value: "low",
-    label: "Baja",
+    label: t('tasks.low'),
     color: "text-blue-500 bg-blue-100 dark:bg-blue-900/30",
   },
   {
     value: "medium",
-    label: "Media",
+    label: t('tasks.medium'),
     color: "text-orange-500 bg-orange-100 dark:bg-orange-900/30",
   },
   {
     value: "high",
-    label: "Alta",
+    label: t('tasks.high'),
+    color: "text-red-500 bg-red-100 dark:bg-red-900/30",
+  },
+  {
+    value: "urgent",
+    label: t('tasks.urgent'),
     color: "text-red-500 bg-red-100 dark:bg-red-900/30",
   },
 ];
@@ -155,7 +163,7 @@ function getPriorityColor(priority: string) {
 
 function getPriorityLabel(priority: string) {
   const p = priorities.find((p) => p.value === priority);
-  return p ? p.label : "Prioridad";
+  return p ? p.label : t('tasks.priority');
 }
 </script>
 
@@ -189,7 +197,7 @@ function getPriorityLabel(priority: string) {
           <template v-else>
             <Folder class="w-4 h-4 flex-shrink-0" />
             <span class="text-sm font-medium flex-1 text-left"
-              >Sin Proyecto</span
+              >{{ t('tasks.project') }}</span
             >
           </template>
           <ChevronDown class="w-4 h-4 opacity-50 flex-shrink-0" />
@@ -210,7 +218,7 @@ function getPriorityLabel(priority: string) {
               </div>
               <span
                 class="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1"
-                >Sin Proyecto</span
+                >{{ t('tasks.without_project') }}</span
               >
               <div
                 v-if="!selectedProjectId"
@@ -255,12 +263,12 @@ function getPriorityLabel(priority: string) {
           ">
           <Hash class="w-4 h-4 flex-shrink-0" />
           <span class="text-sm font-medium flex-1 text-left">
-            {{
+            {{  
               selectedTags.length > 0
-                ? `${selectedTags.length} etiqueta${
+                ? `${selectedTags.length}  ${t('tasks.tags')}{
                     selectedTags.length > 1 ? "s" : ""
                   }`
-                : "Etiquetas"
+                :  t('tasks.tags')
             }}
           </span>
           <ChevronDown class="w-4 h-4 opacity-50 flex-shrink-0" />
@@ -324,7 +332,7 @@ function getPriorityLabel(priority: string) {
             {{
               selectedPriority
                 ? getPriorityLabel(selectedPriority)
-                : "Prioridad"
+                : t('tasks.priority')
             }}
           </span>
           <ChevronDown class="w-4 h-4 opacity-50 flex-shrink-0" />
@@ -343,7 +351,7 @@ function getPriorityLabel(priority: string) {
               "
               class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left text-gray-500">
               <Flag class="w-4 h-4" />
-              <span class="text-sm font-medium flex-1">Sin Prioridad</span>
+              <span class="text-sm font-medium flex-1">{{ t('tasks.without_priority') }}</span>
               <div
                 v-if="!selectedPriority"
                 class="w-2 h-2 rounded-full bg-indigo-500"></div>
@@ -369,31 +377,7 @@ function getPriorityLabel(priority: string) {
       </div>
 
       <!-- Due Date Selector -->
-      <div class="relative flex-shrink-0 w-full md:w-auto">
-        <div class="relative">
-          <input
-            type="date"
-            v-model="selectedDueDate"
-            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-          <button
-            type="button"
-            class="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2"
-            :class="
-              selectedDueDate
-                ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
-                : 'text-gray-500 dark:text-gray-400'
-            ">
-            <Calendar class="w-4 h-4 flex-shrink-0" />
-            <span class="text-sm font-medium whitespace-nowrap">
-              {{
-                selectedDueDate
-                  ? new Date(selectedDueDate).toLocaleDateString()
-                  : "Fecha"
-              }}
-            </span>
-          </button>
-        </div>
-      </div>
+      <DatePicker v-model="selectedDueDate" />
 
       <!-- Input and Button Container -->
       <div class="flex gap-3 flex-1 items-center">
@@ -402,7 +386,7 @@ function getPriorityLabel(priority: string) {
           id="new-task"
           type="text"
           v-model="newTask"
-          placeholder="¿Qué tienes que hacer hoy?"
+          :placeholder="t('tasks.placeholder')"
           class="flex-1 bg-transparent border-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 text-base md:text-lg px-2" />
 
         <!-- Submit Button -->
@@ -411,7 +395,7 @@ function getPriorityLabel(priority: string) {
           :disabled="!newTask.trim()"
           class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-5 py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-medium text-sm md:text-base flex-shrink-0">
           <Plus class="w-5 h-5" />
-          <span class="hidden md:inline">Agregar</span>
+          <span class="hidden md:inline">{{ t('tasks.add_task') }}</span>
         </button>
       </div>
     </div>

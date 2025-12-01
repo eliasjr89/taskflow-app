@@ -79,12 +79,13 @@ const getColorClass = (color: string) => {
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
+  <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 py-6 md:py-10 animate-fade-in">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading mb-2">
-          {{ $t('tags.title') }}
+        <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+          <span>🏷️</span>
+          <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ $t('tags.title') }}</span>
         </h1>
         <p class="text-gray-600 dark:text-gray-400">
           {{ $t('tags.subtitle') }}
@@ -161,8 +162,8 @@ const getColorClass = (color: string) => {
     </div>
 
     <!-- Empty State -->
-    <div v-else class="text-center py-16">
-      <div class="glass-card rounded-2xl p-12 max-w-md mx-auto">
+    <div v-else class="text-center py-12">
+      <div class="glass-card rounded-2xl p-12 max-w-2xl mx-auto">
         <div class="mb-6 inline-flex p-6 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl">
           <Tags class="w-16 h-16 text-indigo-600 dark:text-indigo-400" />
         </div>

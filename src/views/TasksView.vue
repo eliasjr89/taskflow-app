@@ -57,8 +57,9 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
     <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8">
       <!-- Header -->
       <div class="flex flex-col gap-2 mb-8">
-        <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading">
-          {{ t('tasks.title') }}
+        <h1 class="text-3xl md:text-4xl font-bold font-heading flex items-center gap-2">
+          <span>✅</span>
+          <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('tasks.title') }}</span>
         </h1>
         <p class="text-gray-600 dark:text-gray-400 text-lg">{{ t('tasks.subtitle') }}</p>
       </div>
@@ -83,8 +84,8 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
               class="space-y-3" />
           </template>
           <template v-else>
-            <div class="flex flex-col gap-2 mb-8 text-center py-10 opacity-60">
-              <p class="text-gray-500 dark:text-gray-400 text-lg">{{ t('tasks.no_tasks') }}</p>
+           <div class="glass-card text-center text-gray-600 dark:text-gray-300 p-8 rounded-2xl">
+              <p class="text-lg">{{ t('tasks.no_tasks') }}</p>
             </div>
           </template>
         </div>
@@ -96,7 +97,7 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
           <template v-if="filteredCompletedTasks.length">
             <h2
               class="text-2xl font-bold mb-5 text-gray-800 dark:text-gray-100">
-              ✅ {{ t('tasks.completed_title') }}
+              ✅ {{ t('tasks.completed_title') }} 
             </h2>
             <TaskList
               :tasks="filteredCompletedTasks"
@@ -104,8 +105,8 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
               class="space-y-3" />
           </template>
           <template v-else>
-            <div class="text-center text-gray-600 dark:text-gray-300 p-8 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md rounded-2xl border border-gray-200/30 dark:border-gray-700/30">
-              <p class="text-lg">🎯 No hay tareas completadas</p>
+            <div class="glass-card text-center text-gray-600 dark:text-gray-300 p-8 rounded-2xl">
+              <p class="text-lg">🎯 {{ t('tasks.no_completed_tasks') }}</p>
             </div>
           </template>
         </div>

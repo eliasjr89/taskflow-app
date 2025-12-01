@@ -31,11 +31,12 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
+  <div class="flex-1 p-6 md:p-10 w-full animate-fade-in">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading mb-2">
-        {{ t('dashboard.title') }}
+      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+        <span>🏠</span>
+        <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('dashboard.title') }}</span>
       </h1>
       <p class="text-gray-600 dark:text-gray-400 text-lg">
         {{ t('dashboard.subtitle') }}
@@ -98,8 +99,11 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
     </div>
 
     <!-- Progress Bar -->
-    <div class="glass-panel p-6 rounded-2xl mb-8">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 font-heading">{{ t('dashboard.general_progress') }}</h3>
+    <div class="glass-card rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+        <Target class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+        {{ t('dashboard.general_progress') }}
+      </h2>
       <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
         <div 
           class="bg-gradient-to-r from-indigo-600 to-purple-600 h-4 rounded-full transition-all duration-1000 ease-out relative"
@@ -113,9 +117,12 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
     </div>
 
     <!-- Recent Tasks -->
-    <div class="glass-panel p-6 rounded-2xl">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 font-heading">{{ t('dashboard.recent_tasks') }}</h3>
+    <div class="glass-card rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+          <ListTodo class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          {{ t('dashboard.recent_tasks') }}
+        </h2>
         <RouterLink 
           to="/tasks"
           class="flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors group">

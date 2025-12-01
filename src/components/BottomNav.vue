@@ -16,7 +16,7 @@ const navItems = [
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200/30 dark:border-gray-700/30 pb-safe z-50 md:hidden">
+  <nav class="fixed bottom-0 left-0 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 pb-safe z-50 md:hidden shadow-lg">
     <div class="flex justify-between items-center px-4 py-2 overflow-x-auto no-scrollbar">
       <RouterLink
         v-for="item in navItems"

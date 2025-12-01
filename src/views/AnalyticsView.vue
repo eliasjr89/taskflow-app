@@ -2,6 +2,9 @@
 import { computed } from 'vue';
 import { useTaskState } from '../composables/useTaskState';
 import { TrendingUp, Target, CheckCircle2, Clock, FolderKanban, BarChart2 } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const { tasks, projects } = useTaskState();
 
@@ -76,14 +79,15 @@ const maxDailyTasks = computed(() => {
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
+  <div class="flex-1 p-6 md:p-10 w-full animate-fade-in">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-heading">
-        📊 Estadísticas
+      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+        <span>📊</span>
+        <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('analytics.title') }}</span>
       </h1>
       <p class="text-gray-600 dark:text-gray-400">
-        Analiza tu productividad y progreso
+        {{ t('analytics.subtitle') }}
       </p>
     </div>
 
@@ -96,7 +100,7 @@ const maxDailyTasks = computed(() => {
               <Target class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Tareas</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ t('analytics.total_tasks') }}</p>
           <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ totalTasks }}</p>
         </div>
 
@@ -106,7 +110,7 @@ const maxDailyTasks = computed(() => {
               <CheckCircle2 class="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Completadas</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ t('analytics.completed_tasks') }}</p>
           <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ completedTasks }}</p>
         </div>
 
@@ -116,7 +120,7 @@ const maxDailyTasks = computed(() => {
               <Clock class="w-6 h-6 text-orange-600 dark:text-orange-400" />
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Pendientes</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ t('analytics.pending_tasks') }}</p>
           <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ pendingTasks }}</p>
         </div>
 
@@ -126,7 +130,7 @@ const maxDailyTasks = computed(() => {
               <TrendingUp class="w-6 h-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Tasa de Completitud</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ t('analytics.completion_rate') }}</p>
           <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ completionRate }}%</p>
         </div>
       </div>
@@ -135,7 +139,7 @@ const maxDailyTasks = computed(() => {
       <div class="glass-card rounded-2xl p-8">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
           <BarChart2 class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          Progreso General
+          {{ t('analytics.general_progress') }} 
         </h3>
         <div class="flex flex-col md:flex-row items-center gap-8">
           <!-- Progress Circle -->
@@ -173,7 +177,7 @@ const maxDailyTasks = computed(() => {
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
               <p class="text-4xl font-bold text-gray-900 dark:text-gray-100">{{ completionRate }}%</p>
-              <p class="text-sm text-gray-600 dark:text-gray-400">Completado</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('analytics.completed_tasks') }}</p>
             </div>
           </div>
 
@@ -183,25 +187,25 @@ const maxDailyTasks = computed(() => {
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span class="text-gray-700 dark:text-gray-300">Completadas</span>
+                  <span class="text-gray-700 dark:text-gray-300">{{ t('analytics.completed_tasks') }}</span>
                 </div>
                 <span class="font-semibold text-gray-900 dark:text-gray-100">{{ completedTasks }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <div class="w-3 h-3 rounded-full bg-orange-500"></div>
-                  <span class="text-gray-700 dark:text-gray-300">Pendientes</span>
+                  <span class="text-gray-700 dark:text-gray-300">{{ t('analytics.pending_tasks') }}</span>
                 </div>
                 <span class="font-semibold text-gray-900 dark:text-gray-100">{{ pendingTasks }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <div class="w-3 h-3 rounded-full bg-indigo-500"></div>
-                  <span class="text-gray-700 dark:text-gray-300">Total</span>
+                  <span class="text-gray-700 dark:text-gray-300">{{ t('analytics.total') }}</span>
                 </div>
                 <span class="font-semibold text-gray-900 dark:text-gray-100">{{ totalTasks }}</span>
               </div>
-            </div>
+            </div>  
           </div>
         </div>
       </div>
@@ -210,7 +214,7 @@ const maxDailyTasks = computed(() => {
       <div class="glass-card rounded-2xl p-8">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
           <FolderKanban class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          Tareas por Proyecto
+          {{ t('analytics.tasks_by_project') }}
         </h3>
         <div class="space-y-4">
           <div v-for="item in tasksByProject" :key="item.project.id" class="space-y-2">
@@ -242,7 +246,7 @@ const maxDailyTasks = computed(() => {
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <div class="w-3 h-3 rounded-full bg-gray-400"></div>
-                <span class="font-medium text-gray-900 dark:text-gray-100">Sin Proyecto</span>
+                <span class="font-medium text-gray-900 dark:text-gray-100">{{ t('analytics.without_project') }}</span>
               </div>
               <div class="flex items-center gap-4">
                 <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -262,7 +266,7 @@ const maxDailyTasks = computed(() => {
           </div>
 
           <div v-if="tasksByProject.length === 0 && tasksWithoutProject.total === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
-            No hay tareas para analizar
+            {{ t('analytics.no_tasks_to_analyze') }}
           </div>
         </div>
       </div>
@@ -271,7 +275,7 @@ const maxDailyTasks = computed(() => {
       <div class="glass-card rounded-2xl p-8">
         <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
           <TrendingUp class="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          Actividad Semanal
+          {{ t('analytics.weekly_activity') }}
         </h3>
         <div class="grid grid-cols-7 gap-3">
           <div v-for="day in weeklyActivity" :key="day.date" class="flex flex-col items-center">
@@ -296,7 +300,7 @@ const maxDailyTasks = computed(() => {
         <div class="mt-4 flex items-center justify-center gap-4 text-sm">
           <div class="flex items-center gap-2">
             <div class="w-3 h-3 rounded bg-gradient-to-t from-indigo-500 to-purple-500"></div>
-            <span class="text-gray-600 dark:text-gray-400">Tareas creadas</span>
+            <span class="text-gray-600 dark:text-gray-400">{{ t('analytics.created_tasks') }}</span>
           </div>
         </div>
       </div>

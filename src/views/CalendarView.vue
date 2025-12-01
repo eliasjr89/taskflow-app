@@ -1,8 +1,11 @@
+```vue
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useTaskState } from '../composables/useTaskState';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
+import { useTaskState } from '../composables/useTaskState';
 
+const { t } = useI18n();
 const { tasks } = useTaskState();
 
 // Estado del calendario
@@ -91,7 +94,8 @@ const calendarDays = computed(() => {
 // Obtener tareas para una fecha específica
 function getTasksForDate(date: Date) {
   return tasks.value.filter(task => {
-    const taskDate = new Date(task.createdAt);
+    if (!task.dueDate) return false;
+    const taskDate = new Date(task.dueDate);
     return (
       taskDate.getDate() === date.getDate() &&
       taskDate.getMonth() === date.getMonth() &&
@@ -132,15 +136,16 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full animate-fade-in">
+  <div class="flex-1 p-6 md:p-10 w-full animate-fade-in">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-heading">
-          📅 Calendario
+        <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+          <span>📅</span>
+          <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('calendar.title') }}</span>
         </h1>
         <p class="text-gray-600 dark:text-gray-400">
-          Organiza tus tareas por fecha
+          {{ t('calendar.subtitle') }}
         </p>
       </div>
 
@@ -246,7 +251,7 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
                   {{ selectedDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }) }}
                 </h3>
                 <p class="text-xs text-gray-600 dark:text-gray-400">
-                  {{ selectedDayTasks.length }} tarea{{ selectedDayTasks.length !== 1 ? 's' : '' }}
+                  {{ selectedDayTasks.length }} {{ t('calendar.tasks') }}{{ selectedDayTasks.length !== 1 ? 's' : '' }}
                 </p>
               </div>
             </div>
@@ -280,7 +285,7 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
             <div v-else class="text-center py-8">
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                No hay tareas para este día
+                {{ t('calendar.no_tasks') }}
               </p>
             </div>
           </div>
@@ -288,7 +293,7 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
           <div v-else class="text-center py-12">
             <CalendarIcon class="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-600" />
             <p class="text-sm text-gray-500 dark:text-gray-400">
-              Selecciona un día para ver sus tareas
+              {{ t('calendar.select_day') }}
             </p>
           </div>
         </div>

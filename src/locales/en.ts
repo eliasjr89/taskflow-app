@@ -13,6 +13,7 @@ export default {
     confirm: 'Confirm',
     yes_delete: 'Yes, delete',
     loading: 'Loading...',
+    create: 'Create'
   },
   nav: {
     home: 'Home',
@@ -44,6 +45,11 @@ export default {
     urgent: 'Urgent',
     pending_title: 'Pending Tasks',
     completed_title: 'Completed Tasks',
+    without_project: 'Without Project',
+    without_priority: 'Without Priority',
+    no_completed_tasks: 'No completed tasks',
+    empty_state_title: 'No tasks found',
+    empty_state_msg: 'Create your first task to start managing your daily activities.',
   },
   projects: {
     title: 'Projects',
@@ -64,6 +70,9 @@ export default {
     icon: 'Icon',
     progress: 'Progress',
     tasks_count: '{count} tasks',
+    empty_state_title: 'No projects found',
+    empty_state_msg: 'Create your first project to start organizing your tasks.',
+
   },
   tags: {
     title: 'Tags',
@@ -85,6 +94,13 @@ export default {
     completed_tasks: 'Completed',
     pending_tasks: 'Pending',
     completion_rate: 'Completion Rate',
+    tasks_by_project: 'Tasks by Project',
+    without_project: 'Without Project',
+    weekly_activity: 'Weekly Activity',
+    no_tasks_to_analyze: 'No tasks to analyze',
+    created_tasks: 'Created Tasks',
+    general_progress: 'General Progress',
+    total: 'Total',
   },
   dashboard: {
     title: 'Dashboard',
@@ -110,11 +126,20 @@ export default {
     streak: 'Streak (7 days)',
     preferences: 'Preferences',
     theme: 'Theme',
+    notifications: 'Notifications',
+    coming_soon: 'Coming Soon',
     light_mode: 'Light Mode',
     dark_mode: 'Dark Mode',
     most_productive: 'Most Productive Project',
     tasks_completed: 'tasks completed',
     demo_user: 'Demo User',
     demo_role: 'Full Stack Developer',
+  },
+  calendar: {
+    title: 'Calendar',
+    subtitle: 'Organize your tasks by date',
+    no_tasks: 'No tasks for this day',
+    select_day: 'Select a day to view its tasks',
+    tasks: 'tasks',
   }
 }

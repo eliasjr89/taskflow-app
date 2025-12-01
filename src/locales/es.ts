@@ -44,6 +44,10 @@ export default {
     urgent: 'Urgente',
     pending_title: 'Tareas Pendientes',
     completed_title: 'Tareas Completadas',
+    without_project: 'Sin Proyecto',
+    without_priority: 'Sin Prioridad',
+    no_completed_tasks: 'No hay tareas completadas',
+
   },
   projects: {
     title: 'Proyectos',
@@ -63,6 +67,8 @@ export default {
     icon: 'Icono',
     progress: 'Progreso',
     tasks_count: '{count} tareas',
+    empty_state_title: 'No hay proyectos aún',
+    empty_state_msg: 'Crea tu primer proyecto para organizar tus tareas de manera más eficiente y visual.',
   },
   tags: {
     title: 'Etiquetas',
@@ -84,6 +90,14 @@ export default {
     completed_tasks: 'Completadas',
     pending_tasks: 'Pendientes',
     completion_rate: 'Tasa de Finalización',
+    tasks_by_project: 'Tareas por Proyecto',
+    without_project: 'Sin Proyecto',
+    weekly_activity: 'Actividad Semanal',
+    no_tasks_to_analyze: 'No hay tareas para analizar',
+    created_tasks: 'Tareas creadas',
+    total: 'Total',
+    general_progress: 'Progreso General',
+    
   },
   dashboard: {
     title: 'Panel Principal',
@@ -109,11 +123,20 @@ export default {
     streak: 'Racha (7 días)',
     preferences: 'Preferencias',
     theme: 'Tema',
+    notifications: 'Notificaciones',
+    coming_soon: 'Próximamente',
     light_mode: 'Modo Claro',
     dark_mode: 'Modo Oscuro',
     most_productive: 'Proyecto más productivo',
     tasks_completed: 'tareas completadas',
     demo_user: 'Usuario Demo',
     demo_role: 'Desarrollador Full Stack',
+  },
+  calendar: {
+    title: 'Calendario',
+    subtitle: 'Organiza tus tareas por fecha',
+    no_tasks: 'No hay tareas para este día',
+    select_day: 'Selecciona un día para ver sus tareas',
+    tasks: 'tareas',
   }
 }

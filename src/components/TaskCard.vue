@@ -14,7 +14,9 @@ import {
   Music,
   Trash2,
 } from "lucide-vue-next";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const props = defineProps<{ task: Task }>();
 const emit = defineEmits<{
   (e: "toggle-complete", id: number): void;
@@ -106,9 +108,9 @@ const getPriorityColor = (priority?: string) => {
 
 const getPriorityLabel = (priority?: string) => {
   const labels: Record<string, string> = {
-    low: "Baja",
-    medium: "Media",
-    high: "Alta",
+    low: t("tasks.low"),
+    medium: t("tasks.medium"),
+    high: t("tasks.high"),
   };
   return priority ? labels[priority] || "" : "";
 };
@@ -133,15 +135,8 @@ const formatDueDate = (date?: Date | string) => {
   });
 };
 
-function onToggle() {
-  emit("toggle-complete", props.task.id);
-  if (!props.task.completed) {
-    fireConfetti();
-  }
-}
-
 function onDelete() {
-  emit("delete-task", props.task.id);
+  emit('delete-task', props.task.id);
 }
 
 function startEditing() {
@@ -167,105 +162,119 @@ function cancelEdit() {
   isEditing.value = false;
   editTitle.value = props.task.title;
 }
+
+function toggleComplete() {
+  emit("toggle-complete", props.task.id);
+  if (!props.task.completed) {
+    fireConfetti();
+  }
+}
+
+function handleCardClick() {
+  // Optional: Add a default action for card click if needed,
+  // but ensure it doesn't interfere with checkbox or edit.
+  // For now, it's just a placeholder for the new structure.
+}
 </script>
 
 <template>
   <div
-    class="group relative flex items-center justify-between p-5 rounded-2xl glass-card transition-all duration-300 hover:shadow-lg border border-gray-200/50 dark:border-gray-700/50"
-    :class="{ 'opacity-60': task.completed }">
-    <div class="flex items-center gap-5 flex-1 min-w-0">
-      <div class="relative flex-shrink-0">
+    class="group glass-card rounded-2xl p-6 relative overflow-hidden flex items-center gap-4"
+    :class="{ 'opacity-60': task.completed }"
+    @click="handleCardClick">
+    <!-- Checkbox -->
+    <div class="relative flex-shrink-0">
+      <input
+        type="checkbox"
+        :checked="task.completed"
+        @change="toggleComplete"
+        @click.stop
+        class="peer h-6 w-6 cursor-pointer appearance-none rounded-full border-2 border-indigo-500 bg-white dark:bg-gray-800 transition-all checked:bg-indigo-500 checked:border-indigo-600" />
+      <svg
+        class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        width="14"
+        height="14">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+
+    <div class="flex-1 min-w-0">
+      <div v-if="isEditing" class="flex items-center gap-2">
         <input
-          type="checkbox"
-          :checked="task.completed"
-          @change="onToggle"
-          class="peer h-6 w-6 cursor-pointer appearance-none rounded-full border-2 border-indigo-500 transition-all checked:border-indigo-500 checked:bg-indigo-500 hover:border-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900/30" />
-        <svg
-          class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="3"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          width="14"
-          height="14">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+          ref="titleInput"
+          v-model="editTitle"
+          @blur="saveEdit"
+          @keyup.enter="saveEdit"
+          @keyup.esc="cancelEdit"
+          type="text"
+          class="w-full bg-transparent border-b-2 border-indigo-500 focus:outline-none text-gray-800 dark:text-gray-100 px-1 py-0.5 text-lg" />
+      </div>
+      <h3
+        v-else
+        @dblclick="startEditing"
+        class="text-lg font-medium transition-all duration-300 cursor-text select-none mb-2"
+        :class="[
+          task.completed
+            ? 'text-gray-400 dark:text-gray-500 line-through decoration-2 decoration-indigo-500/30'
+            : 'text-gray-800 dark:text-gray-100',
+        ]">
+        {{ task.title }}
+      </h3>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Project Tag -->
+        <div
+        v-if="project"
+        class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
+        :class="getColorClass(project.color)">
+        <component :is="iconMap[project.icon] || Folder" class="w-3.5 h-3.5" />
+        <span class="truncate max-w-[120px]">{{ project.title }}</span>
       </div>
 
-      <div class="flex-1 min-w-0">
-        <div v-if="isEditing" class="flex items-center gap-2">
-          <input
-            ref="titleInput"
-            v-model="editTitle"
-            @blur="saveEdit"
-            @keyup.enter="saveEdit"
-            @keyup.esc="cancelEdit"
-            type="text"
-            class="w-full bg-transparent border-b-2 border-indigo-500 focus:outline-none text-gray-800 dark:text-gray-100 px-1 py-0.5 text-lg" />
+        <!-- Priority Badge -->
+        <div
+          v-if="task.priority"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+          :class="getPriorityColor(task.priority)">
+          <Flag
+            class="w-3.5 h-3.5"
+            :class="{ 'fill-current': task.priority === 'high' }" />
+          <span>{{ getPriorityLabel(task.priority) }}</span>
         </div>
-        <h3
-          v-else
-          @dblclick="startEditing"
-          class="text-lg font-medium truncate transition-all duration-300 cursor-text select-none"
-          :class="[
-            task.completed
-              ? 'text-gray-400 dark:text-gray-500 line-through decoration-2 decoration-indigo-500/30'
-              : 'text-gray-800 dark:text-gray-100',
-          ]">
-          {{ task.title }}
-        </h3>
 
-        <div class="flex flex-wrap items-center gap-3 mt-2">
-          <!-- Priority Badge -->
-          <div
-            v-if="task.priority"
-            class="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium"
-            :class="getPriorityColor(task.priority)">
-            <Flag
-              class="w-3 h-3"
-              :class="{ 'fill-current': task.priority === 'high' }" />
-            <span>{{ getPriorityLabel(task.priority) }}</span>
-          </div>
-
-          <!-- Due Date Badge -->
-          <div
-            v-if="task.dueDate"
-            class="flex items-center gap-1 text-xs"
-            :class="getDueDateColor(task.dueDate)">
-            <Calendar class="w-3 h-3" />
-            <span>{{ formatDueDate(task.dueDate) }}</span>
-          </div>
-
-          <!-- Project Tag -->
-          <div
-            v-if="project"
-            class="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium transition-colors"
-            :class="getColorClass(project.color)">
-            <component :is="iconMap[project.icon] || Folder" class="w-3 h-3" />
-            <span class="truncate max-w-[100px]">{{ project.title }}</span>
-          </div>
-
-          <!-- Tags -->
-          <div v-if="taskTags.length > 0" class="flex flex-wrap gap-1.5">
-            <span
-              v-for="tag in taskTags"
-              :key="tag?.id"
-              :class="getTagColorClass(tag?.color || 'indigo')"
-              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium">
-              <Hash class="w-3 h-3" />
-              {{ tag?.name }}
-            </span>
-          </div>
-        </div>
-      </div>
+      <!-- Tags -->
+      <div v-if="taskTags.length > 0" class="flex flex-wrap gap-2">
+        <span
+        v-for="tag in taskTags"
+        :key="tag?.id"
+        :class="getTagColorClass(tag?.color || 'indigo')"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium">
+        <Hash class="w-3.5 h-3.5" />
+        {{ tag?.name }}
+      </span>
+    </div>
+    
+    <!-- Due Date Badge -->
+    <div
+      v-if="task.dueDate"
+      class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium"
+      :class="getDueDateColor(task.dueDate)">
+      <Calendar class="w-3.5 h-3.5" />
+      <span>{{ formatDueDate(task.dueDate) }}</span>
+    </div>
+  </div>
     </div>
 
     <button
       @click="onDelete"
-      class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 ml-4"
+      class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100 flex-shrink-0"
       aria-label="Eliminar tarea">
       <Trash2 class="w-5 h-5" />
     </button>

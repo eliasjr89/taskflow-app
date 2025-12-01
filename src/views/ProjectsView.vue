@@ -68,11 +68,12 @@ const getProgressColor = (color: string) => {
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 animate-fade-in">
+  <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading">
-          {{ t('projects.title') }}
+        <h1 class="text-4xl font-bold font-heading flex items-center gap-2">
+          <span>📁</span>
+          <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('projects.title') }}</span>
         </h1>
         <p class="text-gray-600 dark:text-gray-400 text-lg">{{ t('projects.subtitle') }}</p>
       </div>
@@ -142,9 +143,9 @@ const getProgressColor = (color: string) => {
       <div class="mb-6 bg-indigo-50 dark:bg-indigo-900/20 w-20 h-20 mx-auto rounded-full flex items-center justify-center animate-bounce-slow">
         <Folder class="w-10 h-10 text-indigo-500" />
       </div>
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 font-heading">No hay proyectos aún</h3>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 font-heading">{{ t('projects.empty_state_title') }}</h3>
       <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
-        Crea tu primer proyecto para organizar tus tareas de manera más eficiente y visual.
+        {{ t('projects.empty_state_msg') }}
       </p>
       <button 
         @click="isModalOpen = true"

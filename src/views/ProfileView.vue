@@ -84,11 +84,12 @@ const stats = computed(() => [
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 max-w-5xl mx-auto w-full animate-fade-in">
+  <div class="flex-1 p-6 md:p-10 w-full animate-fade-in">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading mb-2">
-        {{ t('profile.title') }}
+      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+        <span>👤</span>
+        <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('profile.title') }}</span>
       </h1>
       <p class="text-gray-600 dark:text-gray-400">
         {{ t('profile.subtitle') }}
@@ -197,10 +198,10 @@ const stats = computed(() => [
               </div>
               <div>
                 <p class="font-medium text-gray-900 dark:text-gray-100">
-                  Tema
+                  {{ t('profile.theme') }}
                 </p>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                  {{ isDark ? 'Modo Oscuro' : 'Modo Claro' }}
+                  {{ isDark ? t('profile.dark_mode') : t('profile.light_mode') }}
                 </p>
               </div>
             </div>
@@ -224,15 +225,15 @@ const stats = computed(() => [
                 </div>
                 <div>
                   <p class="font-medium text-gray-900 dark:text-gray-100">
-                    Notificaciones
+                    {{ t('profile.notifications') }}
                   </p>
                   <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Próximamente
+                    {{ t('profile.coming_soon') }}
                   </p>
                 </div>
               </div>
               <div class="px-3 py-1 text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
-                Próximamente
+                {{ t('profile.coming_soon') }}
               </div>
             </div>
           </div>
