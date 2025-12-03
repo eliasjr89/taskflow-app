@@ -14,7 +14,7 @@ export interface Tag {
   createdAt: Date;
 }
 
-export type Priority = 'low' | 'medium' | 'high';
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface Task {
   id: number;
@@ -25,4 +25,12 @@ export interface Task {
   tags?: string[]; // Array of tag IDs
   priority?: Priority;
   dueDate?: Date;
+  description?: string;
+}
+export interface FilterState {
+  search: string;
+  statuses: ('pending' | 'completed')[];
+  priorities: string[];
+  projectIds: string[];
+  tagIds: string[];
 }

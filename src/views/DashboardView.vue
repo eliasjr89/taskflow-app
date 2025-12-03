@@ -31,7 +31,7 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 w-full animate-fade-in">
+  <div class="flex-1 md:p-10 w-full animate-fade-in">
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">

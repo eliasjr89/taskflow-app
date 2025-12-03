@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useTaskState } from '../composables/useTaskState';
-import { Plus, Folder, Briefcase, Star, Heart, Zap, Coffee, Music, Trash2 } from 'lucide-vue-next';
+import { Plus, Folder, Briefcase, Star, Heart, Zap, Coffee, Music, Trash2, Pencil } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
-import AddProjectModal from '../components/AddProjectModal.vue';
+import ProjectModal from '../components/ProjectModal.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 import type { Project } from '../types/global';
 
 const { t } = useI18n();
-const { projects, addProject, deleteProject, getProjectProgress, getTasksByProject } = useTaskState();
+const { projects, addProject, updateProject, deleteProject, getProjectProgress, getTasksByProject } = useTaskState();
 const isModalOpen = ref(false);
 const projectToDelete = ref<string | null>(null);
+const projectToEdit = ref<Project | null>(null);
 
 import type { Component } from 'vue';
 
@@ -21,6 +22,22 @@ const iconMap: Record<string, Component> = {
 const handleCreateProject = (project: Project) => {
   addProject(project);
   isModalOpen.value = false;
+};
+
+const handleUpdateProject = (project: Project) => {
+  updateProject(project);
+  isModalOpen.value = false;
+  projectToEdit.value = null;
+};
+
+const openEditModal = (project: Project) => {
+  projectToEdit.value = project;
+  isModalOpen.value = true;
+};
+
+const openCreateModal = () => {
+  projectToEdit.value = null;
+  isModalOpen.value = true;
 };
 
 const handleDeleteProject = (id: string) => {
@@ -79,7 +96,7 @@ const getProgressColor = (color: string) => {
       </div>
       
       <button 
-        @click="isModalOpen = true"
+        @click="openCreateModal"
         class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5 cursor-pointer">
         <Plus class="w-5 h-5" />
         {{ t('projects.new_project') }}
@@ -102,11 +119,12 @@ const getProgressColor = (color: string) => {
               <component :is="iconMap[project.icon] || Folder" class="w-8 h-8" :class="getColorClass(project.color)" />
             </div>
             
+            <!-- Edit Button -->
             <button 
-              @click.stop="handleDeleteProject(project.id)"
-              class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-20 cursor-pointer"
-              :title="t('projects.delete_project')">
-              <Trash2 class="w-5 h-5" />
+              @click.stop="openEditModal(project)"
+              class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-20 cursor-pointer"
+              :title="t('common.edit')">
+              <Pencil class="w-5 h-5" />
             </button>
           </div>
 
@@ -130,8 +148,15 @@ const getProgressColor = (color: string) => {
             <div class="flex justify-between items-center pt-2">
               <span class="text-xs text-gray-500 dark:text-gray-400 font-medium px-2.5 py-1 rounded-md bg-gray-100 dark:bg-gray-700/50">
            {{ t('projects.tasks_count', { count: getTasksByProject(project.id).length }) }}
-
               </span>
+              
+              <!-- Delete Button (Moved to bottom right) -->
+              <button 
+                @click.stop="handleDeleteProject(project.id)"
+                class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-20 cursor-pointer"
+                :title="t('projects.delete_project')">
+                <Trash2 class="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
@@ -148,17 +173,19 @@ const getProgressColor = (color: string) => {
         {{ t('projects.empty_state_msg') }}
       </p>
       <button 
-        @click="isModalOpen = true"
+        @click="openCreateModal"
         class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5">
         {{ t('projects.new_project') }}
       </button>
     </div>
 
     <!-- Modal -->
-    <AddProjectModal 
+    <ProjectModal 
       :is-open="isModalOpen"
+      :project="projectToEdit"
       @close="isModalOpen = false"
       @create="handleCreateProject"
+      @update="handleUpdateProject"
     />
 
     <ConfirmationModal

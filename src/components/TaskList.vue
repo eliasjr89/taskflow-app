@@ -9,6 +9,10 @@ const { tasks, selectedTaskId } = defineProps<{
   selectedTaskId?: string | number;
 }>();
 
+defineEmits<{
+  (e: 'select-task', task: Task): void;
+}>();
+
 const { removeTask, toggleTaskCompletion, updateTask } = useTasks();
 
 const taskRefs = ref<HTMLElement[]>([]);
@@ -55,6 +59,7 @@ function handleEditTask(task: Task) {
         @toggle-complete="handleToggleComplete"
         @delete-task="handleDeleteTask"
         @edit-task="handleEditTask"
+        @select-task="$emit('select-task', $event)"
       />
     </div>
   </div>

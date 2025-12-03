@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import TaskList from '../TaskList.vue';
+import { createTestI18n } from './testHelpers';
 import TaskCard from '../TaskCard.vue';
 import type { Task } from '../../types/global';
 
 describe('TaskList', () => {
+  const i18n = createTestI18n();
+
   const mockTasks: Task[] = [
     {
       id: 1,
@@ -35,6 +38,7 @@ describe('TaskList', () => {
         components: {
           TaskCard,
         },
+        plugins: [i18n]
       },
     });
 
@@ -51,6 +55,7 @@ describe('TaskList', () => {
         components: {
           TaskCard,
         },
+        plugins: [i18n]
       },
     });
 
@@ -65,6 +70,9 @@ describe('TaskList', () => {
       props: {
         tasks: [],
       },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     expect(wrapper.exists()).toBe(true);
@@ -75,6 +83,9 @@ describe('TaskList', () => {
       props: {
         tasks: mockTasks,
       },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     const container = wrapper.find('div');
@@ -89,6 +100,9 @@ describe('TaskList', () => {
         tasks: mockTasks,
         selectedTaskId: 1,
       },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     expect(wrapper.exists()).toBe(true);

@@ -57,7 +57,7 @@ const stats = computed(() => [
     textColor: 'text-indigo-600 dark:text-indigo-400'
   },
   {
-    label: t('profile.completed'),
+    label: t('profile.completed_tasks'),
     value: completedTasks.value,
     icon: CheckCircle2,
     color: 'green',
@@ -123,7 +123,7 @@ const stats = computed(() => [
                 {{ totalProjects }} {{ t('nav.projects') }}
               </span>
               <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                {{ completedTasks }} {{ t('profile.completed') }}
+                {{ completedTasks }} {{ t('profile.completed_tasks') }}
               </span>
             </div>
           </div>
@@ -132,8 +132,9 @@ const stats = computed(() => [
 
       <!-- Statistics Grid -->
       <div>
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          📊 {{ t('analytics.title') }}
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+          <span>📊</span>
+          <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('analytics.title') }}</span>
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div

@@ -79,6 +79,13 @@ watch(
 );
 
 export function useTaskState() {
+  function updateProject(updatedProject: Project) {
+    const index = projects.value.findIndex(p => p.id === updatedProject.id);
+    if (index !== -1) {
+      projects.value[index] = updatedProject;
+    }
+  }
+
   return {
     tasks,
     projects,
@@ -86,6 +93,7 @@ export function useTaskState() {
     pendingTasks,
     completedTasks,
     addProject,
+    updateProject,
     deleteProject,
     getProjectProgress,
     getTasksByProject,

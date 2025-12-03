@@ -83,7 +83,7 @@ const maxDailyTasks = computed(() => {
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
-        <span>📊</span>
+        📊
         <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('analytics.title') }}</span>
       </h1>
       <p class="text-gray-600 dark:text-gray-400">

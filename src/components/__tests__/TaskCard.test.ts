@@ -1,19 +1,26 @@
 import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
 import TaskCard from '../TaskCard.vue';
+import { createTestI18n } from './testHelpers';
 import type { Task } from '../../types/global';
 
 describe('TaskCard', () => {
+  const i18n = createTestI18n();
+
   const mockTask: Task = {
     id: 1,
     title: 'Tarea de prueba',
     completed: false,
     createdAt: new Date('2024-01-01T12:00:00'),
+    priority: 'low',
   };
 
   it('debe renderizar la tarea correctamente', () => {
     const wrapper = mount(TaskCard, {
       props: { task: mockTask },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     expect(wrapper.text()).toContain('Tarea de prueba');
@@ -22,6 +29,9 @@ describe('TaskCard', () => {
   it('debe mostrar el checkbox', () => {
     const wrapper = mount(TaskCard, {
       props: { task: mockTask },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     const checkbox = wrapper.find('input[type="checkbox"]');
@@ -32,6 +42,9 @@ describe('TaskCard', () => {
     const completedTask: Task = { ...mockTask, completed: true };
     const wrapper = mount(TaskCard, {
       props: { task: completedTask },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     const checkbox = wrapper.find('input[type="checkbox"]');
@@ -42,6 +55,9 @@ describe('TaskCard', () => {
     const completedTask: Task = { ...mockTask, completed: true };
     const wrapper = mount(TaskCard, {
       props: { task: completedTask },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     const title = wrapper.find('h3');
@@ -51,6 +67,9 @@ describe('TaskCard', () => {
   it('debe mostrar el botón de eliminar', () => {
     const wrapper = mount(TaskCard, {
       props: { task: mockTask },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     const deleteButton = wrapper.find('button');
@@ -60,6 +79,9 @@ describe('TaskCard', () => {
   it('debe mostrar el icono SVG de eliminar', () => {
     const wrapper = mount(TaskCard, {
       props: { task: mockTask },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     const svg = wrapper.find('button svg');
@@ -71,6 +93,9 @@ describe('TaskCard', () => {
       props: {
         task: mockTask,
       },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     // Just check that the component renders with the task
@@ -81,6 +106,9 @@ describe('TaskCard', () => {
   it('debe tener el título con cursor-text para indicar edición', () => {
     const wrapper = mount(TaskCard, {
       props: { task: mockTask },
+      global: {
+        plugins: [i18n]
+      }
     });
 
     const title = wrapper.find('h3');
@@ -90,10 +118,13 @@ describe('TaskCard', () => {
   it('debe aplicar clases de glassmorphism al contenedor', () => {
     const wrapper = mount(TaskCard, {
       props: { task: mockTask },
+      global: {
+        plugins: [i18n]
+      }
     });
 
-    const container = wrapper.find('div');
-    expect(container.classes()).toContain('glass-card');
+    const container = wrapper.find('.glass-card');
+    expect(container.exists()).toBe(true);
     expect(container.classes()).toContain('rounded-2xl');
   });
 });

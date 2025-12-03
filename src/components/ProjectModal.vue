@@ -1,21 +1,44 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { X, Folder, Briefcase, Star, Heart, Zap, Coffee, Music } from 'lucide-vue-next';
 import type { Project } from '../types/global';
 
-defineProps<{
+const props = defineProps<{
   isOpen: boolean;
+  project?: Project | null;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'create', project: Project): void;
+  (e: 'update', project: Project): void;
 }>();
 
 const title = ref('');
 const description = ref('');
 const selectedColor = ref('indigo');
 const selectedIcon = ref('Folder');
+
+// Watch for project prop changes to populate form for editing
+watch(() => props.project, (newProject) => {
+  if (newProject) {
+    title.value = newProject.title;
+    description.value = newProject.description || '';
+    selectedColor.value = newProject.color;
+    selectedIcon.value = newProject.icon;
+  } else {
+    resetForm();
+  }
+}, { immediate: true });
+
+// Watch for isOpen to reset form when closing (if not editing)
+watch(() => props.isOpen, (isOpen) => {
+  if (!isOpen) {
+    // Optional: reset on close?
+  } else if (!props.project) {
+    resetForm();
+  }
+});
 
 const colors = [
   { name: 'indigo', class: 'bg-indigo-500' },
@@ -43,17 +66,30 @@ const icons = [
 const handleSubmit = () => {
   if (!title.value.trim()) return;
 
-  const newProject: Project = {
-    id: crypto.randomUUID(),
-    title: title.value,
-    description: description.value,
-    color: selectedColor.value,
-    icon: selectedIcon.value,
-    createdAt: new Date(),
-  };
-
-  emit('create', newProject);
-  resetForm();
+  if (props.project) {
+    // Update existing project
+    const updatedProject: Project = {
+      ...props.project,
+      title: title.value,
+      description: description.value,
+      color: selectedColor.value,
+      icon: selectedIcon.value,
+    };
+    emit('update', updatedProject);
+  } else {
+    // Create new project
+    const newProject: Project = {
+      id: crypto.randomUUID(),
+      title: title.value,
+      description: description.value,
+      color: selectedColor.value,
+      icon: selectedIcon.value,
+      createdAt: new Date(),
+    };
+    emit('create', newProject);
+  }
+  
+  if (!props.project) resetForm();
 };
 
 const resetForm = () => {
@@ -76,7 +112,9 @@ const resetForm = () => {
     <div class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden animate-scale-in">
       <!-- Header -->
       <div class="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white font-heading">{{ $t('projects.new_project') }}</h3>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white font-heading">
+          {{ project ? $t('projects.edit_project') : $t('projects.new_project') }}
+        </h3>
         <button 
           @click="$emit('close')"
           class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors">
@@ -158,7 +196,7 @@ const resetForm = () => {
           @click="handleSubmit"
           :disabled="!title.trim()"
           class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/30">
-          {{ $t('common.create') }}
+          {{ project ? $t('common.save') : $t('common.create') }}
         </button>
       </div>
     </div>

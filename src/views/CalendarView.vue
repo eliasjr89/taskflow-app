@@ -1,12 +1,15 @@
 ```vue
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, X } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { useTaskState } from '../composables/useTaskState';
+import AddTaskForm from '../components/AddTaskForm.vue';
 
 const { t } = useI18n();
 const { tasks } = useTaskState();
+
+const isTaskModalOpen = ref(false);
 
 // Estado del calendario
 const currentDate = ref(new Date());
@@ -152,6 +155,13 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
       <!-- Navigation -->
       <div class="flex items-center gap-3">
         <button
+          @click="isTaskModalOpen = true"
+          class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all text-sm font-medium shadow-lg shadow-indigo-500/30 flex items-center gap-2">
+          <Plus class="w-4 h-4" />
+          {{ t('common.create') }}
+        </button>
+
+        <button
           @click="goToToday"
           class="px-4 py-2 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all text-sm font-medium text-gray-700 dark:text-gray-300">
           Hoy
@@ -202,15 +212,9 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
               @click="selectDate(day.date)"
               class="aspect-square p-2 rounded-xl transition-all duration-200 relative group"
               :class="[
-                day.isCurrentMonth
-                  ? 'hover:bg-white/50 dark:hover:bg-gray-700/50'
-                  : 'opacity-40',
-                isToday(day.date)
-                  ? 'bg-indigo-100 dark:bg-indigo-900/30 ring-2 ring-indigo-500'
-                  : '',
-                isSelected(day.date)
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'text-gray-900 dark:text-gray-100'
+                day.isCurrentMonth ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-600',
+                isToday(day.date) ? 'bg-white dark:bg-gray-800 border-2 border-indigo-500 dark:border-indigo-400 shadow-lg' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
+                isSelected(day.date) ? 'ring-2 ring-indigo-500 dark:ring-indigo-400' : ''
               ]">
               <div class="flex flex-col items-center justify-center h-full">
                 <span class="text-sm font-medium mb-1">
@@ -297,6 +301,20 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
             </p>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div v-if="isTaskModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="isTaskModalOpen = false"></div>
+      <div class="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 animate-fade-in">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold">{{ t('common.create') }}</h3>
+          <button @click="isTaskModalOpen = false" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+        <AddTaskForm @task-added="isTaskModalOpen = false" />
       </div>
     </div>
   </div>
