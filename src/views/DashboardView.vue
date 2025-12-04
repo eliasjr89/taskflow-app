@@ -12,6 +12,8 @@ import {
   ArrowRight 
 } from 'lucide-vue-next';
 
+import { useAnimatedNumber } from '../composables/useAnimatedNumber';
+
 const { tasks, pendingTasks, completedTasks } = useTaskState();
 const { loadTask } = useTasks();
 const { t } = useI18n();
@@ -26,15 +28,21 @@ const completionRate = computed(() =>
   totalTasks.value > 0 ? Math.round((completedCount.value / totalTasks.value) * 100) : 0
 );
 
+// Animated Stats
+const animatedTotal = useAnimatedNumber(totalTasks);
+const animatedCompleted = useAnimatedNumber(completedCount);
+const animatedPending = useAnimatedNumber(pendingCount);
+const animatedRate = useAnimatedNumber(completionRate);
+
 // Tareas recientes (últimas 5)
 const recentTasks = computed(() => tasks.value.slice(0, 5));
 </script>
 
 <template>
-  <div class="flex-1 md:p-10 w-full animate-fade-in">
+  <div class="flex-1 md:p-0 w-full animate-fade-in">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+    <div class="mb-8 text-center md:text-left">
+      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
         <span>🏠</span>
         <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('dashboard.title') }}</span>
       </h1>
@@ -50,7 +58,9 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.total_tasks') }}</p>
-            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2 font-heading">{{ totalTasks }}</p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2 font-heading">
+              {{ animatedTotal }}
+            </p>
           </div>
           <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl group-hover:scale-110 transition-transform duration-300">
             <ListTodo class="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
@@ -63,7 +73,9 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.completed') }}</p>
-            <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2 font-heading">{{ completedCount }}</p>
+            <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2 font-heading">
+              {{ animatedCompleted }}
+            </p>
           </div>
           <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl group-hover:scale-110 transition-transform duration-300">
             <CheckCircle2 class="w-8 h-8 text-green-600 dark:text-green-400" />
@@ -76,7 +88,9 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.pending') }}</p>
-            <p class="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-2 font-heading">{{ pendingCount }}</p>
+            <p class="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-2 font-heading">
+              {{ animatedPending }}
+            </p>
           </div>
           <div class="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl group-hover:scale-110 transition-transform duration-300">
             <Clock class="w-8 h-8 text-amber-600 dark:text-amber-400" />
@@ -89,7 +103,9 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ t('dashboard.success_rate') }}</p>
-            <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2 font-heading">{{ completionRate }}%</p>
+            <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2 font-heading">
+              {{ animatedRate }}%
+            </p>
           </div>
           <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl group-hover:scale-110 transition-transform duration-300">
             <Target class="w-8 h-8 text-purple-600 dark:text-purple-400" />
@@ -106,8 +122,8 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
       </h2>
       <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
         <div 
-          class="bg-gradient-to-r from-indigo-600 to-purple-600 h-4 rounded-full transition-all duration-1000 ease-out relative"
-          :style="{ width: `${completionRate}%` }">
+          class="bg-gradient-to-r from-indigo-600 to-purple-600 h-4 rounded-full transition-all duration-100 ease-out relative"
+          :style="{ width: `${animatedRate}%` }">
           <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
         </div>
       </div>

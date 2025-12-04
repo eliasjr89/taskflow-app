@@ -5,6 +5,8 @@ import { useTheme } from '../composables/usThemes';
 import { useI18n } from 'vue-i18n';
 import { User, CheckCircle2, Target, TrendingUp, Zap, Moon, Sun } from 'lucide-vue-next';
 
+import CountUp from '../components/CountUp.vue';
+
 const { tasks, projects } = useTaskState();
 const { isDark, toggleTheme } = useTheme();
 const { t } = useI18n();
@@ -66,7 +68,8 @@ const stats = computed(() => [
   },
   {
     label: t('profile.completion_rate'),
-    value: `${completionRate.value}%`,
+    value: completionRate.value,
+    suffix: '%',
     icon: TrendingUp,
     color: 'purple',
     bgColor: 'bg-purple-100 dark:bg-purple-900/30',
@@ -84,10 +87,10 @@ const stats = computed(() => [
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 w-full animate-fade-in">
+  <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+    <div class="mb-8 text-center md:text-left">
+      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
         <span>👤</span>
         <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('profile.title') }}</span>
       </h1>
@@ -150,7 +153,7 @@ const stats = computed(() => [
               {{ stat.label }}
             </p>
             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              {{ stat.value }}
+              <CountUp :to="stat.value" />{{ stat.suffix || '' }}
             </p>
           </div>
         </div>

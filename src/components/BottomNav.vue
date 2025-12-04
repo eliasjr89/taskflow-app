@@ -16,7 +16,7 @@ const navItems = [
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 pb-safe z-50 md:hidden shadow-lg">
+  <nav class="fixed bottom-0 left-0 w-full bg-white/20 dark:bg-gray-900/60 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 pb-safe z-50 md:hidden shadow-lg">
     <div class="flex justify-between items-center px-4 py-2 overflow-x-auto no-scrollbar">
       <RouterLink
         v-for="item in navItems"
@@ -28,7 +28,7 @@ const navItems = [
         <!-- Active Indicator -->
         <div 
           v-if="route.path === item.path"
-          class="absolute -top-2 w-8 h-1 bg-indigo-600 dark:bg-indigo-400 rounded-b-full shadow-[0_0_10px_rgba(99,102,241,0.5)]">
+          class="absolute -top-2 w-8 h-1 bg-indigo-600 dark:bg-indigo-400 rounded-b-full shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all duration-500 ease-out animate-slide-down">
         </div>
 
         <!-- Icons -->
@@ -47,5 +47,20 @@ const navItems = [
 <style scoped>
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
 }
 </style>

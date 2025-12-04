@@ -76,11 +76,11 @@ describe('TasksView', () => {
     expect(hasTaskContainer).toBe(true);
   });
 
-  it('debe tener filtros de tareas (Todas, Pendientes, Completadas)', async () => {
+  it('debe tener filtros de tareas (Pendientes, Completadas)', async () => {
     const wrapper = await mountView();
     const text = wrapper.text();
     
-    expect(text).toContain('Todas');
+    // The new UI has checkbox filters for "Pendientes" and "Completadas" in the Sidebar
     expect(text).toContain('Pendientes');
     expect(text).toContain('Completadas');
   });

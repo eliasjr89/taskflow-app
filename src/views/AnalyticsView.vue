@@ -4,9 +4,20 @@ import { useTaskState } from '../composables/useTaskState';
 import { TrendingUp, Target, CheckCircle2, Clock, FolderKanban, BarChart2 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
+import CountUp from '../components/CountUp.vue';
+import { useAnimatedNumber } from '../composables/useAnimatedNumber';
+import { ref, onMounted } from 'vue';
+
 const { t } = useI18n();
 
 const { tasks, projects } = useTaskState();
+const isMounted = ref(false);
+
+onMounted(() => {
+  setTimeout(() => {
+    isMounted.value = true;
+  }, 100);
+});
 
 // Estadísticas generales
 const totalTasks = computed(() => tasks.value.length);
@@ -17,17 +28,25 @@ const completionRate = computed(() => {
   return Math.round((completedTasks.value / totalTasks.value) * 100);
 });
 
+// Animated Stats
+const animatedTotal = useAnimatedNumber(totalTasks);
+const animatedCompleted = useAnimatedNumber(completedTasks);
+const animatedPending = useAnimatedNumber(pendingTasks);
+const animatedRate = useAnimatedNumber(completionRate);
+
 // Tareas por proyecto
 const tasksByProject = computed(() => {
   return projects.value.map(project => {
     const projectTasks = tasks.value.filter(t => t.projectId === project.id);
     const completed = projectTasks.filter(t => t.completed).length;
+    const percentage = projectTasks.length > 0 ? Math.round((completed / projectTasks.length) * 100) : 0;
+    
     return {
       project,
       total: projectTasks.length,
       completed,
       pending: projectTasks.length - completed,
-      percentage: projectTasks.length > 0 ? Math.round((completed / projectTasks.length) * 100) : 0
+      percentage,
     };
   }).filter(p => p.total > 0).sort((a, b) => b.percentage - a.percentage);
 });
@@ -79,10 +98,10 @@ const maxDailyTasks = computed(() => {
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 w-full animate-fade-in">
+  <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+    <div class="mb-8 text-center md:text-left">
+      <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
         📊
         <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('analytics.title') }}</span>
       </h1>
@@ -101,7 +120,7 @@ const maxDailyTasks = computed(() => {
             </div>
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ t('analytics.total_tasks') }}</p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ totalTasks }}</p>
+          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ animatedTotal }}</p>
         </div>
 
         <div class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
@@ -111,7 +130,7 @@ const maxDailyTasks = computed(() => {
             </div>
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ t('analytics.completed_tasks') }}</p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ completedTasks }}</p>
+          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ animatedCompleted }}</p>
         </div>
 
         <div class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
@@ -121,7 +140,7 @@ const maxDailyTasks = computed(() => {
             </div>
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ t('analytics.pending_tasks') }}</p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ pendingTasks }}</p>
+          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ animatedPending }}</p>
         </div>
 
         <div class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
@@ -131,7 +150,7 @@ const maxDailyTasks = computed(() => {
             </div>
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ t('analytics.completion_rate') }}</p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ completionRate }}%</p>
+          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ animatedRate }}%</p>
         </div>
       </div>
 
@@ -164,7 +183,7 @@ const maxDailyTasks = computed(() => {
                 stroke="url(#gradient)"
                 stroke-width="16"
                 stroke-linecap="round"
-                :stroke-dasharray="`${(completionRate * 534.07) / 100} 534.07`"
+                :stroke-dasharray="`${(animatedRate * 534.07) / 100} 534.07`"
                 class="transition-all duration-1000 ease-out"
               />
               <!-- Gradient definition -->
@@ -176,7 +195,7 @@ const maxDailyTasks = computed(() => {
               </defs>
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <p class="text-4xl font-bold text-gray-900 dark:text-gray-100">{{ completionRate }}%</p>
+              <p class="text-4xl font-bold text-gray-900 dark:text-gray-100">{{ animatedRate }}%</p>
               <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('analytics.completed_tasks') }}</p>
             </div>
           </div>
@@ -189,21 +208,21 @@ const maxDailyTasks = computed(() => {
                   <div class="w-3 h-3 rounded-full bg-green-500"></div>
                   <span class="text-gray-700 dark:text-gray-300">{{ t('analytics.completed_tasks') }}</span>
                 </div>
-                <span class="font-semibold text-gray-900 dark:text-gray-100">{{ completedTasks }}</span>
+                <span class="font-semibold text-gray-900 dark:text-gray-100">{{ animatedCompleted }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <div class="w-3 h-3 rounded-full bg-orange-500"></div>
                   <span class="text-gray-700 dark:text-gray-300">{{ t('analytics.pending_tasks') }}</span>
                 </div>
-                <span class="font-semibold text-gray-900 dark:text-gray-100">{{ pendingTasks }}</span>
+                <span class="font-semibold text-gray-900 dark:text-gray-100">{{ animatedPending }}</span>
               </div>
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <div class="w-3 h-3 rounded-full bg-indigo-500"></div>
                   <span class="text-gray-700 dark:text-gray-300">{{ t('analytics.total') }}</span>
                 </div>
-                <span class="font-semibold text-gray-900 dark:text-gray-100">{{ totalTasks }}</span>
+                <span class="font-semibold text-gray-900 dark:text-gray-100">{{ animatedTotal }}</span>
               </div>
             </div>  
           </div>
@@ -228,15 +247,15 @@ const maxDailyTasks = computed(() => {
                   {{ item.completed }}/{{ item.total }}
                 </span>
                 <span class="text-sm font-semibold text-gray-900 dark:text-gray-100 min-w-[3rem] text-right">
-                  {{ item.percentage }}%
+                  <CountUp :to="item.percentage" />%
                 </span>
               </div>
             </div>
             <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
-                class="h-full rounded-full transition-all duration-500"
+                class="h-full rounded-full transition-all duration-1000 ease-out"
                 :class="`bg-${item.project.color}-500`"
-                :style="{ width: `${item.percentage}%` }">
+                :style="{ width: isMounted ? `${item.percentage}%` : '0%' }">
               </div>
             </div>
           </div>
@@ -253,14 +272,14 @@ const maxDailyTasks = computed(() => {
                   {{ tasksWithoutProject.completed }}/{{ tasksWithoutProject.total }}
                 </span>
                 <span class="text-sm font-semibold text-gray-900 dark:text-gray-100 min-w-[3rem] text-right">
-                  {{ tasksWithoutProject.percentage }}%
+                  <CountUp :to="tasksWithoutProject.percentage" />%
                 </span>
               </div>
             </div>
             <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
-                class="h-full bg-gray-400 rounded-full transition-all duration-500"
-                :style="{ width: `${tasksWithoutProject.percentage}%` }">
+                class="h-full bg-gray-400 rounded-full transition-all duration-1000 ease-out"
+                :style="{ width: isMounted ? `${tasksWithoutProject.percentage}%` : '0%' }">
               </div>
             </div>
           </div>
@@ -285,8 +304,8 @@ const maxDailyTasks = computed(() => {
             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden h-32 flex flex-col-reverse p-1">
               <div
                 v-if="day.created > 0"
-                class="w-full bg-gradient-to-t from-indigo-500 to-purple-500 rounded transition-all duration-500"
-                :style="{ height: `${(day.created / maxDailyTasks) * 100}%` }">
+                class="w-full bg-gradient-to-t from-indigo-500 to-purple-500 rounded transition-all duration-1000 ease-out"
+                :style="{ height: isMounted ? `${(day.created / maxDailyTasks) * 100}%` : '0%' }">
               </div>
             </div>
             <div class="text-xs font-semibold text-gray-900 dark:text-gray-100 mt-2">

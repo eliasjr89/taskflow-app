@@ -79,11 +79,11 @@ const getColorClass = (color: string) => {
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 py-6 md:py-10 animate-fade-in">
+  <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+    <div class="flex flex-col md:flex-row items-center md:justify-between gap-4 mb-8 text-center md:text-left">
+      <div class="flex flex-col items-center md:items-start">
+        <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
           <span>🏷️</span>
           <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ $t('tags.title') }}</span>
         </h1>

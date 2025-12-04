@@ -139,11 +139,11 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 </script>
 
 <template>
-  <div class="flex-1 p-6 md:p-10 w-full animate-fade-in">
+  <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-      <div>
-        <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center gap-2">
+    <div class="flex flex-col md:flex-row items-center md:justify-between gap-4 mb-8 text-center md:text-left">
+      <div class="flex flex-col items-center md:items-start">
+        <h1 class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
           <span>📅</span>
           <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('calendar.title') }}</span>
         </h1>
@@ -158,7 +158,7 @@ const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
           @click="isTaskModalOpen = true"
           class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all text-sm font-medium shadow-lg shadow-indigo-500/30 flex items-center gap-2">
           <Plus class="w-4 h-4" />
-          {{ t('common.create') }}
+          {{ t('tasks.add_task') }}
         </button>
 
         <button

@@ -16,6 +16,7 @@ export default {
     create: 'Create',
     clear: 'Clear',
     filters: 'Filters',
+    apply: 'Apply',
   },
   nav: {
     home: 'Home',

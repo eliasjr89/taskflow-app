@@ -13,7 +13,7 @@ const toggleLanguage = () => {
 
 <template>
   <nav
-    class="flex justify-center gap-4 items-center px-6 py-4 bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-sm">
+    class="flex justify-center gap-4 items-center px-6 py-4 bg-white/20 dark:bg-gray-900/60 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-700/20 sticky top-0 z-10 shadow-sm">
     <h1 class="text-3xl font-bold text-gray-900 dark:bg-gradient-to-r dark:from-indigo-400 dark:to-purple-400 dark:bg-clip-text dark:text-transparent font-heading whitespace-nowrap mr-auto">
       TaskFlow
     </h1>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { X, Folder, Briefcase, Star, Heart, Zap, Coffee, Music } from 'lucide-vue-next';
+import { X, Folder, Briefcase, Star, Heart, Zap, Coffee, Music, Book, Camera, Bell, Gift, Globe, Home } from 'lucide-vue-next';
 import type { Project } from '../types/global';
 
 const props = defineProps<{
@@ -18,6 +18,14 @@ const title = ref('');
 const description = ref('');
 const selectedColor = ref('indigo');
 const selectedIcon = ref('Folder');
+
+// Define resetForm before using it in watch
+const resetForm = () => {
+  title.value = '';
+  description.value = '';
+  selectedColor.value = 'indigo';
+  selectedIcon.value = 'Folder';
+};
 
 // Watch for project prop changes to populate form for editing
 watch(() => props.project, (newProject) => {
@@ -51,6 +59,11 @@ const colors = [
   { name: 'teal', class: 'bg-teal-500' },
   { name: 'cyan', class: 'bg-cyan-500' },
   { name: 'blue', class: 'bg-blue-500' },
+  { name: 'lime', class: 'bg-lime-500' },
+  { name: 'emerald', class: 'bg-emerald-500' },
+  { name: 'fuchsia', class: 'bg-fuchsia-500' },
+  { name: 'sky', class: 'bg-sky-500' },
+  { name: 'violet', class: 'bg-violet-500' },
 ];
 
 const icons = [
@@ -61,7 +74,14 @@ const icons = [
   { name: 'Zap', component: Zap },
   { name: 'Coffee', component: Coffee },
   { name: 'Music', component: Music },
+  { name: 'Book', component: Book },
+  { name: 'Camera', component: Camera },
+  { name: 'Bell', component: Bell },
+  { name: 'Gift', component: Gift },
+  { name: 'Globe', component: Globe },
+  { name: 'Home', component: Home },
 ];
+
 
 const handleSubmit = () => {
   if (!title.value.trim()) return;
@@ -90,13 +110,6 @@ const handleSubmit = () => {
   }
   
   if (!props.project) resetForm();
-};
-
-const resetForm = () => {
-  title.value = '';
-  description.value = '';
-  selectedColor.value = 'indigo';
-  selectedIcon.value = 'Folder';
 };
 </script>
 

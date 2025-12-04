@@ -107,34 +107,44 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
       @selectTask="handleSelectTask" />
 
     <!-- Mobile Filter Drawer -->
-    <div 
-      v-if="isMobileFiltersOpen" 
-      class="fixed inset-0 z-50 md:hidden"
-    >
-      <!-- Backdrop -->
+    <Transition name="drawer">
       <div 
-        class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        @click="isMobileFiltersOpen = false"
-      ></div>
-      
-      <!-- Drawer -->
-      <div class="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white dark:bg-gray-900 shadow-2xl transform transition-transform duration-300 ease-out">
-        <Sidebar
-          :tasks="tasks"
-          :mobile="true"
-          :show-search="false"
-          :deferred="true"
-          @update:filters="handleFilterUpdate"
-          @selectTask="handleSelectTask"
-          @close="isMobileFiltersOpen = false"
-        />
+        v-if="isMobileFiltersOpen" 
+        class="fixed inset-0 z-[100] md:hidden"
+      >
+        <!-- Full-Screen Glass Backdrop -->
+        <Transition name="fade">
+          <div 
+            v-if="isMobileFiltersOpen"
+            class="absolute inset-0 transition-all duration-300"
+            @click="isMobileFiltersOpen = false"
+          ></div>
+        </Transition>
+        
+        <!-- Drawer with Auto Height -->
+        <Transition name="slide">
+          <div 
+            v-if="isMobileFiltersOpen"
+            class="absolute right-0 top-0 w-[85%] max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden h-auto z-10"
+          >
+            <Sidebar
+              :tasks="tasks"
+              :mobile="true"
+              :show-search="false"
+              :deferred="true"
+              @update:filters="handleFilterUpdate"
+              @selectTask="handleSelectTask"
+              @close="isMobileFiltersOpen = false"
+            />
+          </div>
+        </Transition>
       </div>
-    </div>
+    </Transition>
     
     <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8">
       <!-- Header -->
-      <div class="flex flex-col gap-2 mb-6">
-        <h1 class="text-3xl md:text-4xl font-bold font-heading flex items-center gap-2">
+      <div class="flex flex-col gap-2 mb-6 text-center md:text-left">
+        <h1 class="text-3xl md:text-4xl font-bold font-heading flex items-center justify-center md:justify-start gap-2">
           📝
           <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('tasks.title') }}</span>
         </h1>
@@ -217,5 +227,41 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Drawer slide animation */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-enter-from {
+  transform: translateX(100%);
+}
+
+.slide-leave-to {
+  transform: translateX(100%);
+}
+
+/* Backdrop fade animation */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Drawer wrapper animation */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.drawer-enter-from,
+.drawer-leave-to {
+  opacity: 0;
 }
 </style>

@@ -137,24 +137,25 @@ const priorities = [
   {
     value: "low",
     label: t('tasks.low'),
-    color: "text-blue-500 bg-blue-100 dark:bg-blue-900/30",
+    color: "text-green-500 bg-green-100 dark:bg-green-900/30",
   },
   {
     value: "medium",
     label: t('tasks.medium'),
-    color: "text-orange-500 bg-orange-100 dark:bg-orange-900/30",
+    color: "text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30",
   },
   {
     value: "high",
     label: t('tasks.high'),
-    color: "text-red-500 bg-red-100 dark:bg-red-900/30",
+    color: "text-orange-500 bg-orange-100 dark:bg-orange-900/30",
   },
   {
     value: "urgent",
     label: t('tasks.urgent'),
-    color: "text-rose-500 bg-rose-100 dark:bg-rose-900/30",
+    color: "text-red-500 bg-red-100 dark:bg-red-900/30",
   },
 ];
+
 
 function getPriorityColor(priority: string) {
   const p = priorities.find((p) => p.value === priority);

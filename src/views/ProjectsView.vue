@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import CountUp from '../components/CountUp.vue';
+import { ref, onMounted } from 'vue';
 import { useTaskState } from '../composables/useTaskState';
 import { Plus, Folder, Briefcase, Star, Heart, Zap, Coffee, Music, Trash2, Pencil } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
@@ -12,6 +13,13 @@ const { projects, addProject, updateProject, deleteProject, getProjectProgress, 
 const isModalOpen = ref(false);
 const projectToDelete = ref<string | null>(null);
 const projectToEdit = ref<Project | null>(null);
+const isMounted = ref(false);
+
+onMounted(() => {
+  setTimeout(() => {
+    isMounted.value = true;
+  }, 100);
+});
 
 import type { Component } from 'vue';
 
@@ -86,8 +94,8 @@ const getProgressColor = (color: string) => {
 
 <template>
   <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-      <div>
+    <div class="flex flex-col md:flex-row items-center md:justify-between gap-4 mb-8 text-center md:text-left">
+      <div class="flex flex-col items-center md:items-start">
         <h1 class="text-4xl font-bold font-heading flex items-center gap-2">
           <span>📁</span>
           <span class="bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{{ t('projects.title') }}</span>
@@ -119,38 +127,43 @@ const getProgressColor = (color: string) => {
               <component :is="iconMap[project.icon] || Folder" class="w-8 h-8" :class="getColorClass(project.color)" />
             </div>
             
-            <!-- Edit Button -->
-            <button 
-              @click.stop="openEditModal(project)"
-              class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-20 cursor-pointer"
-              :title="t('common.edit')">
-              <Pencil class="w-5 h-5" />
-            </button>
           </div>
-
+          
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ project.title }}</h3>
           <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-2 h-10">
             {{ project.description }}
           </p>
-
+          
           <div class="space-y-3">
             <div class="flex justify-between text-sm font-medium">
               <span class="text-gray-600 dark:text-gray-300">{{ t('projects.progress') }}</span>
-              <span class="text-indigo-600 dark:text-indigo-400">{{ getProjectProgress(project.id) }}%</span>
+              <span class="text-indigo-600 dark:text-indigo-400">
+                <CountUp :to="getProjectProgress(project.id)" />%
+              </span>
             </div>
             <div class="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
               <div 
-                class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
-                :class="getProgressColor(project.color)"
-                :style="{ width: `${getProjectProgress(project.id)}%` }">
-              </div>
+              class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out"
+              :class="getProgressColor(project.color)"
+              :style="{ width: isMounted ? `${getProjectProgress(project.id)}%` : '0%' }">
             </div>
-            <div class="flex justify-between items-center pt-2">
-              <span class="text-xs text-gray-500 dark:text-gray-400 font-medium px-2.5 py-1 rounded-md bg-gray-100 dark:bg-gray-700/50">
-           {{ t('projects.tasks_count', { count: getTasksByProject(project.id).length }) }}
-              </span>
+          </div>
+          <div class="flex justify-between items-center pt-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium px-2.5 py-1 rounded-md bg-gray-100 dark:bg-gray-700/50">
+              {{ t('projects.tasks_count', { count: getTasksByProject(project.id).length }) }}
+            </span>
+            
+            <!-- Edit & Delete Buttons Container -->
+            <div class="flex items-center gap-1">
+              <!-- Edit Button -->
+              <button 
+                @click.stop="openEditModal(project)"
+                class="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-20 cursor-pointer"
+                :title="t('common.edit')">
+                <Pencil class="w-5 h-5" />
+              </button>
               
-              <!-- Delete Button (Moved to bottom right) -->
+              <!-- Delete Button -->
               <button 
                 @click.stop="handleDeleteProject(project.id)"
                 class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-20 cursor-pointer"
@@ -158,6 +171,7 @@ const getProgressColor = (color: string) => {
                 <Trash2 class="w-5 h-5" />
               </button>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -187,7 +201,7 @@ const getProgressColor = (color: string) => {
       @create="handleCreateProject"
       @update="handleUpdateProject"
     />
-
+    
     <ConfirmationModal
       :is-open="!!projectToDelete"
       :title="t('projects.delete_confirm_title')"

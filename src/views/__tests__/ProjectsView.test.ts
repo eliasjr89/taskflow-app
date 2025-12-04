@@ -37,7 +37,7 @@ describe('ProjectsView', () => {
       global: {
         plugins: [i18n],
         stubs: {
-          AddProjectModal: true,
+          ProjectModal: true,
           ConfirmationModal: true,
         },
       },
@@ -74,7 +74,7 @@ describe('ProjectsView', () => {
     await newButton?.trigger('click');
     await flushPromises();
     
-    const modal = wrapper.findComponent({ name: 'AddProjectModal' });
+    const modal = wrapper.findComponent({ name: 'ProjectModal' });
     expect(modal.props('isOpen')).toBe(true);
   });
 
