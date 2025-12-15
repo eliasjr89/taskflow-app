@@ -44,10 +44,10 @@ const iconMap: Record<string, any> = {
   Music,
 };
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!newTask.value.trim()) return;
 
-  addTask(
+  const success = await addTask(
     newTask.value.trim(),
     selectedProjectId.value,
     selectedTags.value.length > 0 ? selectedTags.value : undefined,
@@ -55,15 +55,17 @@ const handleSubmit = () => {
     selectedDueDate.value ? new Date(selectedDueDate.value) : undefined
   );
 
-  newTask.value = "";
-  selectedProjectId.value = undefined;
-  selectedTags.value = [];
-  selectedPriority.value = undefined;
-  selectedDueDate.value = new Date().toISOString();
-  isDropdownOpen.value = false;
-  isTagDropdownOpen.value = false;
-  isPriorityDropdownOpen.value = false;
-}
+  if (success) {
+    newTask.value = "";
+    selectedProjectId.value = undefined;
+    selectedTags.value = [];
+    selectedPriority.value = undefined;
+    selectedDueDate.value = new Date().toISOString();
+    isDropdownOpen.value = false;
+    isTagDropdownOpen.value = false;
+    isPriorityDropdownOpen.value = false;
+  }
+};
 
 function toggleDropdown() {
   isDropdownOpen.value = !isDropdownOpen.value;
@@ -130,32 +132,34 @@ const getTagColorClass = (color: string): string => {
     cyan: "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300",
     blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
   };
-  return colorMap[color] || 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300';
+  return (
+    colorMap[color] ||
+    "bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300"
+  );
 };
 
 const priorities = [
   {
     value: "low",
-    label: t('tasks.low'),
+    label: t("tasks.low"),
     color: "text-green-500 bg-green-100 dark:bg-green-900/30",
   },
   {
     value: "medium",
-    label: t('tasks.medium'),
+    label: t("tasks.medium"),
     color: "text-yellow-500 bg-yellow-100 dark:bg-yellow-900/30",
   },
   {
     value: "high",
-    label: t('tasks.high'),
+    label: t("tasks.high"),
     color: "text-orange-500 bg-orange-100 dark:bg-orange-900/30",
   },
   {
     value: "urgent",
-    label: t('tasks.urgent'),
+    label: t("tasks.urgent"),
     color: "text-red-500 bg-red-100 dark:bg-red-900/30",
   },
 ];
-
 
 function getPriorityColor(priority: string) {
   const p = priorities.find((p) => p.value === priority);
@@ -164,7 +168,7 @@ function getPriorityColor(priority: string) {
 
 function getPriorityLabel(priority: string) {
   const p = priorities.find((p) => p.value === priority);
-  return p ? p.label : t('tasks.priority');
+  return p ? p.label : t("tasks.priority");
 }
 </script>
 
@@ -177,52 +181,52 @@ function getPriorityLabel(priority: string) {
       <!-- Row 1: Selectors -->
       <div class="flex flex-wrap items-center gap-2 w-full">
         <!-- Project Selector -->
-        <div class="relative flex-shrink-0">
-        <button
-          type="button"
-          @click="toggleDropdown"
-          class="px-4 py-3 rounded-xl border border-gray-200/50 shadow-lg dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[140px]"
-          :class="[
+        <div class="relative shrink-0">
+          <button
+            type="button"
+            @click="toggleDropdown"
+            class="px-4 py-3 rounded-xl border border-gray-200/50 shadow-lg dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[140px]"
+            :class="[
             getSelectedProject() ? getColorClass(getSelectedProject()!.color) : 'text-gray-500 dark:text-gray-400'
           ]">
-          <template v-if="getSelectedProject()">
-            <component
-              :is="iconMap[getSelectedProject()!.icon] || Folder"
-              class="w-4 h-4" />
-            <span
-              class="text-sm font-medium truncate flex-1 text-left">
-              {{ getSelectedProject()!.title }}
-            </span>
-          </template>
-          <template v-else>
-            <Folder class="w-4 h-4 flex-shrink-0" />
-            <span class="text-sm font-medium flex-1 text-left whitespace-nowrap"
-              >{{ t('tasks.project') }}</span
-            >
-          </template>
-          <ChevronDown class="w-4 h-4 opacity-50 flex-shrink-0" />
-        </button>
+            <template v-if="getSelectedProject()">
+              <component
+                :is="iconMap[getSelectedProject()!.icon] || Folder"
+                class="w-4 h-4" />
+              <span class="text-sm font-medium truncate flex-1 text-left">
+                {{ getSelectedProject()!.title }}
+              </span>
+            </template>
+            <template v-else>
+              <Folder class="w-4 h-4 shrink-0" />
+              <span
+                class="text-sm font-medium flex-1 text-left whitespace-nowrap"
+                >{{ t("tasks.project") }}</span
+              >
+            </template>
+            <ChevronDown class="w-4 h-4 opacity-50 shrink-0" />
+          </button>
 
-        <!-- Dropdown Menu - Opens DOWNWARD -->
-        <div
-          v-if="isDropdownOpen"
-          class="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-[10000] animate-fade-in">
-          <div class="p-2 space-y-1 max-h-60 overflow-y-auto">
-            <button
-              type="button"
-              @click="selectProject(undefined)"
-              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
-              <div
-                class="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-500 flex-shrink-0">
+          <!-- Dropdown Menu - Opens DOWNWARD -->
+          <div
+            v-if="isDropdownOpen"
+            class="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-10000 animate-fade-in">
+            <div class="p-2 space-y-1 max-h-60 overflow-y-auto">
+              <button
+                type="button"
+                @click="selectProject(undefined)"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
+                <div
+                  class="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-500 shrink-0">
                   <Folder class="w-4 h-4" />
                 </div>
                 <span
                   class="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1"
-                  >{{ t('tasks.without_project') }}</span
+                  >{{ t("tasks.without_project") }}</span
                 >
                 <div
                   v-if="!selectedProjectId"
-                  class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></div>
+                  class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></div>
               </button>
 
               <button
@@ -232,7 +236,7 @@ function getPriorityLabel(priority: string) {
                 @click="selectProject(project.id)"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
                 <div
-                  class="p-1.5 rounded-md flex-shrink-0"
+                  class="p-1.5 rounded-md shrink-0"
                   :class="getColorClass(project.color)">
                   <component
                     :is="iconMap[project.icon] || Folder"
@@ -244,16 +248,14 @@ function getPriorityLabel(priority: string) {
                 >
                 <div
                   v-if="selectedProjectId === project.id"
-                  class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></div>
+                  class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></div>
               </button>
             </div>
           </div>
         </div>
 
         <!-- Tag Selector -->
-        <div
-          v-if="tags.length > 0"
-          class="relative flex-shrink-0">
+        <div v-if="tags.length > 0" class="relative shrink-0">
           <button
             type="button"
             @click="toggleTagDropdown"
@@ -261,23 +263,24 @@ function getPriorityLabel(priority: string) {
             :class="
               selectedTags.length > 0 ? '' : 'text-gray-500 dark:text-gray-400'
             ">
-            <Hash class="w-4 h-4 flex-shrink-0" />
-            <span class="text-sm font-medium flex-1 text-left whitespace-nowrap">
-              {{  
+            <Hash class="w-4 h-4 shrink-0" />
+            <span
+              class="text-sm font-medium flex-1 text-left whitespace-nowrap">
+              {{
                 selectedTags.length > 0
-                  ? `${selectedTags.length} ${t('tasks.tags')}${
+                  ? `${selectedTags.length} ${t("tasks.tags")}${
                       selectedTags.length > 1 ? "s" : ""
                     }`
-                  :  t('tasks.tags')
+                  : t("tasks.tags")
               }}
             </span>
-            <ChevronDown class="w-4 h-4 opacity-50 flex-shrink-0" />
+            <ChevronDown class="w-4 h-4 opacity-50 shrink-0" />
           </button>
 
           <!-- Tag Dropdown - Opens DOWNWARD -->
           <div
             v-if="isTagDropdownOpen"
-            class="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-[10000] animate-fade-in">
+            class="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-10000 animate-fade-in">
             <div class="p-2 space-y-1 max-h-60 overflow-y-auto">
               <button
                 v-for="tag in tags"
@@ -286,7 +289,7 @@ function getPriorityLabel(priority: string) {
                 @click="toggleTag(tag.id)"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left">
                 <div
-                  class="p-1.5 rounded-md flex-shrink-0"
+                  class="p-1.5 rounded-md shrink-0"
                   :class="getTagColorClass(tag.color)">
                   <Hash class="w-4 h-4" />
                 </div>
@@ -296,7 +299,7 @@ function getPriorityLabel(priority: string) {
                 >
                 <div
                   v-if="selectedTags.includes(tag.id)"
-                  class="w-5 h-5 rounded bg-indigo-500 flex items-center justify-center flex-shrink-0">
+                  class="w-5 h-5 rounded bg-indigo-500 flex items-center justify-center shrink-0">
                   <svg
                     class="w-3 h-3 text-white"
                     fill="none"
@@ -315,7 +318,7 @@ function getPriorityLabel(priority: string) {
         </div>
 
         <!-- Priority Selector -->
-        <div class="relative flex-shrink-0">
+        <div class="relative shrink-0">
           <button
             type="button"
             @click="isPriorityDropdownOpen = !isPriorityDropdownOpen"
@@ -326,22 +329,23 @@ function getPriorityLabel(priority: string) {
                 : 'text-gray-500 dark:text-gray-400'
             ">
             <Flag
-              class="w-4 h-4 flex-shrink-0"
+              class="w-4 h-4 shrink-0"
               :class="{ 'fill-current': selectedPriority }" />
-            <span class="text-sm font-medium flex-1 text-left whitespace-nowrap">
+            <span
+              class="text-sm font-medium flex-1 text-left whitespace-nowrap">
               {{
                 selectedPriority
                   ? getPriorityLabel(selectedPriority)
-                  : t('tasks.priority')
+                  : t("tasks.priority")
               }}
             </span>
-            <ChevronDown class="w-4 h-4 opacity-50 flex-shrink-0" />
+            <ChevronDown class="w-4 h-4 opacity-50 shrink-0" />
           </button>
 
           <!-- Priority Dropdown - Opens DOWNWARD -->
           <div
             v-if="isPriorityDropdownOpen"
-            class="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-[10000] animate-fade-in">
+            class="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-10000 animate-fade-in">
             <div class="p-2 space-y-1">
               <button
                 type="button"
@@ -351,7 +355,9 @@ function getPriorityLabel(priority: string) {
                 "
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left text-gray-500">
                 <Flag class="w-4 h-4" />
-                <span class="text-sm font-medium flex-1">{{ t('tasks.without_priority') }}</span>
+                <span class="text-sm font-medium flex-1">{{
+                  t("tasks.without_priority")
+                }}</span>
                 <div
                   v-if="!selectedPriority"
                   class="w-2 h-2 rounded-full bg-indigo-500"></div>
@@ -394,9 +400,9 @@ function getPriorityLabel(priority: string) {
         <button
           type="submit"
           :disabled="!newTask.trim()"
-          class="w-full md:w-[25%] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-5 py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-medium text-sm md:text-base flex-shrink-0">
+          class="w-full md:w-[25%] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-5 py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-medium text-sm md:text-base shrink-0">
           <Plus class="w-5 h-5" />
-          <span class="hidden md:inline">{{ t('tasks.add_task') }}</span>
+          <span class="hidden md:inline">{{ t("tasks.add_task") }}</span>
         </button>
       </div>
     </div>
@@ -404,19 +410,19 @@ function getPriorityLabel(priority: string) {
     <!-- Backdrop for project dropdown -->
     <div
       v-if="isDropdownOpen"
-      class="fixed inset-0 z-[9999]"
+      class="fixed inset-0 z-9999"
       @click="isDropdownOpen = false"></div>
 
     <!-- Backdrop for tag dropdown -->
     <div
       v-if="isTagDropdownOpen"
-      class="fixed inset-0 z-[9999]"
+      class="fixed inset-0 z-9999"
       @click="isTagDropdownOpen = false"></div>
 
     <!-- Backdrop for priority dropdown -->
     <div
       v-if="isPriorityDropdownOpen"
-      class="fixed inset-0 z-[9999]"
+      class="fixed inset-0 z-9999"
       @click="isPriorityDropdownOpen = false"></div>
   </form>
 </template>

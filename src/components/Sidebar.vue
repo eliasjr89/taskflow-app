@@ -1,33 +1,36 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useI18n } from 'vue-i18n';
+import { useI18n } from "vue-i18n";
 import type { Task, FilterState } from "../types/global";
 import { useTaskState } from "../composables/useTaskState";
 import { useTagState } from "../composables/useTagState";
-import { 
-  Search, 
-  Filter, 
-  CheckSquare, 
-  Flag, 
-  Folder, 
-  Hash, 
+import {
+  Search,
+  Filter,
+  CheckSquare,
+  Flag,
+  Folder,
+  Hash,
   ChevronDown,
-  X
+  X,
 } from "lucide-vue-next";
 
 const { t } = useI18n();
 const { projects } = useTaskState();
 const { tags } = useTagState();
 
-const props = withDefaults(defineProps<{ 
-  tasks: Task[];
-  mobile?: boolean;
-  showSearch?: boolean;
-  deferred?: boolean;
-}>(), {
-  showSearch: true,
-  deferred: false
-});
+const props = withDefaults(
+  defineProps<{
+    tasks: Task[];
+    mobile?: boolean;
+    showSearch?: boolean;
+    deferred?: boolean;
+  }>(),
+  {
+    showSearch: true,
+    deferred: false,
+  }
+);
 
 const emit = defineEmits<{
   (e: "update:filters", filters: FilterState): void;
@@ -37,7 +40,7 @@ const emit = defineEmits<{
 
 // State for filters
 const searchQuery = ref("");
-const selectedStatuses = ref<('pending' | 'completed')[]>([]);
+const selectedStatuses = ref<("pending" | "completed")[]>([]);
 const selectedPriorities = ref<string[]>([]);
 const selectedProjectIds = ref<string[]>([]);
 const selectedTagIds = ref<string[]>([]);
@@ -47,7 +50,7 @@ const openSections = ref({
   status: true,
   priority: true,
   projects: true,
-  tags: true
+  tags: true,
 });
 
 const toggleSection = (section: keyof typeof openSections.value) => {
@@ -57,14 +60,22 @@ const toggleSection = (section: keyof typeof openSections.value) => {
 // Search suggestions
 const suggestions = computed(() => {
   if (!searchQuery.value) return [];
-  return props.tasks.filter((task) =>
-    task.title.toLowerCase().includes(searchQuery.value.toLowerCase())
-  ).slice(0, 5);
+  return props.tasks
+    .filter((task) =>
+      task.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+    .slice(0, 5);
 });
 
 // Watch for changes and emit updates (only if NOT deferred)
 watch(
-  [searchQuery, selectedStatuses, selectedPriorities, selectedProjectIds, selectedTagIds],
+  [
+    searchQuery,
+    selectedStatuses,
+    selectedPriorities,
+    selectedProjectIds,
+    selectedTagIds,
+  ],
   () => {
     if (!props.deferred) {
       emitFilters();
@@ -79,7 +90,7 @@ function emitFilters() {
     statuses: selectedStatuses.value,
     priorities: selectedPriorities.value,
     projectIds: selectedProjectIds.value,
-    tagIds: selectedTagIds.value
+    tagIds: selectedTagIds.value,
   });
 }
 
@@ -93,13 +104,13 @@ function clearFilters() {
   selectedPriorities.value = [];
   selectedProjectIds.value = [];
   selectedTagIds.value = [];
-  // If not deferred, this will trigger the watch and emit. 
+  // If not deferred, this will trigger the watch and emit.
   // If deferred, we might want to emit immediately or wait for Apply.
-  // Standard UX: Clear usually applies immediately or resets UI. 
-  // Let's reset UI and if deferred, user still needs to click Apply to confirm clearing? 
+  // Standard UX: Clear usually applies immediately or resets UI.
+  // Let's reset UI and if deferred, user still needs to click Apply to confirm clearing?
   // No, "Clear" usually implies "Reset and Apply" or just "Reset UI".
   // Let's make Clear reset UI. If deferred, user must click Apply to commit the clear.
-  // Actually, user requested "Clear filters OR Apply". 
+  // Actually, user requested "Clear filters OR Apply".
   // So Clear should probably apply the cleared state.
   if (props.deferred) {
     emitFilters(); // Optional: Apply immediately on clear? Or just reset UI?
@@ -151,32 +162,39 @@ const getTagColorClass = (color: string) => {
 </script>
 
 <template>
-  <aside 
+  <aside
     class="w-full glass-card rounded-2xl p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar transition-all duration-300"
     :class="[
-      mobile ? 'h-auto rounded bg-white dark:bg-gray-900' : 'md:w-72 h-[calc(100vh-6rem)] sticky top-24'
-    ]"
-  >
-    
+      mobile
+        ? 'h-auto rounded bg-white dark:bg-gray-900'
+        : 'md:w-72 h-[calc(100vh-6rem)] sticky top-24',
+    ]">
     <!-- Mobile Header with Close Button -->
-    <div v-if="mobile" class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
-      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ t('common.filters') }}</h2>
-      <button @click="emit('close')" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+    <div
+      v-if="mobile"
+      class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
+      <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">
+        {{ t("common.filters") }}
+      </h2>
+      <button
+        @click="emit('close')"
+        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
         <X class="w-5 h-5 text-gray-500" />
       </button>
     </div>
-    
+
     <!-- Search Bar -->
     <div v-if="showSearch" class="relative">
       <div class="relative">
-        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
           :placeholder="t('common.search')"
           v-model="searchQuery"
           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all text-sm" />
       </div>
-      
+
       <!-- Suggestions -->
       <ul
         v-if="searchQuery && suggestions.length"
@@ -192,49 +210,91 @@ const getTagColorClass = (color: string) => {
     </div>
 
     <!-- Filters Header (Desktop only or if search is hidden) -->
-    <div v-if="!mobile || !showSearch" class="flex items-center gap-2 text-gray-900 dark:text-gray-100 font-semibold pb-2 border-b border-gray-200/50 dark:border-gray-700/50">
+    <div
+      v-if="!mobile || !showSearch"
+      class="flex items-center gap-2 text-gray-900 dark:text-gray-100 font-semibold pb-2 border-b border-gray-200/50 dark:border-gray-700/50">
       <Filter class="w-4 h-4" />
-      <span>{{ t('common.filters') }}</span>
+      <span>{{ t("common.filters") }}</span>
     </div>
 
     <!-- Status Filter -->
     <div class="space-y-3">
-      <button @click="toggleSection('status')" class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <button
+        @click="toggleSection('status')"
+        class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
         <div class="flex items-center gap-2">
           <CheckSquare class="w-4 h-4" />
-          <span>{{ t('tasks.status') }}</span>
+          <span>{{ t("tasks.status") }}</span>
         </div>
-        <ChevronDown 
-          class="w-4 h-4 opacity-50 transition-transform duration-300" 
-          :class="{ 'rotate-180': openSections.status }" 
-        />
+        <ChevronDown
+          class="w-4 h-4 opacity-50 transition-transform duration-300"
+          :class="{ 'rotate-180': openSections.status }" />
       </button>
-      
+
       <Transition
         enter-active-class="transition-all duration-300 ease-out"
         enter-from-class="opacity-0 -translate-y-2 max-h-0"
         enter-to-class="opacity-100 translate-y-0 max-h-96"
         leave-active-class="transition-all duration-200 ease-in"
         leave-from-class="opacity-100 translate-y-0 max-h-96"
-        leave-to-class="opacity-0 -translate-y-2 max-h-0"
-      >
-        <div v-show="openSections.status" class="space-y-2 pl-1 overflow-hidden">
-          <label class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+        leave-to-class="opacity-0 -translate-y-2 max-h-0">
+        <div
+          v-show="openSections.status"
+          class="space-y-2 pl-1 overflow-hidden">
+          <label
+            class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <div class="relative flex items-center">
-              <input type="checkbox" value="pending" v-model="selectedStatuses" class="peer sr-only" />
-              <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
-              <svg class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+              <input
+                type="checkbox"
+                value="pending"
+                v-model="selectedStatuses"
+                class="peer sr-only" />
+              <div
+                class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
+              <svg
+                class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="3">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">{{ t('common.pending') }}</span>
+            <span
+              class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors"
+              >{{ t("common.pending") }}</span
+            >
           </label>
-          
-          <label class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+
+          <label
+            class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <div class="relative flex items-center">
-              <input type="checkbox" value="completed" v-model="selectedStatuses" class="peer sr-only" />
-              <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
-              <svg class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+              <input
+                type="checkbox"
+                value="completed"
+                v-model="selectedStatuses"
+                class="peer sr-only" />
+              <div
+                class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
+              <svg
+                class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="3">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">{{ t('common.completed') }}</span>
+            <span
+              class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors"
+              >{{ t("common.completed") }}</span
+            >
           </label>
         </div>
       </Transition>
@@ -242,33 +302,56 @@ const getTagColorClass = (color: string) => {
 
     <!-- Priority Filter -->
     <div class="space-y-3">
-      <button @click="toggleSection('priority')" class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <button
+        @click="toggleSection('priority')"
+        class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
         <div class="flex items-center gap-2">
           <Flag class="w-4 h-4" />
-          <span>{{ t('tasks.priority') }}</span>
+          <span>{{ t("tasks.priority") }}</span>
         </div>
-        <ChevronDown 
-          class="w-4 h-4 opacity-50 transition-transform duration-300" 
-          :class="{ 'rotate-180': openSections.priority }" 
-        />
+        <ChevronDown
+          class="w-4 h-4 opacity-50 transition-transform duration-300"
+          :class="{ 'rotate-180': openSections.priority }" />
       </button>
-      
+
       <Transition
         enter-active-class="transition-all duration-300 ease-out"
         enter-from-class="opacity-0 -translate-y-2 max-h-0"
         enter-to-class="opacity-100 translate-y-0 max-h-96"
         leave-active-class="transition-all duration-200 ease-in"
         leave-from-class="opacity-100 translate-y-0 max-h-96"
-        leave-to-class="opacity-0 -translate-y-2 max-h-0"
-      >
-        <div v-show="openSections.priority" class="space-y-2 pl-1 overflow-hidden">
-          <label v-for="priority in ['low', 'medium', 'high', 'urgent']" :key="priority" class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+        leave-to-class="opacity-0 -translate-y-2 max-h-0">
+        <div
+          v-show="openSections.priority"
+          class="space-y-2 pl-1 overflow-hidden">
+          <label
+            v-for="priority in ['low', 'medium', 'high', 'urgent']"
+            :key="priority"
+            class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <div class="relative flex items-center">
-              <input type="checkbox" :value="priority" v-model="selectedPriorities" class="peer sr-only" />
-              <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
-              <svg class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+              <input
+                type="checkbox"
+                :value="priority"
+                v-model="selectedPriorities"
+                class="peer sr-only" />
+              <div
+                class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
+              <svg
+                class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="3">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors capitalize">{{ t(`tasks.${priority}`) }}</span>
+            <span
+              class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors capitalize"
+              >{{ t(`tasks.${priority}`) }}</span
+            >
           </label>
         </div>
       </Transition>
@@ -276,35 +359,60 @@ const getTagColorClass = (color: string) => {
 
     <!-- Projects Filter -->
     <div class="space-y-3" v-if="projects.length > 0">
-      <button @click="toggleSection('projects')" class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <button
+        @click="toggleSection('projects')"
+        class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
         <div class="flex items-center gap-2">
           <Folder class="w-4 h-4" />
-          <span>{{ t('tasks.project') }}</span>
+          <span>{{ t("tasks.project") }}</span>
         </div>
-        <ChevronDown 
-          class="w-4 h-4 opacity-50 transition-transform duration-300" 
-          :class="{ 'rotate-180': openSections.projects }" 
-        />
+        <ChevronDown
+          class="w-4 h-4 opacity-50 transition-transform duration-300"
+          :class="{ 'rotate-180': openSections.projects }" />
       </button>
-      
+
       <Transition
         enter-active-class="transition-all duration-300 ease-out"
         enter-from-class="opacity-0 -translate-y-2 max-h-0"
         enter-to-class="opacity-100 translate-y-0 max-h-96"
         leave-active-class="transition-all duration-200 ease-in"
         leave-from-class="opacity-100 translate-y-0 max-h-96"
-        leave-to-class="opacity-0 -translate-y-2 max-h-0"
-      >
-        <div v-show="openSections.projects" class="space-y-2 pl-1 overflow-hidden">
-          <label v-for="project in projects" :key="project.id" class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+        leave-to-class="opacity-0 -translate-y-2 max-h-0">
+        <div
+          v-show="openSections.projects"
+          class="space-y-2 pl-1 overflow-hidden">
+          <label
+            v-for="project in projects"
+            :key="project.id"
+            class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <div class="relative flex items-center">
-              <input type="checkbox" :value="project.id" v-model="selectedProjectIds" class="peer sr-only" />
-              <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
-              <svg class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+              <input
+                type="checkbox"
+                :value="project.id"
+                v-model="selectedProjectIds"
+                class="peer sr-only" />
+              <div
+                class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
+              <svg
+                class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="3">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7" />
+              </svg>
             </div>
             <div class="flex items-center gap-2 min-w-0">
-              <div class="w-2 h-2 rounded-full flex-shrink-0" :class="getProjectColorClass(project.color)"></div>
-              <span class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors truncate">{{ project.title }}</span>
+              <div
+                class="w-2 h-2 rounded-full shrink-0"
+                :class="getProjectColorClass(project.color)"></div>
+              <span
+                class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors truncate"
+                >{{ project.title }}</span
+              >
             </div>
           </label>
         </div>
@@ -313,52 +421,75 @@ const getTagColorClass = (color: string) => {
 
     <!-- Tags Filter -->
     <div class="space-y-3" v-if="tags.length > 0">
-      <button @click="toggleSection('tags')" class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <button
+        @click="toggleSection('tags')"
+        class="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50">
         <div class="flex items-center gap-2">
           <Hash class="w-4 h-4" />
-          <span>{{ t('tasks.tags') }}</span>
+          <span>{{ t("tasks.tags") }}</span>
         </div>
-        <ChevronDown 
-          class="w-4 h-4 opacity-50 transition-transform duration-300" 
-          :class="{ 'rotate-180': openSections.tags }" 
-        />
+        <ChevronDown
+          class="w-4 h-4 opacity-50 transition-transform duration-300"
+          :class="{ 'rotate-180': openSections.tags }" />
       </button>
-      
+
       <Transition
         enter-active-class="transition-all duration-300 ease-out"
         enter-from-class="opacity-0 -translate-y-2 max-h-0"
         enter-to-class="opacity-100 translate-y-0 max-h-96"
         leave-active-class="transition-all duration-200 ease-in"
         leave-from-class="opacity-100 translate-y-0 max-h-96"
-        leave-to-class="opacity-0 -translate-y-2 max-h-0"
-      >
+        leave-to-class="opacity-0 -translate-y-2 max-h-0">
         <div v-show="openSections.tags" class="space-y-2 pl-1 overflow-hidden">
-          <label v-for="tag in tags" :key="tag.id" class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+          <label
+            v-for="tag in tags"
+            :key="tag.id"
+            class="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <div class="relative flex items-center">
-              <input type="checkbox" :value="tag.id" v-model="selectedTagIds" class="peer sr-only" />
-              <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
-              <svg class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+              <input
+                type="checkbox"
+                :value="tag.id"
+                v-model="selectedTagIds"
+                class="peer sr-only" />
+              <div
+                class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all group-hover:border-indigo-400 peer-checked:scale-110"></div>
+              <svg
+                class="absolute w-3 h-3 text-white left-1 top-1 opacity-0 peer-checked:opacity-100 transition-all duration-200 pointer-events-none"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="3">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <span class="text-xs px-2 py-0.5 rounded-md transition-colors" :class="getTagColorClass(tag.color)">{{ tag.name }}</span>
+            <span
+              class="text-xs px-2 py-0.5 rounded-md transition-colors"
+              :class="getTagColorClass(tag.color)"
+              >{{ tag.name }}</span
+            >
           </label>
         </div>
       </Transition>
     </div>
 
     <!-- Deferred Actions (Apply/Clear) -->
-    <div v-if="deferred" class="pt-6 mt-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
-      <button 
+    <div
+      v-if="deferred"
+      class="pt-6 mt-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
+      <button
         @click="clearFilters"
         class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-        {{ t('common.clear') }}
+        {{ t("common.clear") }}
       </button>
-      <button 
+      <button
         @click="applyFilters"
         class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/30">
-        {{ t('common.apply') }}
+        {{ t("common.apply") }}
       </button>
     </div>
-
   </aside>
 </template>
 
