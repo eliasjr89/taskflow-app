@@ -1,44 +1,67 @@
 <script setup lang="ts">
-import { RouterLink, useRoute } from 'vue-router';
-import { Home, CheckSquare, FolderKanban, Calendar, Tags, BarChart2, User } from 'lucide-vue-next';
+import { RouterLink, useRoute } from "vue-router";
+import {
+  Home,
+  CheckSquare,
+  FolderKanban,
+  Calendar,
+  Tags,
+  BarChart2,
+  User,
+} from "lucide-vue-next";
+import { useSectionTheme } from "@/composables/useSectionTheme";
 
 const route = useRoute();
+const { theme } = useSectionTheme();
 
 const navItems = [
-  { name: 'Inicio', path: '/', icon: Home },
-  { name: 'Tareas', path: '/tasks', icon: CheckSquare },
-  { name: 'Proyectos', path: '/projects', icon: FolderKanban },
-  { name: 'Calendario', path: '/calendar', icon: Calendar },
-  { name: 'Etiquetas', path: '/tags', icon: Tags },
-  { name: 'Estadísticas', path: '/analytics', icon: BarChart2 },
-  { name: 'Perfil', path: '/profile', icon: User },
+  { name: "Inicio", path: "/dashboard", icon: Home }, // Updated path to /dashboard to match router
+  { name: "Tareas", path: "/tasks", icon: CheckSquare },
+  { name: "Proyectos", path: "/projects", icon: FolderKanban },
+  { name: "Calendario", path: "/calendar", icon: Calendar },
+  { name: "Etiquetas", path: "/tags", icon: Tags },
+  { name: "Estadísticas", path: "/analytics", icon: BarChart2 },
+  { name: "Perfil", path: "/profile", icon: User },
 ];
+
+const isActive = (path: string) =>
+  route.path === path || (path === "/dashboard" && route.path === "/");
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 w-full bg-white/20 dark:bg-gray-900/60 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 pb-safe z-50 md:hidden shadow-lg">
-    <div class="flex justify-between items-center px-4 py-2 overflow-x-auto no-scrollbar">
+  <nav
+    class="fixed bottom-0 left-0 w-full bg-bg-dark/95 backdrop-blur-xl border-t border-white/10 pb-safe z-50 md:hidden shadow-2xl">
+    <div
+      class="flex justify-between items-center px-6 py-4 overflow-x-auto no-scrollbar">
       <RouterLink
         v-for="item in navItems"
         :key="item.path"
         :to="item.path"
-        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[60px]"
-        :class="route.path === item.path ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
-        
-        <!-- Active Indicator -->
-        <div 
-          v-if="route.path === item.path"
-          class="absolute -top-2 w-8 h-1 bg-indigo-600 dark:bg-indigo-400 rounded-b-full shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all duration-500 ease-out animate-slide-down">
-        </div>
+        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none"
+        :class="isActive(item.path) ? '' : 'text-white/40 hover:text-white/70'">
+        <!-- Active Indicator (Glow) -->
+        <div
+          v-if="isActive(item.path)"
+          class="absolute -top-4 w-10 h-1 rounded-full shadow-lg transition-all duration-500 ease-out animate-slide-down bg-linear-to-r"
+          :class="
+            theme.sidebar.active
+              .split(' ')
+              .filter((c) => c.startsWith('from-') || c.startsWith('to-'))
+              .join(' ')
+          "></div>
+
+        <!-- Active Background Shape (Subtle) -->
+        <div
+          v-if="isActive(item.path)"
+          class="absolute inset-0 bg-white/5 rounded-xl blur-md -z-10"></div>
 
         <!-- Icons -->
-        <component 
-          :is="item.icon" 
-          class="w-5 h-5 transition-transform duration-300 group-active:scale-90" 
-          :class="route.path === item.path ? '-translate-y-0.5' : ''" 
-        />
-        
-        <span class="text-[9px] font-medium truncate w-full text-center">{{ item.name }}</span>
+        <component
+          :is="item.icon"
+          class="w-6 h-6 transition-transform duration-300 group-active:scale-95"
+          :class="isActive(item.path) ? theme.sidebar.icon : ''" />
+
+        <!-- No text label as requested -->
       </RouterLink>
     </div>
   </nav>

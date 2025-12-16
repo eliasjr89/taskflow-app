@@ -1,11 +1,25 @@
 <script setup lang="ts">
-import { RouterView } from "vue-router";
+import { RouterView, useRoute } from "vue-router";
+import { computed, defineAsyncComponent } from "vue";
 import MainLayout from "./components/MainLayout.vue";
+import AuthLayout from "./layouts/AuthLayout.vue"; // Sync import
 import FeedbackModal from "./components/FeedbackModal.vue";
+
+const AdminLayout = defineAsyncComponent(
+  () => import("@/layouts/AdminLayout.vue")
+);
+
+const route = useRoute();
+const layout = computed(() => {
+  if (route.meta.layout === "AdminLayout") return AdminLayout;
+  if (route.meta.layout === "MainLayout") return MainLayout;
+  // Default to AuthLayout to prevent flashing MainLayout (Dashboard) on load/transition
+  return AuthLayout;
+});
 </script>
 
 <template>
-  <MainLayout>
+  <component :is="layout">
     <RouterView v-slot="{ Component, route }">
       <transition
         :name="(route.meta.transition as string) || 'fade'"
@@ -20,7 +34,7 @@ import FeedbackModal from "./components/FeedbackModal.vue";
       </transition>
     </RouterView>
     <FeedbackModal />
-  </MainLayout>
+  </component>
 </template>
 
 <style>

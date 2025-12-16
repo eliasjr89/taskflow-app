@@ -12,7 +12,7 @@ import { useI18n } from "vue-i18n";
 import { useTaskState } from "../composables/useTaskState";
 import AddTaskForm from "../components/AddTaskForm.vue";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { tasks } = useTaskState();
 
 const isTaskModalOpen = ref(false);
@@ -26,7 +26,7 @@ const currentMonth = computed(() => currentDate.value.getMonth());
 const currentYear = computed(() => currentDate.value.getFullYear());
 
 const monthName = computed(() => {
-  return currentDate.value.toLocaleDateString("es-ES", {
+  return currentDate.value.toLocaleDateString(locale.value, {
     month: "long",
     year: "numeric",
   });
@@ -149,7 +149,17 @@ function isSelected(date: Date): boolean {
   );
 }
 
-const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const weekDays = computed(() => {
+  const formatter = new Intl.DateTimeFormat(locale.value, { weekday: "short" });
+  const days = [];
+  // Jan 1 2024 was Monday
+  const curr = new Date(2024, 0, 1);
+  for (let i = 0; i < 7; i++) {
+    days.push(formatter.format(curr).replace(".", ""));
+    curr.setDate(curr.getDate() + 1);
+  }
+  return days.map((d) => d.charAt(0).toUpperCase() + d.slice(1));
+});
 </script>
 
 <template>
@@ -183,14 +193,14 @@ const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
         <button
           @click="goToToday"
           class="px-4 py-2 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all text-sm font-medium text-gray-700 dark:text-gray-300">
-          Hoy
+          {{ t("calendar.today") }}
         </button>
 
         <div class="flex items-center gap-2 glass-card px-2 py-1.5 rounded-xl">
           <button
             @click="previousMonth"
             class="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors"
-            aria-label="Mes anterior">
+            :aria-label="t('calendar.prev_month')">
             <ChevronLeft class="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
 
@@ -202,7 +212,7 @@ const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
           <button
             @click="nextMonth"
             class="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors"
-            aria-label="Mes siguiente">
+            :aria-label="t('calendar.next_month')">
             <ChevronRight class="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
         </div>
@@ -266,7 +276,12 @@ const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
               <div
                 v-if="day.tasksCount > 0"
                 class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                {{ day.tasksCount }} tarea{{ day.tasksCount > 1 ? "s" : "" }}
+                {{ day.tasksCount }}
+                {{
+                  day.tasksCount > 1
+                    ? t("calendar.tooltip_tasks")
+                    : t("calendar.tooltip_task")
+                }}
               </div>
             </button>
           </div>
@@ -284,7 +299,7 @@ const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-gray-100">
                   {{
-                    selectedDate.toLocaleDateString("es-ES", {
+                    selectedDate.toLocaleDateString(locale, {
                       day: "numeric",
                       month: "long",
                     })

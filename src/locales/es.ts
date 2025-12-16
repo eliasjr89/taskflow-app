@@ -129,6 +129,7 @@ export default {
     created_tasks: "Tareas creadas",
     total: "Total",
     general_progress: "Progreso General",
+    no_data: "Sin datos suficientes",
   },
   dashboard: {
     title: "Panel Principal",
@@ -169,6 +170,16 @@ export default {
     profile_updated: "Perfil actualizado correctamente",
     logout_msg: "Salir de la aplicación",
     streak: "Racha",
+    streak_label: "Racha Actual (7 días)",
+    role: "Desarrollador Full Stack",
+    location: "Madrid, ES",
+    language: "Idioma",
+    form: {
+      username: "Nombre de usuario",
+      name: "Nombre",
+      lastname: "Apellido",
+      email: "Correo Electrónico",
+    },
   },
   calendar: {
     title: "Calendario",
@@ -176,6 +187,11 @@ export default {
     no_tasks: "No hay tareas para este día",
     select_day: "Selecciona un día para ver sus tareas",
     tasks: "tareas",
+    today: "Hoy",
+    prev_month: "Mes anterior",
+    next_month: "Mes siguiente",
+    tooltip_task: "tarea",
+    tooltip_tasks: "tareas",
   },
   auth: {
     welcome_back: "Bienvenido de nuevo",
@@ -200,5 +216,14 @@ export default {
     taskflow_slogan: "Eleva tu productividad.",
     error: "Error",
     welcome: "¡Bienvenido!",
+  },
+  admin: {
+    overview: "Vista General",
+    users: "Gestión de Usuarios",
+    projects: "Gestión de Proyectos",
+    tasks: "Gestión de Tareas",
+    database: "Base de Datos",
+    profile: "Mi Perfil",
+    panel: "Panel de Administración",
   },
 };

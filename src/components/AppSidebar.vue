@@ -11,6 +11,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Layers, // Added Layers icon
 } from "lucide-vue-next";
 
 import { useI18n } from "vue-i18n";
@@ -26,7 +27,7 @@ const toggleSidebar = () => {
 };
 
 const navItems = computed(() => [
-  { name: t("nav.home"), path: "/", icon: Home },
+  { name: t("nav.home"), path: "/dashboard", icon: Home }, // Updated path
   { name: t("nav.tasks"), path: "/tasks", icon: CheckSquare },
   { name: t("nav.projects"), path: "/projects", icon: FolderKanban },
   { name: t("nav.calendar"), path: "/calendar", icon: Calendar },
@@ -38,28 +39,41 @@ const navItems = computed(() => [
 
 <template>
   <aside
-    class="hidden md:flex flex-col p-2 gap-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl transition-all duration-300 h-[calc(100vh-6rem)] sticky top-24 shadow-lg"
-    :class="[isCollapsed ? 'w-15' : 'w-50']">
+    class="hidden md:flex flex-col p-2 gap-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl transition-all duration-300 h-[calc(100vh-4rem)] sticky top-8 ml-4 shadow-lg shrink-0"
+    :class="[isCollapsed ? 'w-20' : 'w-64']">
     <!-- Header with Toggle -->
     <div
-      class="flex items-center justify-between mb-2 pb-4 border-b border-gray-200/30 dark:border-gray-700/30 relative">
-      <div
-        class="flex flex-col overflow-hidden transition-all duration-300"
-        :class="[isCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto']">
-        <h1
-          class="text-3xl font-bold bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent font-heading whitespace-nowrap">
-          {{ t("nav.menu") }}
-        </h1>
-        <p
-          class="text-xs text-gray-600 dark:text-gray-400 mt-1 whitespace-nowrap">
-          {{ t("nav.subtitle") }}
-        </p>
+      class="flex items-center justify-between mb-2 pb-4 border-b border-gray-200/30 dark:border-gray-700/30 relative px-2 pt-2">
+      <div class="flex items-center gap-3 transition-all duration-300 px-1">
+        <!-- Logo Container (Always visible) -->
+        <div
+          :class="[
+            'w-8 h-8 rounded-lg flex items-center justify-center shadow-md bg-linear-to-br min-w-[32px] shrink-0',
+            theme.sidebar.active
+              .split(' ')
+              .filter((c) => c.startsWith('from-') || c.startsWith('to-'))
+              .join(' '),
+          ]">
+          <Layers class="w-5 h-5 text-white" />
+        </div>
+
+        <!-- Title (Collapsible) -->
+        <div
+          class="overflow-hidden transition-all duration-300"
+          :class="[isCollapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto']">
+          <h1
+            class="text-xl font-bold text-gray-800 dark:text-white font-heading whitespace-nowrap tracking-wide">
+            TaskFlow
+          </h1>
+        </div>
       </div>
 
       <button
         @click="toggleSidebar"
-        class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors absolute right-0 top-0"
-        :class="{ 'right-1/2 translate-x-1/2': isCollapsed }">
+        class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors absolute"
+        :class="
+          isCollapsed ? 'left-1/2 -translate-x-1/2 top-4' : 'right-0 top-3'
+        ">
         <component
           :is="isCollapsed ? ChevronRight : ChevronLeft"
           class="w-5 h-5" />

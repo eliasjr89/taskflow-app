@@ -2,14 +2,19 @@
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { LogOut } from "lucide-vue-next";
+import DynamicBackground from "@/components/DynamicBackground.vue";
 
 // Component for exit view
 const router = useRouter();
 
 onMounted(() => {
-  // Redirect to login after 3 seconds
+  // Clear Auth
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  // Redirect to welcome after 3 seconds
   setTimeout(() => {
-    router.push("/login");
+    router.push("/");
   }, 3000);
 });
 </script>
@@ -17,7 +22,8 @@ onMounted(() => {
 <template>
   <div
     class="fixed inset-0 min-h-screen w-full overflow-hidden flex items-center justify-center z-50">
-    <!-- Background Image with Overlay Removed -->
+    <!-- Dynamic Background -->
+    <DynamicBackground />
 
     <!-- Content Container -->
     <div class="relative z-10 w-full max-w-md px-4 text-center">

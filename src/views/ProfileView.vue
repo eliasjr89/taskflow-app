@@ -1,35 +1,24 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useTaskState } from "../composables/useTaskState";
-import { useTheme } from "../composables/useTheme";
+
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useFeedback } from "../composables/useFeedback";
 import api from "../services/api";
-import {
-  User,
-  CheckCircle2,
-  Moon,
-  Sun,
-  LogOut,
-  Camera,
-  Edit2,
-  Save,
-  X,
-  Mail,
-  Bell,
-  Globe,
-} from "lucide-vue-next";
+import { LogOut, Camera, Edit2, Save, X, Mail, Globe } from "lucide-vue-next";
+import { useSectionTheme } from "../composables/useSectionTheme";
+import SkeletonLoader from "../components/SkeletonLoader.vue";
 
 const { resetState } = useTaskState();
-const { isDark, toggleTheme } = useTheme();
-const { t } = useI18n();
+const { t, locale } = useI18n();
+
+const toggleLanguage = () => {
+  locale.value = locale.value === "es" ? "en" : "es";
+};
+const { theme } = useSectionTheme();
 const router = useRouter();
 const { showFeedback } = useFeedback();
-
-// Preferences
-const notificationsEnabled = ref(true);
-const currentLanguage = ref("es");
 
 // User Data
 const userRaw = localStorage.getItem("user");
@@ -42,6 +31,7 @@ try {
 const currentUser = ref(initialUser);
 const isEditingProfile = ref(false);
 const isLoadingProfile = ref(false);
+const isLoading = ref(true);
 
 const profileForm = ref({
   username: "",
@@ -55,6 +45,8 @@ const profileForm = ref({
 onMounted(async () => {
   try {
     const response = await api.get("/user/profile");
+    // Simulate generic delay for skeleton demo
+    await new Promise((resolve) => setTimeout(resolve, 600));
     // ...
 
     const userData = response.data.data || response.data;
@@ -74,6 +66,8 @@ onMounted(async () => {
     }
   } catch {
     // Error loading profile - silent fail
+  } finally {
+    isLoading.value = false;
   }
 });
 
@@ -175,23 +169,14 @@ const cancelEdit = () => {
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
-    <!-- Header -->
-    <div class="mb-8 text-center md:text-left">
-      <h1
-        class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
-        <span>👤</span>
-        <span
-          class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent"
-          >{{ t("profile.title") }}</span
-        >
-      </h1>
-      <p class="text-gray-600 dark:text-gray-400">
-        {{ t("profile.subtitle") }}
-      </p>
+  <div class="flex-1 flex flex-col w-full px-4 md:px-0 animate-fade-in">
+    <!-- Skeleton Loading -->
+    <div v-if="isLoading">
+      <SkeletonLoader type="banner" class="h-64 rounded-3xl mb-6" />
+      <SkeletonLoader type="card" :count="1" class="h-40" />
     </div>
 
-    <div class="space-y-6">
+    <div v-else class="space-y-6">
       <!-- Hidden File Input -->
       <input
         type="file"
@@ -200,297 +185,216 @@ const cancelEdit = () => {
         accept="image/png, image/jpeg, image/jpg, image/webp"
         @change="onFileChange" />
 
-      <!-- Profile Card with Luxury Design -->
-      <div class="glass-card-luxury rounded-3xl p-8 relative overflow-hidden">
-        <!-- Background Gradient Overlay -->
+      <!-- Profile Banner Card (Dark Theme Enforced) -->
+      <div
+        class="relative rounded-3xl p-8 overflow-hidden bg-bg-dark border border-white/10 shadow-2xl min-h-[300px] flex flex-col justify-center">
+        <!-- Dynamic Background Blobs -->
         <div
-          class="absolute inset-0 bg-linear-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none"></div>
+          class="absolute inset-0 bg-bg-dark rounded-3xl z-0 overflow-hidden">
+          <div
+            :class="[
+              'absolute -top-24 -left-20 w-96 h-96 rounded-full blur-[80px] opacity-40 transition-all duration-1000 ease-in-out bg-linear-to-br',
+              theme.gradients.blob1,
+            ]"></div>
+          <div
+            :class="[
+              'absolute -bottom-24 -right-20 w-96 h-96 rounded-full blur-[80px] opacity-30 transition-all duration-1000 ease-in-out bg-linear-to-br',
+              theme.gradients.blob2,
+            ]"></div>
+          <div
+            class="absolute inset-0 bg-[url('/img/grid.svg')] bg-center mask-[linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 z-0"></div>
+        </div>
 
         <div
-          class="relative flex flex-col md:flex-row items-center md:items-start gap-8">
-          <!-- Avatar with Upload -->
-          <div class="relative group">
+          class="relative z-10 flex flex-col-reverse md:flex-row items-center md:justify-between gap-10 w-full">
+          <!-- Info / Form Section (Left now) -->
+          <div class="flex-1 w-full text-center md:text-left">
+            <template v-if="!isEditingProfile">
+              <h2
+                class="text-4xl font-bold text-white font-outfit mb-2 drop-shadow-md">
+                {{ currentUser?.name || currentUser?.username }}
+                {{ currentUser?.lastname }}
+              </h2>
+              <p
+                class="text-xl text-indigo-200 font-medium mb-4 flex items-center justify-center md:justify-start gap-2">
+                <span class="text-white/60 text-base"
+                  >@{{ currentUser?.username }}</span
+                >
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                <span class="text-white/60 text-base">{{
+                  t("profile.role")
+                }}</span>
+              </p>
+
+              <div
+                class="flex flex-wrap gap-3 justify-center md:justify-start mb-6">
+                <div
+                  class="px-4 py-2 rounded-xl bg-white/10 text-white text-sm backdrop-blur-md border border-white/5 flex items-center gap-2">
+                  <Mail class="w-4 h-4 text-indigo-300" />
+                  {{ currentUser?.email }}
+                </div>
+                <div
+                  class="px-4 py-2 rounded-xl bg-white/10 text-white text-sm backdrop-blur-md border border-white/5 flex items-center gap-2">
+                  <Globe class="w-4 h-4 text-indigo-300" />
+                  {{ t("profile.location") }}
+                </div>
+              </div>
+            </template>
+
+            <template v-else>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="space-y-4">
+                  <input
+                    v-model="profileForm.username"
+                    type="text"
+                    :placeholder="t('profile.form.username')"
+                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
+                  <input
+                    v-model="profileForm.email"
+                    type="email"
+                    :placeholder="t('profile.form.email')"
+                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
+                </div>
+                <div class="space-y-4">
+                  <input
+                    v-model="profileForm.name"
+                    type="text"
+                    :placeholder="t('profile.form.name')"
+                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
+                  <input
+                    v-model="profileForm.lastname"
+                    type="text"
+                    :placeholder="t('profile.form.lastname')"
+                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
+                </div>
+              </div>
+            </template>
+
+            <!-- Actions -->
+            <div class="flex gap-3 justify-center md:justify-start">
+              <button
+                v-if="!isEditingProfile"
+                @click="isEditingProfile = true"
+                class="px-6 py-2.5 bg-white text-indigo-900 hover:bg-indigo-50 rounded-xl font-bold shadow-lg transition-all hover:-translate-y-0.5 flex items-center gap-2">
+                <Edit2 class="w-4 h-4" /> {{ t("common.edit") }}
+              </button>
+              <template v-else>
+                <button
+                  @click="saveProfile"
+                  :disabled="isLoadingProfile"
+                  class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg transition-all hover:-translate-y-0.5 flex items-center gap-2">
+                  <Save class="w-4 h-4" /> {{ t("common.save") }}
+                </button>
+                <button
+                  @click="cancelEdit"
+                  class="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold shadow-lg transition-all hover:-translate-y-0.5 flex items-center gap-2 border border-white/10">
+                  <X class="w-4 h-4" /> {{ t("common.cancel") }}
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Avatar Section (Right now) -->
+          <div class="relative group shrink-0">
             <div
-              class="w-32 h-32 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl ring-4 ring-white/20 dark:ring-gray-800/50 overflow-hidden transition-all duration-300 group-hover:scale-105">
+              class="w-40 h-40 rounded-full bg-linear-to-br flex items-center justify-center shadow-2xl ring-4 ring-white/10 overflow-hidden"
+              :class="[
+                profileForm.profile_image
+                  ? ''
+                  : theme.gradients.blob1.replace('blur', ''),
+              ]">
               <img
                 v-if="profileForm.profile_image"
                 :src="profileForm.profile_image"
-                alt="Profile"
                 class="w-full h-full object-cover" />
-              <User v-else class="w-16 h-16 text-white" />
+              <span v-else class="text-6xl font-bold text-white">{{
+                currentUser?.username?.charAt(0).toUpperCase()
+              }}</span>
             </div>
-
             <!-- Edit Overlay -->
             <div
               v-if="isEditingProfile"
               class="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               @click="handleImageUpload">
-              <Camera class="w-8 h-8 text-white" />
+              <Camera class="w-10 h-10 text-white" />
             </div>
-
-            <!-- Remove Image Button -->
+            <!-- Remove Button -->
             <button
               v-if="isEditingProfile && profileForm.profile_image"
               @click="removeProfileImage"
-              class="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition-all z-10">
+              class="absolute -top-1 -right-1 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
               <X class="w-4 h-4 text-white" />
             </button>
-
             <div
-              class="absolute -bottom-1 -right-1 w-10 h-10 bg-green-500 rounded-full border-4 border-white dark:border-gray-900 flex items-center justify-center shadow-lg">
-              <CheckCircle2 class="w-5 h-5 text-white" />
-            </div>
-          </div>
-
-          <!-- User Info & Edit Form -->
-          <div class="flex-1 w-full">
-            <template v-if="!isEditingProfile">
-              <div class="text-center md:text-left">
-                <h2
-                  class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                  {{
-                    currentUser?.name ||
-                    currentUser?.username ||
-                    t("profile.demo_user")
-                  }}
-                  {{ currentUser?.lastname || "" }}
-                </h2>
-                <p
-                  class="text-lg text-indigo-600 dark:text-indigo-400 font-medium mb-1">
-                  @{{ currentUser?.username }}
-                </p>
-                <div
-                  class="flex items-center justify-center md:justify-start gap-2 text-gray-500 dark:text-gray-400 mb-6">
-                  <Mail class="w-4 h-4" />
-                  <span>{{ currentUser?.email || t("nav.subtitle") }}</span>
-                </div>
-
-                <div
-                  class="flex flex-wrap gap-3 justify-center md:justify-start">
-                  <div
-                    class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-300">
-                    Full Stack Developer
-                  </div>
-                  <div
-                    class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-300">
-                    Madrid, ES 📍
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Edit Form -->
-            <template v-else>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-4">
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >Username</label
-                    >
-                    <input
-                      v-model="profileForm.username"
-                      type="text"
-                      class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
-                  </div>
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >Email</label
-                    >
-                    <input
-                      v-model="profileForm.email"
-                      type="email"
-                      class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
-                  </div>
-                </div>
-
-                <div class="space-y-4">
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >Nombre</label
-                    >
-                    <input
-                      v-model="profileForm.name"
-                      type="text"
-                      class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
-                  </div>
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                      >Apellido</label
-                    >
-                    <input
-                      v-model="profileForm.lastname"
-                      type="text"
-                      class="w-full px-4 py-2 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-3 justify-center md:justify-start mt-8">
-              <button
-                v-if="!isEditingProfile"
-                @click="isEditingProfile = true"
-                class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 font-medium">
-                <Edit2 class="w-4 h-4" />
-                {{ t("common.edit") || "Editar Perfil" }}
-              </button>
-
-              <template v-else>
-                <button
-                  @click="saveProfile"
-                  :disabled="isLoadingProfile"
-                  class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl shadow-lg shadow-green-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 font-medium disabled:opacity-50">
-                  <Save class="w-4 h-4" />
-                  {{ t("common.save") || "Guardar Cambios" }}
-                </button>
-                <button
-                  @click="cancelEdit"
-                  class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-2 font-medium">
-                  <X class="w-4 h-4" />
-                  {{ t("common.cancel") || "Cancelar" }}
-                </button>
-              </template>
-            </div>
+              class="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-bg-dark rounded-full"></div>
           </div>
         </div>
       </div>
 
-      <!-- Settings -->
-      <div class="glass-card-luxury rounded-2xl p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">
-          ⚙️ {{ t("profile.preferences") || "Preferencias" }}
-        </h3>
-
-        <div class="space-y-4">
-          <!-- Theme Toggle -->
-          <div
-            class="flex items-center justify-between p-4 rounded-xl bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all">
-            <div class="flex items-center gap-3">
-              <div class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                <component
-                  :is="isDark ? Moon : Sun"
-                  class="w-5 h-5 text-gray-700 dark:text-gray-300" />
+      <!-- Settings Panel (Matching Dark/Glass Style) -->
+      <div
+        class="relative rounded-2xl p-6 bg-bg-dark border border-white/10 shadow-xl overflow-hidden">
+        <div class="absolute inset-0 bg-white/5 z-0 pointer-events-none"></div>
+        <div class="relative z-10">
+          <h3
+            class="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+            ⚙️ {{ t("profile.preferences") }}
+          </h3>
+          <div class="space-y-4">
+            <!-- Language -->
+            <div
+              class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all">
+              <div class="flex items-center gap-3">
+                <div class="p-2 rounded-lg bg-white/10">
+                  <Globe class="w-5 h-5 text-indigo-200" />
+                </div>
+                <div>
+                  <p class="font-medium text-white">
+                    {{ t("profile.language") || "Idioma" }}
+                  </p>
+                  <p class="text-sm text-white/50">Español / English</p>
+                </div>
               </div>
-              <div>
-                <p class="font-medium text-gray-900 dark:text-gray-100">
-                  {{ t("profile.theme") }}
-                </p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  {{
-                    isDark ? t("profile.dark_mode") : t("profile.light_mode")
-                  }}
-                </p>
-              </div>
+              <button
+                @click="toggleLanguage"
+                class="relative inline-flex h-8 w-24 items-center justify-between rounded-full bg-white/20 p-1 transition-colors cursor-pointer border border-white/10">
+                <span
+                  class="absolute h-6 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-all duration-300"
+                  :class="
+                    locale === 'es' ? 'left-1' : 'left-[calc(50%+4px)]'
+                  "></span>
+                <span
+                  class="relative z-10 w-1/2 text-center text-xs font-bold transition-colors"
+                  :class="locale === 'es' ? 'text-indigo-600' : 'text-white/50'"
+                  >ES</span
+                >
+                <span
+                  class="relative z-10 w-1/2 text-center text-xs font-bold transition-colors"
+                  :class="locale === 'en' ? 'text-indigo-600' : 'text-white/50'"
+                  >EN</span
+                >
+              </button>
             </div>
-            <button
-              @click="toggleTheme"
-              class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors"
-              :class="isDark ? 'bg-indigo-600' : 'bg-gray-300'">
-              <span
-                class="inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform"
-                :class="isDark ? 'translate-x-7' : 'translate-x-1'">
-              </span>
-            </button>
-          </div>
 
-          <!-- Notifications -->
-          <div
-            class="flex items-center justify-between p-4 rounded-xl bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all">
-            <div class="flex items-center gap-3">
-              <div class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                <Bell class="w-5 h-5 text-gray-700 dark:text-gray-300" />
-              </div>
-              <div>
-                <p class="font-medium text-gray-900 dark:text-gray-100">
-                  Notificaciones
-                </p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  Activar alertas por correo
-                </p>
-              </div>
-            </div>
-            <button
-              @click="notificationsEnabled = !notificationsEnabled"
-              class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors"
-              :class="notificationsEnabled ? 'bg-indigo-600' : 'bg-gray-300'">
-              <span
-                class="inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform"
-                :class="
-                  notificationsEnabled ? 'translate-x-7' : 'translate-x-1'
-                ">
-              </span>
-            </button>
-          </div>
-
-          <!-- Language -->
-          <div
-            class="flex items-center justify-between p-4 rounded-xl bg-white/50 dark:bg-gray-800/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all">
-            <div class="flex items-center gap-3">
-              <div class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                <Globe class="w-5 h-5 text-gray-700 dark:text-gray-300" />
-              </div>
-              <div>
-                <p class="font-medium text-gray-900 dark:text-gray-100">
-                  Idioma
-                </p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  Seleccionar idioma de la interfaz
-                </p>
-              </div>
-            </div>
-            <button
-              @click="currentLanguage = currentLanguage === 'es' ? 'en' : 'es'"
-              class="relative inline-flex h-8 w-24 items-center justify-between rounded-full bg-gray-200 dark:bg-gray-700 p-1 transition-colors cursor-pointer">
-              <span
-                class="absolute h-6 w-[calc(50%-4px)] rounded-full bg-white dark:bg-gray-600 shadow-sm transition-all duration-300"
-                :class="
-                  currentLanguage === 'es' ? 'left-1' : 'left-[calc(50%+4px)]'
-                ">
-              </span>
-              <span
-                class="relative z-10 w-1/2 text-center text-xs font-bold transition-colors"
-                :class="
-                  currentLanguage === 'es'
-                    ? 'text-indigo-600 dark:text-indigo-400'
-                    : 'text-gray-500'
-                ">
-                ES
-              </span>
-              <span
-                class="relative z-10 w-1/2 text-center text-xs font-bold transition-colors"
-                :class="
-                  currentLanguage === 'en'
-                    ? 'text-indigo-600 dark:text-indigo-400'
-                    : 'text-gray-500'
-                ">
-                EN
-              </span>
-            </button>
-          </div>
-
-          <!-- Logout Button -->
-          <div
-            class="flex items-center justify-between p-4 rounded-xl bg-white/50 dark:bg-gray-800/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all cursor-pointer group mt-4 border border-transparent hover:border-red-200 dark:hover:border-red-800"
-            @click="handleLogout">
-            <div class="flex items-center gap-3">
-              <div
-                class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 group-hover:bg-red-100 dark:group-hover:bg-red-900/50 transition-colors">
-                <LogOut class="w-5 h-5 text-amber-500 dark:text-red-400" />
-              </div>
-              <div>
-                <p
-                  class="font-medium text-gray-900 dark:text-gray-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
-                  {{ t("common.logout") || "Cerrar Sesión" }}
-                </p>
-                <p
-                  class="text-sm text-gray-600 dark:text-gray-400 group-hover:text-red-500 dark:group-hover:text-red-300 transition-colors">
-                  {{ t("profile.logout_msg") || "Salir de la aplicación" }}
-                </p>
+            <!-- Logout -->
+            <div
+              class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-red-900/20 hover:border-red-500/30 transition-all cursor-pointer group"
+              @click="handleLogout">
+              <div class="flex items-center gap-3">
+                <div
+                  class="p-2 rounded-lg bg-white/10 group-hover:bg-red-500/20 transition-colors">
+                  <LogOut class="w-5 h-5 text-red-300" />
+                </div>
+                <div>
+                  <p
+                    class="font-medium text-white group-hover:text-red-200 transition-colors">
+                    {{ t("common.logout") }}
+                  </p>
+                  <p
+                    class="text-sm text-white/50 group-hover:text-red-300/70 transition-colors">
+                    {{ t("profile.logout_msg") }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>

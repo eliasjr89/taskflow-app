@@ -7,12 +7,22 @@
 /* Configuración de Tailwind v4 */
 @theme {
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-outfit: 'Outfit', system-ui, -apple-system, sans-serif;
 
-  /* Variables de color personalizadas */
-  --color-primary: #6366f1;
-  --color-primary-dark: #4f46e5;
+  /* Custom Colors */
+  --color-bg-dark: #0f172a;
+  --color-bg-card: rgba(30, 41, 59, 0.7);
+  --color-primary: #3b82f6;
+  --color-primary-glow: rgba(59, 130, 246, 0.5);
+  --color-accent: #8b5cf6;
+  --color-text-main: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-danger: #ef4444;
+  --color-success: #10b981;
+  --color-border: rgba(255, 255, 255, 0.1);
 }
+
+/* Dark mode is handled automatically or by class if needed, let's rely on defaults to fix build */
 
 /* Force dark mode to apply color-scheme */
 :root.dark {
@@ -34,6 +44,10 @@
 
 @utility glass-input {
   @apply bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 focus:bg-white/80 dark:focus:bg-gray-900/80 transition-all duration-200;
+}
+
+@utility glass-card-admin {
+  @apply bg-bg-card border border-border rounded-2xl backdrop-blur-md shadow-xl;
 }
 
 /* Estilos globales */
@@ -58,11 +72,11 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-heading);
+  font-family: var(--font-outfit);
 }
 
 /* Imagen de fondo con overlay */
-/* Imagen de fondo con overlay - DESHABILITADO para usar DynamicBackground.vue
+/* Imagen de fondo con overlay */
 body::before {
   content: '';
   position: fixed;
@@ -70,7 +84,7 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/background.png');
+  background-image: url('/taskflow_bg.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -84,17 +98,10 @@ body::after {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(5px);
   z-index: -1;
-  transition: background 0.3s ease;
 }
-
-html.dark body::after {
-  background: rgba(17, 24, 39, 0.85);
-  backdrop-filter: blur(12px);
-}
-*/
 
 /* Scrollbar personalizado */
 ::-webkit-scrollbar {
@@ -189,4 +196,17 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 
 .animate-scale-in {
   animation: scaleIn 0.4s ease-out forwards;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }

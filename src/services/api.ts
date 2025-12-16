@@ -4,6 +4,7 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/taskflow`
     : "http://localhost:3000/taskflow",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },

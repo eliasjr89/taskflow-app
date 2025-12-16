@@ -1,22 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, onMounted, computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import api from "../services/api";
-import { useFeedback } from "../composables/useFeedback";
+import { useToast } from "../composables/useToast";
 import { useTaskState } from "../composables/useTaskState";
 import { User, Mail, Lock, ArrowRight, Loader2 } from "lucide-vue-next";
 
-const { showFeedback } = useFeedback();
+const toast = useToast();
 const { loadData } = useTaskState();
-const router = useRouter();
+const router = useRouter(); // Restore router
+const route = useRoute();
 const { t } = useI18n();
 
 // State
-const isWelcomePhase = ref(true);
-const showForm = ref(false);
+const showForm = ref(false); // Start false to animate in? Or just true. Let's animate in quickly.
 const isLoginMode = ref(true);
 const isLoading = ref(false);
+
+const role = computed(() => route.query.role as string | undefined);
+const isRoleAdmin = computed(() => role.value === "admin");
 
 // Form Data
 const formData = ref({
@@ -29,13 +32,10 @@ const formData = ref({
 });
 
 onMounted(() => {
-  // Sequence: Welcome Image -> Form Appearance
+  // Direct animation
   setTimeout(() => {
-    isWelcomePhase.value = false;
-    setTimeout(() => {
-      showForm.value = true;
-    }, 500); // Wait for welcome text fade out (optional)
-  }, 2500);
+    showForm.value = true;
+  }, 100);
 });
 
 const toggleMode = () => {
@@ -61,11 +61,15 @@ const handleAuth = async () => {
       });
 
       const resData = response.data.data || response.data;
+      toast.success(
+        t("auth.welcome"),
+        `Bienvenido ${resData.user.name || resData.user.username}`
+      );
       finalizeAuth(resData);
     } else {
       // Register
       if (formData.value.password !== formData.value.confirmPassword) {
-        showFeedback(t("auth.error"), t("auth.passwords_mismatch"), "error");
+        toast.error(t("auth.error"), t("auth.passwords_mismatch"));
         isLoading.value = false;
         return;
       }
@@ -79,11 +83,11 @@ const handleAuth = async () => {
       });
       const resData = response.data.data || response.data;
       finalizeAuth(resData);
-      showFeedback(t("auth.welcome"), t("auth.account_created"), "success");
+      toast.success(t("auth.welcome"), t("auth.account_created"));
     }
   } catch (err: any) {
     const msg = err.response?.data?.message || t("auth.auth_failed");
-    showFeedback(t("auth.error"), msg, "error");
+    toast.error(t("auth.error"), msg);
   } finally {
     isLoading.value = false;
   }
@@ -93,7 +97,12 @@ const finalizeAuth = async (data: any) => {
   localStorage.setItem("token", data.token);
   localStorage.setItem("user", JSON.stringify(data.user));
   await loadData();
-  router.push("/");
+
+  if (data.user.role === "admin" || data.user.role === "manager") {
+    router.push("/admin/overview");
+  } else {
+    router.push("/dashboard");
+  }
 };
 </script>
 
@@ -104,29 +113,9 @@ const finalizeAuth = async (data: any) => {
 
     <!-- Content Container -->
     <div class="relative z-10 w-full max-w-md px-4">
-      <!-- Welcome Phase -->
-      <transition
-        enter-active-class="transition duration-1000 ease-out"
-        enter-from-class="transform opacity-0 translate-y-10"
-        enter-to-class="transform opacity-100 translate-y-0"
-        leave-active-class="transition duration-500 ease-in"
-        leave-from-class="transform opacity-100 translate-y-0"
-        leave-to-class="transform opacity-0 -translate-y-10">
-        <div v-if="isWelcomePhase" class="text-center">
-          <h1
-            class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-indigo-500 mb-6 drop-shadow-lg">
-            TaskFlow
-          </h1>
-          <p
-            class="text-xl text-gray-600 dark:text-gray-300 font-light tracking-wide">
-            {{ $t("auth.taskflow_slogan") }}
-          </p>
-        </div>
-      </transition>
-
       <!-- Auth Form Phase -->
       <transition
-        enter-active-class="transition duration-700 delay-200 ease-out"
+        enter-active-class="transition duration-700 ease-out"
         enter-from-class="transform opacity-0 scale-95"
         enter-to-class="transform opacity-100 scale-100">
         <div v-if="showForm" class="glass-panel p-8 rounded-3xl">
@@ -135,16 +124,25 @@ const finalizeAuth = async (data: any) => {
             <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {{
                 isLoginMode
-                  ? $t("auth.welcome_back")
+                  ? isRoleAdmin
+                    ? "Acceso Administrativo"
+                    : $t("auth.welcome_back")
                   : $t("auth.create_account")
               }}
             </h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm">
-              {{
-                isLoginMode
-                  ? $t("auth.login_subtitle")
-                  : $t("auth.register_subtitle")
-              }}
+              <span
+                v-if="isRoleAdmin && isLoginMode"
+                class="text-purple-400 font-medium"
+                >Panel de Control Global</span
+              >
+              <span v-else>
+                {{
+                  isLoginMode
+                    ? $t("auth.login_subtitle")
+                    : $t("auth.register_subtitle")
+                }}
+              </span>
             </p>
           </div>
 

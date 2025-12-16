@@ -51,7 +51,7 @@ import CountUp from "../components/CountUp.vue";
 import { useAnimatedNumber } from "../composables/useAnimatedNumber";
 import { ref, onMounted } from "vue";
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const isMounted = ref(false);
 
@@ -138,8 +138,8 @@ const weeklyActivity = computed(() => {
     });
 
     days.push({
-      day: date.toLocaleDateString("es-ES", { weekday: "short" }),
-      date: date.toLocaleDateString("es-ES", {
+      day: date.toLocaleDateString(locale.value, { weekday: "short" }),
+      date: date.toLocaleDateString(locale.value, {
         day: "numeric",
         month: "short",
       }),
@@ -189,7 +189,7 @@ const maxDailyTasks = computed(() => {
                 <Zap class="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
               <h3 class="font-semibold text-gray-900 dark:text-gray-100">
-                {{ t("profile.streak") || "Racha Actual (7 días)" }}
+                {{ t("profile.streak_label") || "Racha Actual (7 días)" }}
               </h3>
             </div>
             <div class="flex items-end gap-2">
@@ -197,9 +197,9 @@ const maxDailyTasks = computed(() => {
                 class="text-4xl font-bold text-gray-900 dark:text-gray-100"
                 >{{ animatedStreak }}</span
               >
-              <span class="text-sm text-gray-600 dark:text-gray-400 mb-1"
-                >tareas completadas</span
-              >
+              <span class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{
+                t("profile.tasks_completed")
+              }}</span>
             </div>
           </div>
         </div>
@@ -234,7 +234,7 @@ const maxDailyTasks = computed(() => {
                     {{ mostProductiveProject.completedTasks }}/{{
                       mostProductiveProject.totalTasks
                     }}
-                    completadas
+                    {{ t("analytics.completed_tasks").toLowerCase() }}
                   </div>
                   <div
                     class="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full font-medium">
@@ -254,7 +254,7 @@ const maxDailyTasks = computed(() => {
             <div
               class="relative z-10 flex flex-col items-center justify-center h-full text-center">
               <p class="text-gray-500 dark:text-gray-400">
-                Sin datos suficientes
+                {{ t("analytics.no_data") }}
               </p>
             </div>
           </template>

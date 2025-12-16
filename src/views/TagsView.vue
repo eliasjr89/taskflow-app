@@ -5,8 +5,10 @@ import { useTaskState } from "../composables/useTaskState";
 import AddTagModal from "../components/AddTagModal.vue";
 import { Tags, Plus, Edit2, Trash2, Hash } from "lucide-vue-next";
 import type { Tag } from "../types/global";
+import { useI18n } from "vue-i18n";
 
 const { tags, addTag, updateTag, deleteTag } = useTagState();
+const { t } = useI18n();
 const { tasks } = useTaskState();
 
 const isModalOpen = ref(false);
@@ -59,11 +61,7 @@ function handleSaveTag(tag: Tag) {
 }
 
 function handleDeleteTag(tagId: string) {
-  if (
-    confirm(
-      "¿Estás seguro de eliminar esta etiqueta? Las tareas no se eliminarán, solo se removerá la etiqueta."
-    )
-  ) {
+  if (confirm(t("tags.delete_confirm_msg"))) {
     deleteTag(tagId);
   }
 }
@@ -136,8 +134,11 @@ const getColorClass = (color: string) => {
                 {{ tag.name }}
               </h3>
               <p class="text-sm text-gray-600 dark:text-gray-400">
-                {{ getTaskCount(tag.id) }} tarea{{
-                  getTaskCount(tag.id) !== 1 ? "s" : ""
+                {{ getTaskCount(tag.id) }}
+                {{
+                  getTaskCount(tag.id) !== 1
+                    ? t("calendar.tooltip_tasks")
+                    : t("calendar.tooltip_task")
                 }}
               </p>
             </div>
@@ -149,13 +150,13 @@ const getColorClass = (color: string) => {
             <button
               @click.stop="openEditModal(tag)"
               class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer relative z-20"
-              title="Editar">
+              :title="t('common.edit')">
               <Edit2 class="w-4 h-4" />
             </button>
             <button
               @click.stop="handleDeleteTag(tag.id)"
               class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors relative z-20 cursor-pointer"
-              :title="$t('common.delete')">
+              :title="t('common.delete')">
               <Trash2 class="w-4 h-4" />
             </button>
           </div>

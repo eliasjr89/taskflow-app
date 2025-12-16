@@ -132,6 +132,7 @@ export default {
     no_tasks_to_analyze: "No tasks to analyze",
     created_tasks: "Created Tasks",
     general_progress: "General Progress",
+    no_data: "Not enough data",
     total: "Total",
   },
   dashboard: {
@@ -172,6 +173,16 @@ export default {
     profile_updated: "Profile updated successfully",
     logout_msg: "Sign out of the application",
     streak: "Streak",
+    streak_label: "Current Streak (7 days)",
+    role: "Full Stack Developer",
+    location: "Madrid, ES",
+    language: "Language",
+    form: {
+      username: "Username",
+      name: "First Name",
+      lastname: "Last Name",
+      email: "Email Address",
+    },
   },
   calendar: {
     title: "Calendar",
@@ -179,6 +190,11 @@ export default {
     no_tasks: "No tasks for this day",
     select_day: "Select a day to view its tasks",
     tasks: "tasks",
+    today: "Today",
+    prev_month: "Previous Month",
+    next_month: "Next Month",
+    tooltip_task: "task",
+    tooltip_tasks: "tasks",
   },
   auth: {
     welcome_back: "Welcome Back",
@@ -202,5 +218,14 @@ export default {
     taskflow_slogan: "Elevate your productivity.",
     error: "Error",
     welcome: "Welcome!",
+  },
+  admin: {
+    overview: "Overview",
+    users: "User Management",
+    projects: "Project Management",
+    tasks: "Task Management",
+    database: "Database",
+    profile: "My Profile",
+    panel: "Admin Panel",
   },
 };

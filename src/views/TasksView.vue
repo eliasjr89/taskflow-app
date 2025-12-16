@@ -5,6 +5,7 @@ import { useTasks } from "../composables/useTask";
 import { useI18n } from "vue-i18n";
 import type { FilterState } from "../types/global";
 import { Filter } from "lucide-vue-next";
+import SkeletonLoader from "../components/SkeletonLoader.vue";
 
 import AddTaskForm from "../components/AddTaskForm.vue";
 import TaskList from "../components/TaskList.vue";
@@ -28,8 +29,17 @@ const activeFilters = ref<FilterState>({
 const isModalOpen = ref(false);
 const isMobileFiltersOpen = ref(false);
 const selectedTask = ref<(typeof tasks.value)[0] | null>(null);
+const isLoading = ref(true);
 
-onMounted(loadTask);
+onMounted(async () => {
+  try {
+    await loadTask();
+  } finally {
+    setTimeout(() => {
+      isLoading.value = false;
+    }, 500);
+  }
+});
 
 // Advanced Filtering Logic
 const filteredTasks = computed(() => {
@@ -151,90 +161,86 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
       </div>
     </Transition>
 
-    <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8">
-      <!-- Header -->
-      <div class="flex flex-col gap-2 mb-6 text-center md:text-left">
-        <h1
-          class="text-3xl md:text-4xl font-bold font-heading flex items-center justify-center md:justify-start gap-2">
-          📝
-          <span
-            class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent"
-            >{{ t("tasks.title") }}</span
-          >
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400 text-lg">
-          {{ t("tasks.subtitle") }}
-        </p>
+    <div class="flex-1 flex flex-col w-full px-4 md:px-0 lg:px-0">
+      <!-- Removed redundant header -->
+
+      <!-- SKELETON LOADING -->
+      <div v-if="isLoading" class="space-y-6">
+        <SkeletonLoader type="text" />
+        <SkeletonLoader type="list" :count="5" />
       </div>
 
-      <!-- Mobile Filters Button -->
-      <div class="md:hidden mb-6 flex gap-2">
-        <div class="relative flex-1">
-          <input
-            type="text"
-            :placeholder="t('common.search')"
-            v-model="activeFilters.search"
-            class="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600/50 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
-        </div>
-        <button
-          @click="isMobileFiltersOpen = true"
-          class="px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300/50 dark:border-gray-600/50 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
-          <Filter class="w-5 h-5" />
-        </button>
-      </div>
-
-      <!-- Add Task Form -->
-      <AddTaskForm class="mb-6" />
-
-      <div class="space-y-6">
-        <!-- Pending Tasks -->
-        <div v-if="displayPendingTasks.length > 0">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold flex items-center gap-2">
-              <span>📝</span>
-              <span
-                class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                {{ t("tasks.pending_title") }}
-              </span>
-            </h2>
-            <span
-              class="text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-              <CountUp :to="displayPendingTasks.length" />
-            </span>
+      <!-- MAIN CONTENT -->
+      <div v-else>
+        <!-- Mobile Filters Button & Search -->
+        <div class="md:hidden mb-6 flex gap-2">
+          <div class="relative flex-1">
+            <input
+              type="text"
+              :placeholder="t('common.search')"
+              v-model="activeFilters.search"
+              class="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600/50 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
           </div>
-          <TaskList
-            :tasks="displayPendingTasks"
-            @select-task="handleSelectTask" />
+          <button
+            @click="isMobileFiltersOpen = true"
+            class="px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300/50 dark:border-gray-600/50 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
+            <Filter class="w-5 h-5" />
+          </button>
         </div>
 
-        <!-- Completed Tasks -->
-        <div v-if="displayCompletedTasks.length > 0" class="mt-8">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold flex items-center gap-2">
-              <span>✅</span>
+        <!-- Add Task Form -->
+        <AddTaskForm class="mb-6" />
+
+        <div class="space-y-6">
+          <!-- Pending Tasks -->
+          <div v-if="displayPendingTasks.length > 0">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-semibold flex items-center gap-2">
+                <span>📝</span>
+                <span
+                  class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                  {{ t("tasks.pending_title") }}
+                </span>
+              </h2>
               <span
-                class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                {{ t("tasks.completed_title") }}
+                class="text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                <CountUp :to="displayPendingTasks.length" />
               </span>
-            </h2>
-            <span
-              class="text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-              <CountUp :to="displayCompletedTasks.length" />
-            </span>
+            </div>
+            <TaskList
+              :tasks="displayPendingTasks"
+              @select-task="handleSelectTask" />
           </div>
-          <TaskList
-            :tasks="displayCompletedTasks"
-            @select-task="handleSelectTask" />
-        </div>
 
-        <!-- No Tasks Empty State -->
-        <div
-          v-if="
-            displayPendingTasks.length === 0 &&
-            displayCompletedTasks.length === 0
-          "
-          class="glass-card rounded-2xl p-8 text-center text-gray-600 dark:text-gray-300">
-          <p class="text-lg">{{ t("tasks.no_tasks") }}</p>
+          <!-- Completed Tasks -->
+          <div v-if="displayCompletedTasks.length > 0" class="mt-8">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-semibold flex items-center gap-2">
+                <span>✅</span>
+                <span
+                  class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                  {{ t("tasks.completed_title") }}
+                </span>
+              </h2>
+              <span
+                class="text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                <CountUp :to="displayCompletedTasks.length" />
+              </span>
+            </div>
+            <TaskList
+              :tasks="displayCompletedTasks"
+              @select-task="handleSelectTask" />
+          </div>
+
+          <!-- No Tasks Empty State -->
+          <div
+            v-if="
+              displayPendingTasks.length === 0 &&
+              displayCompletedTasks.length === 0
+            "
+            class="glass-card rounded-2xl p-8 text-center text-gray-600 dark:text-gray-300">
+            <p class="text-lg">{{ t("tasks.no_tasks") }}</p>
+          </div>
         </div>
       </div>
     </div>
