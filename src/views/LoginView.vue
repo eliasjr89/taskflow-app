@@ -32,6 +32,12 @@ const formData = ref({
 });
 
 onMounted(() => {
+  // Si no hay rol especificado en la URL y estamos en modo login, redirigir a Welcome para forzar elección
+  if (!route.query.role && isLoginMode.value) {
+    router.replace({ name: "Welcome" });
+    return;
+  }
+
   // Direct animation
   setTimeout(() => {
     showForm.value = true;

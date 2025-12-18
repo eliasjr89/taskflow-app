@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useTaskState } from "../composables/useTaskState";
+import { useProjectState } from "../composables/useProjectState";
 import {
   TrendingUp,
   Target,
@@ -15,7 +16,8 @@ import {
 
 // ... (existing computed vars)
 
-const { tasks, projects, loadData } = useTaskState();
+const { tasks, loadData } = useTaskState();
+const { projects, loadProjects } = useProjectState();
 
 // Racha actual (Tasks completed in last 7 days)
 const currentStreak = computed(() => {
@@ -57,6 +59,7 @@ const isMounted = ref(false);
 
 onMounted(() => {
   loadData();
+  loadProjects();
   setTimeout(() => {
     isMounted.value = true;
   }, 100);

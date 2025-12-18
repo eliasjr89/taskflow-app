@@ -2,7 +2,7 @@
 import { ref, computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import type { Task, FilterState } from "../types/global";
-import { useTaskState } from "../composables/useTaskState";
+import { useProjectState } from "../composables/useProjectState";
 import { useTagState } from "../composables/useTagState";
 import {
   Search,
@@ -16,7 +16,7 @@ import {
 } from "lucide-vue-next";
 
 const { t } = useI18n();
-const { projects } = useTaskState();
+const { projects } = useProjectState();
 const { tags } = useTagState();
 
 const props = withDefaults(

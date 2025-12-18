@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import type { Task } from "../types/global";
 import { useConfetti } from "../composables/useConfetti";
-import { useTaskState } from "../composables/useTaskState";
+import { useProjectState } from "../composables/useProjectState";
 import { useTagState } from "../composables/useTagState";
 import {
   Folder,
@@ -29,13 +29,12 @@ const emit = defineEmits<{
   (e: "select-task", task: Task): void;
 }>();
 
-const { fireConfetti } = useConfetti();
-const { projects } = useTaskState();
+const { triggerConfetti } = useConfetti();
+const { projects } = useProjectState();
 const { tags } = useTagState();
 
 const isEditing = ref(false);
 const editTitle = ref(props.task.title);
-const titleInput = ref<HTMLInputElement | null>(null);
 
 const iconMap: Record<string, any> = {
   Folder,
@@ -143,12 +142,12 @@ const formatDueDate = (date?: Date | string) => {
 };
 
 function onDelete() {
-  emit('delete-task', props.task.id);
+  emit("delete-task", props.task.id);
 }
 
 function startEditing() {
   if (props.task.completed) return;
-  emit('select-task', props.task);
+  emit("select-task", props.task);
 }
 
 function saveEdit() {
@@ -171,22 +170,19 @@ function toggleComplete() {
   emit("toggle-complete", props.task.id);
   // Fire confetti when marking as complete (not when unmarking)
   if (!wasCompleted) {
-    fireConfetti();
+    triggerConfetti();
   }
 }
-
-
 </script>
 
 <template>
   <div
     class="glass-card p-4 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group relative animate-fade-in flex flex-col gap-3"
     :class="{ 'opacity-60': task.completed }">
-    
     <!-- Row 1: Checkbox + Title -->
     <div class="flex items-start gap-3 w-full">
       <!-- Checkbox -->
-      <div class="relative flex-shrink-0 mt-1" @click.stop>
+      <div class="relative shrink-0 mt-1" @click.stop>
         <input
           type="checkbox"
           :checked="task.completed"
@@ -196,7 +192,8 @@ function toggleComplete() {
           class="w-6 h-6 cursor-pointer transition-all duration-300"
           :class="{
             'text-green-500': task.completed,
-            'text-gray-300 dark:text-gray-600 hover:text-indigo-400': !task.completed
+            'text-gray-300 dark:text-gray-600 hover:text-indigo-400':
+              !task.completed,
           }"
           @click="toggleComplete"
           fill="none"
@@ -217,7 +214,6 @@ function toggleComplete() {
       <div class="flex-1 min-w-0">
         <div v-if="isEditing" class="flex items-center gap-2" @click.stop>
           <input
-            ref="titleInput"
             v-model="editTitle"
             @blur="saveEdit"
             @keyup.enter="saveEdit"
@@ -248,7 +244,9 @@ function toggleComplete() {
           v-if="project"
           class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors"
           :class="getColorClass(project.color)">
-          <component :is="iconMap[project.icon] || Folder" class="w-3.5 h-3.5" />
+          <component
+            :is="iconMap[project.icon] || Folder"
+            class="w-3.5 h-3.5" />
           <span class="truncate max-w-[120px]">{{ project.title }}</span>
         </div>
 
@@ -274,7 +272,7 @@ function toggleComplete() {
             {{ tag?.name }}
           </span>
         </div>
-      
+
         <!-- Due Date Badge -->
         <div
           v-if="task.dueDate"
@@ -286,7 +284,8 @@ function toggleComplete() {
       </div>
 
       <!-- Right: Actions -->
-      <div class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-all flex-shrink-0 ml-auto">
+      <div
+        class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-all shrink-0 ml-auto">
         <button
           @click.stop="startEditing"
           class="p-2 cursor-pointer text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl transition-colors"

@@ -10,7 +10,7 @@ const { tasks, selectedTaskId } = defineProps<{
 }>();
 
 defineEmits<{
-  (e: 'select-task', task: Task): void;
+  (e: "select-task", task: Task): void;
 }>();
 
 const { removeTask, toggleTaskCompletion, updateTask } = useTasks();
@@ -24,11 +24,11 @@ watch(
     await nextTick();
     const index = tasks.findIndex((t) => t.id === id);
     if (index !== -1 && taskRefs.value[index]) {
-      taskRefs.value[index].scrollIntoView({
+      taskRefs.value[index]?.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
-      taskRefs.value[index].classList.add("ring-2", "ring-indigo-400");
+      taskRefs.value[index]?.classList.add("ring-2", "ring-indigo-400");
       setTimeout(
         () =>
           taskRefs.value[index]?.classList.remove("ring-2", "ring-indigo-400"),
@@ -53,14 +53,16 @@ function handleEditTask(task: Task) {
 
 <template>
   <div class="flex flex-col gap-3 w-full">
-    <div v-for="(task, index) in tasks" :key="task.id" :ref="(el: any) => taskRefs[index] = el as HTMLElement">
-      <TaskCard 
+    <div
+      v-for="(task, index) in tasks"
+      :key="task.id"
+      :ref="(el: any) => taskRefs[index] = el as HTMLElement">
+      <TaskCard
         :task="task"
         @toggle-complete="handleToggleComplete"
         @delete-task="handleDeleteTask"
         @edit-task="handleEditTask"
-        @select-task="$emit('select-task', $event)"
-      />
+        @select-task="$emit('select-task', $event)" />
     </div>
   </div>
 </template>

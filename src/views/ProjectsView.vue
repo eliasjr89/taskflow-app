@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CountUp from "../components/CountUp.vue";
 import { ref, onMounted } from "vue";
-import { useTaskState } from "../composables/useTaskState";
+import { useProjectState } from "../composables/useProjectState";
 import SkeletonLoader from "../components/SkeletonLoader.vue";
 import {
   Plus,
@@ -28,7 +28,8 @@ const {
   deleteProject,
   getProjectProgress,
   getTasksByProject,
-} = useTaskState();
+  loadProjects,
+} = useProjectState();
 const isModalOpen = ref(false);
 const projectToDelete = ref<string | null>(null);
 const projectToEdit = ref<Project | null>(null);
@@ -36,6 +37,7 @@ const isMounted = ref(false);
 const isLoading = ref(true);
 
 onMounted(() => {
+  loadProjects();
   setTimeout(() => {
     isMounted.value = true;
     isLoading.value = false;

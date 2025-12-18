@@ -1,12 +1,14 @@
 // src/composables/useTasks.ts
 import { useTaskState } from "./useTaskState";
+import { useProjectState } from "./useProjectState";
 import api from "../services/api";
 import type { Task } from "../types/global";
 import { useFeedback } from "./useFeedback";
 import { useI18n } from "vue-i18n";
 
 export function useTasks() {
-  const { tasks, loadData, projects } = useTaskState();
+  const { tasks, loadData } = useTaskState();
+  const { projects } = useProjectState();
   const { showFeedback } = useFeedback();
   const { t } = useI18n();
 

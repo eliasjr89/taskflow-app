@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from "vue";
 import { useTaskState } from "../composables/useTaskState";
 import { useTasks } from "../composables/useTask";
+import { useProjectState } from "../composables/useProjectState";
 import { useI18n } from "vue-i18n";
 import type { FilterState } from "../types/global";
 import { Filter } from "lucide-vue-next";
@@ -16,6 +17,7 @@ import CountUp from "../components/CountUp.vue";
 const { t } = useI18n();
 const { tasks } = useTaskState();
 const { loadTask } = useTasks();
+const { loadProjects } = useProjectState();
 
 // Filters state
 const activeFilters = ref<FilterState>({
@@ -33,7 +35,7 @@ const isLoading = ref(true);
 
 onMounted(async () => {
   try {
-    await loadTask();
+    await Promise.all([loadTask(), loadProjects()]);
   } finally {
     setTimeout(() => {
       isLoading.value = false;

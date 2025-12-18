@@ -1,37 +1,40 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-vue-next';
-import { vClickOutside } from '../composables/useClickOutside';
+import { ref, computed } from "vue";
+import { Calendar, ChevronLeft, ChevronRight } from "lucide-vue-next";
+import { vClickOutside } from "../composables/useClickOutside";
 
 const props = defineProps<{
   modelValue?: string;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void;
+  (e: "update:modelValue", value: string): void;
 }>();
 
 const isOpen = ref(false);
 const currentDate = ref(new Date());
 
 const selectedDate = computed({
-  get: () => props.modelValue ? new Date(props.modelValue) : null,
+  get: () => (props.modelValue ? new Date(props.modelValue) : null),
   set: (value: Date | null) => {
     if (value) {
       const year = value.getFullYear();
-      const month = String(value.getMonth() + 1).padStart(2, '0');
-      const day = String(value.getDate()).padStart(2, '0');
-      emit('update:modelValue', `${year}-${month}-${day}`);
+      const month = String(value.getMonth() + 1).padStart(2, "0");
+      const day = String(value.getDate()).padStart(2, "0");
+      emit("update:modelValue", `${year}-${month}-${day}`);
       isOpen.value = false;
     }
-  }
+  },
 });
 
 const currentMonth = computed(() => currentDate.value.getMonth());
 const currentYear = computed(() => currentDate.value.getFullYear());
 
 const monthName = computed(() => {
-  return currentDate.value.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  return currentDate.value.toLocaleDateString("es-ES", {
+    month: "long",
+    year: "numeric",
+  });
 });
 
 function previousMonth() {
@@ -50,41 +53,41 @@ function goToToday() {
 const calendarDays = computed(() => {
   const year = currentYear.value;
   const month = currentMonth.value;
-  
+
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  
+
   let firstDayOfWeek = firstDay.getDay();
   firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
-  
+
   const days: Array<{ date: Date; isCurrentMonth: boolean }> = [];
-  
+
   const prevMonthLastDay = new Date(year, month, 0).getDate();
   for (let i = firstDayOfWeek - 1; i >= 0; i--) {
     const day = prevMonthLastDay - i;
     days.push({
       date: new Date(year, month - 1, day),
-      isCurrentMonth: false
+      isCurrentMonth: false,
     });
   }
-  
+
   for (let day = 1; day <= lastDay.getDate(); day++) {
     days.push({
       date: new Date(year, month, day),
-      isCurrentMonth: true
+      isCurrentMonth: true,
     });
   }
-  
+
   const remainingDays = 7 - (days.length % 7);
   if (remainingDays < 7) {
     for (let day = 1; day <= remainingDays; day++) {
       days.push({
         date: new Date(year, month + 1, day),
-        isCurrentMonth: false
+        isCurrentMonth: false,
       });
     }
   }
-  
+
   return days;
 });
 
@@ -121,7 +124,7 @@ function closeCalendar(event: Event) {
 
 const pickerContainer = ref<HTMLElement | null>(null);
 
-const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+const weekDays = ["L", "M", "X", "J", "V", "S", "D"];
 </script>
 
 <template>
@@ -135,12 +138,12 @@ const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
           ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20'
           : 'text-gray-500 dark:text-gray-400'
       ">
-      <Calendar class="w-4 h-4 flex-shrink-0" />
+      <Calendar class="w-4 h-4 shrink-0" />
       <span class="text-sm font-medium whitespace-nowrap">
         {{
           modelValue
             ? new Date(modelValue).toLocaleDateString()
-            : 'Fecha de vencimiento'
+            : "Fecha de vencimiento"
         }}
       </span>
     </button>
@@ -165,9 +168,10 @@ const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <ChevronLeft class="w-4 h-4" />
           </button>
-          
+
           <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize">
+            <span
+              class="text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize">
               {{ monthName }}
             </span>
             <button
@@ -177,7 +181,7 @@ const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
               Hoy
             </button>
           </div>
-          
+
           <button
             type="button"
             @click="nextMonth"
@@ -213,7 +217,7 @@ const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
                 : '',
               isSelected(day.date)
                 ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                : 'text-gray-900 dark:text-gray-100'
+                : 'text-gray-900 dark:text-gray-100',
             ]">
             {{ day.date.getDate() }}
           </button>

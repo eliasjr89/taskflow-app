@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useTasks } from "../composables/useTask";
-import { useTaskState } from "../composables/useTaskState";
+import { useProjectState } from "../composables/useProjectState";
 import { useTagState } from "../composables/useTagState";
 import {
   Folder,
@@ -31,7 +31,7 @@ const isTagDropdownOpen = ref(false);
 const isPriorityDropdownOpen = ref(false);
 
 const { addTask } = useTasks();
-const { projects } = useTaskState();
+const { projects } = useProjectState();
 const { tags } = useTagState();
 
 const iconMap: Record<string, any> = {
