@@ -61,6 +61,7 @@ export default {
     without_priority: "Sin Prioridad",
     no_completed_tasks: "No hay tareas completadas.",
     task_title: "Título de la tarea",
+    no_priority: "Sin prioridad",
     add_description: "Añadir descripción...",
     confirm_delete: "¿Estás seguro de que quieres eliminar esta tarea?",
     completed: "Completada",

@@ -29,7 +29,7 @@ loadTags();
 // Tag Methods
 const addTag = async (tag: Tag) => {
   try {
-    await api.post("/tags", { name: tag.name });
+    await api.post("/tags", { name: tag.name, color: tag.color });
     await loadTags();
   } catch {
     // Error handling
