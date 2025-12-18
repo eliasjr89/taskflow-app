@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
-import type { User } from "@/types";
 import { useToast } from "@/composables/useToast";
 import { useSectionTheme } from "@/composables/useSectionTheme";
+import { useUserState } from "@/composables/useUserState";
 
 const toast = useToast();
 const { theme } = useSectionTheme();
+const { user, fetchUser } = useUserState();
 
-const user = ref<User | any>({});
 const profileImage = ref<string | null>(null);
 const loading = ref(true);
 const saving = ref(false);
 
 const fileInput = ref<HTMLInputElement | null>(null);
-const avatarFile = ref<File | null>(null); // Store the actual file for upload
+const avatarFile = ref<File | null>(null);
 
 const form = ref({
   username: "",
@@ -22,27 +22,27 @@ const form = ref({
   name: "",
   lastname: "",
   password: "",
-  avatarColor: "", // Added to satisfy types
+  avatarColor: "",
 });
 
-const fetchProfile = async () => {
+const loadProfile = async () => {
   loading.value = true;
   try {
-    const res = await api.get("/user/profile");
-    if (res.data.success) {
-      user.value = res.data.data;
+    if (!user.value) {
+      await fetchUser();
+    }
+
+    if (user.value) {
       form.value = {
         username: user.value.username,
-        email: user.value.email, // Read only mostly
+        email: user.value.email,
         name: user.value.name,
         lastname: user.value.lastname,
         password: "",
         avatarColor: "",
       };
-      profileImage.value = user.value.profile_image;
+      profileImage.value = user.value.profile_image || null;
     }
-  } catch {
-    // ignore
   } finally {
     loading.value = false;
   }
@@ -52,12 +52,8 @@ const handleImageUpload = (e: Event) => {
   const input = e.target as HTMLInputElement;
   if (input.files && input.files[0]) {
     const file = input.files[0];
-
-    // Process image: Resize and Compress
     compressImage(file, (compressedFile) => {
       avatarFile.value = compressedFile;
-
-      // Preview
       const reader = new FileReader();
       reader.onload = (e) => {
         profileImage.value = e.target?.result as string;
@@ -75,7 +71,7 @@ const compressImage = (file: File, callback: (f: File) => void) => {
     img.src = event.target?.result as string;
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      const MAX_WIDTH = 800; // Safe size
+      const MAX_WIDTH = 800;
       const MAX_HEIGHT = 800;
       let width = img.width;
       let height = img.height;
@@ -97,11 +93,9 @@ const compressImage = (file: File, callback: (f: File) => void) => {
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.drawImage(img, 0, 0, width, height);
-
         canvas.toBlob(
           (blob) => {
             if (blob) {
-              // Default to jpeg 0.8 quality
               const newFile = new File([blob], file.name, {
                 type: "image/jpeg",
                 lastModified: Date.now(),
@@ -118,19 +112,18 @@ const compressImage = (file: File, callback: (f: File) => void) => {
 };
 
 const handleSubmit = async () => {
+  if (!user.value) return;
   saving.value = true;
   try {
-    // 1. Upload Avatar if changed
     if (avatarFile.value) {
       const formData = new FormData();
       formData.append("avatar", avatarFile.value);
-
       await api.post("/user/avatar", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      // No need to manually update local state from this call if we refetch user below
     }
 
-    // 2. Update other profile info
     const payload: any = {
       username: form.value.username,
       name: form.value.name,
@@ -139,17 +132,18 @@ const handleSubmit = async () => {
 
     if (form.value.password) payload.password = form.value.password;
 
-    // We don't send profile_image as base64 string anymore
-
     await api.put(`/users/${user.value.id}`, payload);
+
     toast.success(
       "Perfil actualizado",
       "Los cambios se han guardado correctamente"
     );
-    // Refresh to sync state
-    await fetchProfile();
-    // Force header update via reloading or event bus (simple reload for now)
-    window.location.reload();
+
+    // Refresh global state
+    await fetchUser();
+
+    // Reload local form data
+    loadProfile();
   } catch (error: any) {
     const errorMsg =
       error.response?.data?.message || "Error al actualizar perfil";
@@ -159,7 +153,7 @@ const handleSubmit = async () => {
   }
 };
 
-onMounted(fetchProfile);
+onMounted(loadProfile);
 </script>
 
 <template>
@@ -255,7 +249,7 @@ onMounted(fetchProfile);
                 :class="`w-full h-full rounded-full flex items-center justify-center text-7xl text-white bg-linear-to-br ${
                   form.avatarColor || 'from-primary to-accent'
                 }`">
-                {{ user.username?.charAt(0).toUpperCase() }}
+                {{ user?.username?.charAt(0).toUpperCase() }}
               </div>
 
               <!-- Overlay Camera Icon -->
@@ -281,19 +275,19 @@ onMounted(fetchProfile);
 
           <!-- User Info -->
           <h2 class="text-3xl font-bold text-white mb-2 tracking-tight">
-            {{ user.name }} {{ user.lastname }}
+            {{ user?.name }} {{ user?.lastname }}
           </h2>
 
           <div class="flex flex-wrap justify-center gap-3 mb-8">
             <span
               class="px-3 py-1 rounded-full bg-slate-700/50 text-slate-300 border border-slate-600 text-sm font-medium flex items-center gap-2">
               <i class="fa-solid fa-at text-xs text-slate-400"></i>
-              {{ user.username }}
+              {{ user?.username }}
             </span>
             <span
               class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
               <i class="fa-solid fa-shield-cat text-xs"></i>
-              {{ user.role }}
+              {{ user?.role }}
             </span>
           </div>
 
@@ -324,7 +318,11 @@ onMounted(fetchProfile);
                 >Miembro desde</span
               >
               <div class="font-mono text-white text-sm py-1.5 font-medium">
-                {{ new Date(user.created_at).toLocaleDateString() }}
+                {{
+                  user?.created_at
+                    ? new Date(user.created_at).toLocaleDateString()
+                    : "-"
+                }}
               </div>
             </div>
           </div>
@@ -405,7 +403,7 @@ onMounted(fetchProfile);
           <div class="flex justify-end gap-4 pt-4">
             <button
               type="button"
-              @click="fetchProfile"
+              @click="loadProfile"
               class="px-6 py-2.5 rounded-xl border border-border text-white hover:bg-white/5 transition-colors">
               Cancelar
             </button>

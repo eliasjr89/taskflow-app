@@ -11,8 +11,8 @@ const mapProject = (p: any): Project => ({
   title: p.name,
   description: p.description,
   createdAt: new Date(p.created_at),
-  color: "indigo", // Default until backend supports it
-  icon: "Folder",
+  color: p.color || "indigo",
+  icon: p.icon || "Folder",
 });
 
 const loadProjects = async () => {
@@ -31,36 +31,50 @@ const loadProjects = async () => {
   }
 };
 
+import { useToast } from "./useToast";
+
+// ... existing code ...
+
 const addProject = async (project: Project) => {
+  const toast = useToast();
   try {
     await api.post("/projects", {
       name: project.title,
       description: project.description,
+      color: project.color,
+      icon: project.icon,
     });
     await loadProjects();
+    toast.success("Project created successfully");
   } catch {
-    // Silent fail
+    toast.error("Failed to create project");
   }
 };
 
 const updateProject = async (updatedProject: Project) => {
+  const toast = useToast();
   try {
     await api.put(`/projects/${updatedProject.id}`, {
       name: updatedProject.title,
       description: updatedProject.description,
+      color: updatedProject.color,
+      icon: updatedProject.icon,
     });
     await loadProjects();
+    toast.success("Project updated successfully");
   } catch {
-    // console.error("Failed to update project", e);
+    toast.error("Failed to update project");
   }
 };
 
 const deleteProject = async (projectId: string) => {
+  const toast = useToast();
   try {
     await api.delete(`/projects/${projectId}`);
     await loadProjects();
+    toast.success("Project deleted successfully");
   } catch {
-    // Silent fail
+    toast.error("Failed to delete project");
   }
 };
 

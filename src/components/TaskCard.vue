@@ -147,7 +147,8 @@ function onDelete() {
 
 function startEditing() {
   if (props.task.completed) return;
-  emit("select-task", props.task);
+  isEditing.value = true;
+  // emit("select-task", props.task); // Changed behavior to support inline editing
 }
 
 function saveEdit() {

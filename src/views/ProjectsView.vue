@@ -11,6 +11,12 @@ import {
   Heart,
   Zap,
   Coffee,
+  Book,
+  Camera,
+  Bell,
+  Gift,
+  Globe,
+  Home,
   Music,
   Trash2,
   Pencil,
@@ -54,6 +60,12 @@ const iconMap: Record<string, Component> = {
   Zap,
   Coffee,
   Music,
+  Book,
+  Camera,
+  Bell,
+  Gift,
+  Globe,
+  Home,
 };
 
 const handleCreateProject = (project: Project) => {
