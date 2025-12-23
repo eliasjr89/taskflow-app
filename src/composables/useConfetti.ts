@@ -1,3 +1,5 @@
+import confetti from "canvas-confetti";
+
 export function useConfetti() {
   const triggerConfetti = () => {
     const duration = 3 * 1000;
@@ -23,13 +25,13 @@ export function useConfetti() {
       const particleCount = 50 * (timeLeft / duration);
 
       // Create confetti from two origins
-      (window as any).confetti?.(
+      confetti(
         Object.assign({}, defaults, {
           particleCount,
           origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
         })
       );
-      (window as any).confetti?.(
+      confetti(
         Object.assign({}, defaults, {
           particleCount,
           origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },

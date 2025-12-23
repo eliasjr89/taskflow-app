@@ -15,7 +15,7 @@ import {
 } from "lucide-vue-next";
 
 import { useI18n } from "vue-i18n";
-import { useSectionTheme } from "../composables/useSectionTheme";
+import { useSectionTheme } from "../../composables/useSectionTheme";
 
 const route = useRoute();
 const { t } = useI18n();

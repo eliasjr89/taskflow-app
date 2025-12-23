@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRoute } from "vue-router";
-import api from "@/services/api";
+import { useUserState } from "../../composables/useUserState";
 import { useI18n } from "vue-i18n";
-import { useSectionTheme } from "@/composables/useSectionTheme";
+import { useSectionTheme } from "../../composables/useSectionTheme";
 
 const route = useRoute();
 const { t, locale } = useI18n();
 const { theme } = useSectionTheme();
-const user = ref<any>(null);
+const { user, fetchUser } = useUserState();
 
 const currentTime = ref("");
 const currentDate = ref("");
@@ -58,11 +58,8 @@ onMounted(async () => {
   updateTime();
   timer = setInterval(updateTime, 1000) as unknown as number;
 
-  try {
-    const res = await api.get("/user/profile");
-    user.value = res.data.data;
-  } catch {
-    // ignore
+  if (!user.value) {
+    await fetchUser();
   }
 });
 

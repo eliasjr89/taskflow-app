@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import { useTagState } from "../composables/useTagState";
 import { useTaskState } from "../composables/useTaskState";
-import AddTagModal from "../components/AddTagModal.vue";
+import AddTagModal from "../components/tags/AddTagModal.vue";
 import { Tags, Plus, Edit2, Trash2, Hash } from "lucide-vue-next";
 import type { Tag } from "../types/global";
 import { useI18n } from "vue-i18n";

@@ -9,7 +9,7 @@ import {
   BarChart2,
   User,
 } from "lucide-vue-next";
-import { useSectionTheme } from "@/composables/useSectionTheme";
+import { useSectionTheme } from "../../composables/useSectionTheme";
 
 const route = useRoute();
 const { theme } = useSectionTheme();

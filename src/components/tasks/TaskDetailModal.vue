@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { vClickOutside } from "../composables/useClickOutside";
+import { vClickOutside } from "@/composables/useClickOutside";
 import {
   X,
   Flag,
@@ -12,13 +12,14 @@ import {
   Trash2,
   ChevronDown,
   Check,
+  Timer,
 } from "lucide-vue-next";
-import type { Task, Priority } from "../types/global";
-import { useTasks } from "../composables/useTask";
+import type { Task, Priority } from "@/types/global";
+import { useTasks } from "@/composables/useTask";
 
-import { useProjectState } from "../composables/useProjectState";
-import { useTagState } from "../composables/useTagState";
-import DatePicker from "./DatePicker.vue";
+import { useProjectState } from "@/composables/useProjectState";
+import { useTagState } from "@/composables/useTagState";
+import DatePicker from "@/components/common/DatePicker.vue";
 
 const props = defineProps<{
   task: Task | null;
@@ -27,6 +28,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "close"): void;
+  (e: "focus", task: Task): void;
 }>();
 
 const { t } = useI18n();
@@ -86,7 +88,9 @@ function addTag(tagId: string) {
 }
 
 function removeTag(tagId: string) {
-  editedTask.value.tags = editedTask.value.tags?.filter((id) => id !== tagId);
+  editedTask.value.tags = editedTask.value.tags?.filter(
+    (id: string) => id !== tagId
+  );
   handleSave();
 }
 
@@ -104,7 +108,7 @@ function selectProject(projectId: string | undefined) {
 function getProjectName(projectId: string | undefined) {
   if (!projectId) return t("tasks.without_project");
   return (
-    projects.value.find((p) => p.id === projectId)?.title ||
+    projects.value.find((p: any) => p.id === projectId)?.title ||
     t("tasks.without_project")
   );
 }
@@ -358,7 +362,7 @@ const dueDateModel = computed({
                 v-for="tagId in editedTask.tags"
                 :key="tagId"
                 class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 transition-all duration-200 hover:bg-indigo-200 dark:hover:bg-indigo-900/50">
-                {{ tags.find((t) => t.id === tagId)?.name }}
+                {{ tags.find((t: any) => t.id === tagId)?.name }}
                 <button
                   @click="removeTag(tagId)"
                   class="hover:text-indigo-900 dark:hover:text-indigo-100 transition-colors duration-200">
@@ -394,7 +398,7 @@ const dueDateModel = computed({
                     <div class="p-1 max-h-40 overflow-y-auto">
                       <button
                         v-for="tag in tags.filter(
-                          (t) => !editedTask.tags?.includes(t.id)
+                          (t: any) => !editedTask.tags?.includes(t.id)
                         )"
                         :key="tag.id"
                         @click="addTag(tag.id)"
@@ -404,7 +408,7 @@ const dueDateModel = computed({
                       </button>
                       <div
                         v-if="
-                          tags.filter((t) => !editedTask.tags?.includes(t.id))
+                          tags.filter((t: any) => !editedTask.tags?.includes(t.id))
                             .length === 0
                         "
                         class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 text-center">
@@ -422,6 +426,12 @@ const dueDateModel = computed({
       <!-- Footer -->
       <div
         class="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex justify-end gap-3">
+        <button
+          @click="props.task && emit('focus', props.task)"
+          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-all duration-200">
+          <Timer class="w-4 h-4" />
+          Iniciar Enfoque
+        </button>
         <button
           @click="emit('close')"
           class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200">

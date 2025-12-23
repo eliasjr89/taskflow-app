@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import CountUp from "../components/CountUp.vue";
+import CountUp from "@/components/common/CountUp.vue";
 import { ref, onMounted } from "vue";
 import { useProjectState } from "../composables/useProjectState";
-import SkeletonLoader from "../components/SkeletonLoader.vue";
+import SkeletonLoader from "@/components/common/SkeletonLoader.vue";
 import {
   Plus,
   Folder,
@@ -22,8 +22,8 @@ import {
   Pencil,
 } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
-import ProjectModal from "../components/ProjectModal.vue";
-import ConfirmationModal from "../components/ConfirmationModal.vue";
+import ProjectModal from "@/components/projects/ProjectModal.vue";
+import { useConfirm } from "../composables/useConfirm";
 import type { Project } from "../types/global";
 
 const { t } = useI18n();
@@ -36,8 +36,8 @@ const {
   getTasksByProject,
   loadProjects,
 } = useProjectState();
+const { confirm } = useConfirm();
 const isModalOpen = ref(false);
-const projectToDelete = ref<string | null>(null);
 const projectToEdit = ref<Project | null>(null);
 const isMounted = ref(false);
 const isLoading = ref(true);
@@ -89,14 +89,17 @@ const openCreateModal = () => {
   isModalOpen.value = true;
 };
 
-const handleDeleteProject = (id: string) => {
-  projectToDelete.value = id;
-};
+const handleDeleteProject = async (id: string) => {
+  const confirmed = await confirm({
+    title: t("projects.delete_confirm_title"),
+    message: t("projects.delete_confirm_msg"),
+    confirmText: t("common.yes_delete"),
+    cancelText: t("common.cancel"),
+    type: "danger",
+  });
 
-const confirmDeleteProject = () => {
-  if (projectToDelete.value) {
-    deleteProject(projectToDelete.value);
-    projectToDelete.value = null;
+  if (confirmed) {
+    deleteProject(id);
   }
 };
 
@@ -230,7 +233,6 @@ const getProgressColor = (color: string) => {
                     <Pencil class="w-5 h-5" />
                   </button>
 
-                  <!-- Delete Button -->
                   <button
                     @click.stop="handleDeleteProject(project.id)"
                     class="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 relative z-20 cursor-pointer"
@@ -267,22 +269,12 @@ const getProgressColor = (color: string) => {
       </div>
     </div>
 
-    <!-- Modal -->
     <ProjectModal
       :is-open="isModalOpen"
       :project="projectToEdit"
       @close="isModalOpen = false"
       @create="handleCreateProject"
       @update="handleUpdateProject" />
-
-    <ConfirmationModal
-      :is-open="!!projectToDelete"
-      :title="t('projects.delete_confirm_title')"
-      :message="t('projects.delete_confirm_msg')"
-      :confirm-text="t('common.yes_delete')"
-      :cancel-text="t('common.cancel')"
-      @close="projectToDelete = null"
-      @confirm="confirmDeleteProject" />
   </div>
 </template>
 

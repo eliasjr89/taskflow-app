@@ -2,7 +2,7 @@
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { LogOut } from "lucide-vue-next";
-import DynamicBackground from "@/components/DynamicBackground.vue";
+import DynamicBackground from "@/components/common/DynamicBackground.vue";
 
 // Component for exit view
 const router = useRouter();

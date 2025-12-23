@@ -10,7 +10,7 @@ import {
 } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import { useTaskState } from "../composables/useTaskState";
-import AddTaskForm from "../components/AddTaskForm.vue";
+import AddTaskForm from "@/components/tasks/AddTaskForm.vue";
 
 const { t, locale } = useI18n();
 const { tasks } = useTaskState();

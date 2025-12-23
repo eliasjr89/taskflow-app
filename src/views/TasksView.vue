@@ -1,37 +1,84 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref } from "vue";
 import { useTaskState } from "../composables/useTaskState";
 import { useTasks } from "../composables/useTask";
 import { useProjectState } from "../composables/useProjectState";
-import { useI18n } from "vue-i18n";
-import type { FilterState } from "../types/global";
-import { Filter } from "lucide-vue-next";
-import SkeletonLoader from "../components/SkeletonLoader.vue";
+import { useTaskFilter } from "@/composables/useTaskFilter";
+import SkeletonLoader from "@/components/common/SkeletonLoader.vue";
 
-import AddTaskForm from "../components/AddTaskForm.vue";
-import TaskList from "../components/TaskList.vue";
-import Sidebar from "../components/Sidebar.vue";
-import TaskDetailModal from "../components/TaskDetailModal.vue";
-import CountUp from "../components/CountUp.vue";
+import TaskDetailModal from "@/components/tasks/TaskDetailModal.vue";
+import KanbanBoard from "@/components/tasks/KanbanBoard.vue";
+import TaskTable from "@/components/tasks/TaskTable.vue";
+import TaskMatrix from "@/components/tasks/TaskMatrix.vue";
+import TaskTimeline from "@/components/tasks/TaskTimeline.vue";
+import FocusMode from "@/components/tasks/FocusMode.vue";
+import TasksToolbar from "@/components/tasks/TasksToolbar.vue";
 
-const { t } = useI18n();
 const { tasks } = useTaskState();
-const { loadTask } = useTasks();
-const { loadProjects } = useProjectState();
+const { loadTask, toggleTaskCompletion } = useTasks();
+const { loadProjects, projects } = useProjectState();
+const { filteredTasks } = useTaskFilter();
 
-// Filters state
-const activeFilters = ref<FilterState>({
-  search: "",
-  statuses: [],
-  priorities: [],
-  projectIds: [],
-  tagIds: [],
-});
+// View Mode State
+const viewMode = ref<"board" | "table" | "matrix" | "timeline">("board");
+const handleTaskStatusChange = async (
+  taskId: number,
+  newCompletionStatus: boolean
+) => {
+  const task = tasks.value.find((t) => t.id === taskId);
+  if (task && task.completed !== newCompletionStatus) {
+    await toggleTaskCompletion(taskId);
+  }
+};
 
 const isModalOpen = ref(false);
-const isMobileFiltersOpen = ref(false);
+const isFocusModeOpen = ref(false);
 const selectedTask = ref<(typeof tasks.value)[0] | null>(null);
 const isLoading = ref(true);
+
+const handleOpenFocusMode = (task: (typeof tasks.value)[0]) => {
+  selectedTask.value = task;
+  isFocusModeOpen.value = true;
+};
+
+const handleCompleteTask = async (task: (typeof tasks.value)[0]) => {
+  if (!task.completed) {
+    await toggleTaskCompletion(task.id);
+  }
+};
+
+const handleExportCSV = () => {
+  const headers = ["ID", "Title", "Status", "Priority", "Project", "Due Date"];
+  const rows = filteredTasks.value.map((t) => [
+    t.id,
+    `"${t.title.replace(/"/g, '""')}"`, // Escape quotes
+    t.completed ? "Completed" : "Pending",
+    t.priority || "None",
+    `"${(
+      projects.value.find((p) => p.id === t.projectId)?.title || "Uncategorized"
+    ).replace(/"/g, '""')}"`,
+    t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "N/A",
+  ]);
+
+  const csvContent = [headers.join(","), ...rows.map((e) => e.join(","))].join(
+    "\n"
+  );
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `tasks_export_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+};
 
 onMounted(async () => {
   try {
@@ -43,81 +90,7 @@ onMounted(async () => {
   }
 });
 
-// Advanced Filtering Logic
-const filteredTasks = computed(() => {
-  return tasks.value.filter((task) => {
-    // 1. Search Filter
-    if (
-      activeFilters.value.search &&
-      !task.title
-        .toLowerCase()
-        .includes(activeFilters.value.search.toLowerCase())
-    ) {
-      return false;
-    }
-
-    // 2. Status Filter
-    if (activeFilters.value.statuses.length > 0) {
-      const status = task.completed ? "completed" : "pending";
-      if (!activeFilters.value.statuses.includes(status)) {
-        return false;
-      }
-    }
-
-    // 3. Priority Filter
-    if (activeFilters.value.priorities.length > 0) {
-      if (
-        !task.priority ||
-        !activeFilters.value.priorities.includes(task.priority)
-      ) {
-        return false;
-      }
-    }
-
-    // 4. Project Filter
-    if (activeFilters.value.projectIds.length > 0) {
-      if (
-        !task.projectId ||
-        !activeFilters.value.projectIds.includes(task.projectId.toString())
-      ) {
-        return false;
-      }
-    }
-
-    // 5. Tag Filter
-    if (activeFilters.value.tagIds.length > 0) {
-      if (
-        !task.tags ||
-        !task.tags.some((tagId) =>
-          activeFilters.value.tagIds.includes(tagId.toString())
-        )
-      ) {
-        return false;
-      }
-    }
-
-    return true;
-  });
-});
-
-// Derived lists for display
-const displayPendingTasks = computed(() =>
-  filteredTasks.value
-    .filter((t) => !t.completed)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-);
-
-const displayCompletedTasks = computed(() =>
-  filteredTasks.value
-    .filter((t) => t.completed)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-);
-
 // Event Handlers
-function handleFilterUpdate(filters: FilterState) {
-  activeFilters.value = filters;
-}
-
 function handleSelectTask(task: (typeof tasks.value)[0]) {
   selectedTask.value = task;
   isModalOpen.value = true;
@@ -126,46 +99,7 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
 
 <template>
   <div class="flex flex-1 flex-col md:flex-row gap-6 animate-fade-in relative">
-    <!-- Desktop Sidebar -->
-    <Sidebar
-      class="hidden md:flex"
-      :tasks="tasks"
-      :deferred="true"
-      @update:filters="handleFilterUpdate"
-      @selectTask="handleSelectTask" />
-
-    <!-- Mobile Filter Drawer -->
-    <Transition name="drawer">
-      <div v-if="isMobileFiltersOpen" class="fixed inset-0 z-100 md:hidden">
-        <!-- Full-Screen Glass Backdrop -->
-        <Transition name="fade">
-          <div
-            v-if="isMobileFiltersOpen"
-            class="absolute inset-0 transition-all duration-300"
-            @click="isMobileFiltersOpen = false"></div>
-        </Transition>
-
-        <!-- Drawer with Auto Height -->
-        <Transition name="slide">
-          <div
-            v-if="isMobileFiltersOpen"
-            class="absolute right-0 top-0 w-[85%] max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-2xl overflow-hidden h-auto z-10">
-            <Sidebar
-              :tasks="tasks"
-              :mobile="true"
-              :show-search="false"
-              :deferred="true"
-              @update:filters="handleFilterUpdate"
-              @selectTask="handleSelectTask"
-              @close="isMobileFiltersOpen = false" />
-          </div>
-        </Transition>
-      </div>
-    </Transition>
-
     <div class="flex-1 flex flex-col w-full px-4 md:px-0 lg:px-0">
-      <!-- Removed redundant header -->
-
       <!-- SKELETON LOADING -->
       <div v-if="isLoading" class="space-y-6">
         <SkeletonLoader type="text" />
@@ -173,76 +107,61 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
       </div>
 
       <!-- MAIN CONTENT -->
-      <div v-else>
-        <!-- Mobile Filters Button & Search -->
-        <div class="md:hidden mb-6 flex gap-2">
-          <div class="relative flex-1">
-            <input
-              type="text"
-              :placeholder="t('common.search')"
-              v-model="activeFilters.search"
-              class="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600/50 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
-          </div>
-          <button
-            @click="isMobileFiltersOpen = true"
-            class="px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300/50 dark:border-gray-600/50 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
-            <Filter class="w-5 h-5" />
-          </button>
-        </div>
+      <div v-else class="h-[calc(100vh-140px)] flex flex-col">
+        <!-- Header Controls Panel -->
+        <TasksToolbar
+          v-model:viewMode="viewMode"
+          @export="handleExportCSV"
+          @add="
+            isModalOpen = true;
+            selectedTask = null;
+          " />
 
-        <!-- Add Task Form -->
-        <AddTaskForm class="mb-6" />
-
-        <div class="space-y-6">
-          <!-- Pending Tasks -->
-          <div v-if="displayPendingTasks.length > 0">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-semibold flex items-center gap-2">
-                <span>📝</span>
-                <span
-                  class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                  {{ t("tasks.pending_title") }}
-                </span>
-              </h2>
-              <span
-                class="text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                <CountUp :to="displayPendingTasks.length" />
-              </span>
+        <!-- CONTENT AREA -->
+        <div class="flex-1 overflow-hidden min-h-0 relative">
+          <!-- KANBAN VIEW -->
+          <Transition name="fade" mode="out-in">
+            <div v-if="viewMode === 'board'" class="h-full pb-4" :key="'board'">
+              <KanbanBoard
+                :tasks="filteredTasks"
+                @update:status="handleTaskStatusChange"
+                @select-task="handleSelectTask"
+                @focus-task="handleOpenFocusMode" />
             </div>
-            <TaskList
-              :tasks="displayPendingTasks"
-              @select-task="handleSelectTask" />
-          </div>
 
-          <!-- Completed Tasks -->
-          <div v-if="displayCompletedTasks.length > 0" class="mt-8">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-semibold flex items-center gap-2">
-                <span>✅</span>
-                <span
-                  class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                  {{ t("tasks.completed_title") }}
-                </span>
-              </h2>
-              <span
-                class="text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                <CountUp :to="displayCompletedTasks.length" />
-              </span>
+            <!-- TABLE VIEW -->
+            <div
+              v-else-if="viewMode === 'table'"
+              class="h-full pb-4 px-1"
+              :key="'table'">
+              <TaskTable
+                :tasks="filteredTasks"
+                :projects="projects"
+                @select-task="handleSelectTask"
+                @focus-task="handleOpenFocusMode"
+                @update:status="handleTaskStatusChange" />
             </div>
-            <TaskList
-              :tasks="displayCompletedTasks"
-              @select-task="handleSelectTask" />
-          </div>
 
-          <!-- No Tasks Empty State -->
-          <div
-            v-if="
-              displayPendingTasks.length === 0 &&
-              displayCompletedTasks.length === 0
-            "
-            class="glass-card rounded-2xl p-8 text-center text-gray-600 dark:text-gray-300">
-            <p class="text-lg">{{ t("tasks.no_tasks") }}</p>
-          </div>
+            <!-- MATRIX VIEW -->
+            <div
+              v-else-if="viewMode === 'matrix'"
+              class="h-full pb-4 px-1"
+              :key="'matrix'">
+              <TaskMatrix
+                :tasks="filteredTasks"
+                @select-task="handleSelectTask"
+                @focus-task="handleOpenFocusMode" />
+            </div>
+
+            <!-- TIMELINE VIEW -->
+            <div v-else class="h-full pb-4 px-1" :key="'timeline'">
+              <TaskTimeline
+                :tasks="filteredTasks"
+                :projects="projects"
+                @select-task="handleSelectTask"
+                @focus-task="handleOpenFocusMode" />
+            </div>
+          </Transition>
         </div>
       </div>
     </div>
@@ -250,8 +169,16 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
     <!-- Task Detail Modal -->
     <TaskDetailModal
       :task="selectedTask"
-      :is-open="isModalOpen"
-      @close="isModalOpen = false" />
+      :is-open="isModalOpen && !isFocusModeOpen"
+      @close="isModalOpen = false"
+      @focus="handleOpenFocusMode" />
+
+    <!-- Focus Mode Overlay -->
+    <FocusMode
+      :task="selectedTask"
+      :is-open="isFocusModeOpen"
+      @close="isFocusModeOpen = false"
+      @complete="handleCompleteTask" />
   </div>
 </template>
 

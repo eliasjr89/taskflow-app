@@ -8,7 +8,7 @@ import { useFeedback } from "../composables/useFeedback";
 import api from "../services/api";
 import { LogOut, Camera, Edit2, Save, X, Mail, Globe } from "lucide-vue-next";
 import { useSectionTheme } from "../composables/useSectionTheme";
-import SkeletonLoader from "../components/SkeletonLoader.vue";
+import SkeletonLoader from "../components/common/SkeletonLoader.vue";
 
 const { resetState } = useTaskState();
 const { t, locale } = useI18n();

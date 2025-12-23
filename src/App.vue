@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from "vue-router";
 import { computed, defineAsyncComponent } from "vue";
-import MainLayout from "./components/MainLayout.vue";
-import AuthLayout from "./layouts/AuthLayout.vue"; // Sync import
-import FeedbackModal from "./components/FeedbackModal.vue";
+import AppLayout from "./layouts/AppLayout.vue";
+import AuthLayout from "./layouts/AuthLayout.vue";
+import FeedbackModal from "./components/common/FeedbackModal.vue";
+import ConfirmDialog from "./components/common/ConfirmDialog.vue";
 
 const AdminLayout = defineAsyncComponent(
   () => import("@/layouts/AdminLayout.vue")
@@ -12,7 +13,7 @@ const AdminLayout = defineAsyncComponent(
 const route = useRoute();
 const layout = computed(() => {
   if (route.meta.layout === "AdminLayout") return AdminLayout;
-  if (route.meta.layout === "MainLayout") return MainLayout;
+  if (route.meta.layout === "AppLayout") return AppLayout;
   // Default to AuthLayout to prevent flashing MainLayout (Dashboard) on load/transition
   return AuthLayout;
 });
@@ -34,6 +35,7 @@ const layout = computed(() => {
       </transition>
     </RouterView>
     <FeedbackModal />
+    <ConfirmDialog />
   </component>
 </template>
 

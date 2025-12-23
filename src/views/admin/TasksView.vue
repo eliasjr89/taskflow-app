@@ -2,12 +2,12 @@
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
 import type { Task, Project } from "@/types";
-import Modal from "@/components/admin/Modal.vue";
+import BaseModal from "@/components/common/BaseModal.vue";
 import Badge from "@/components/admin/Badge.vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import { useConfetti } from "@/composables/useConfetti";
-import EnhancedSelect from "@/components/EnhancedSelect.vue";
+import EnhancedSelect from "@/components/common/EnhancedSelect.vue";
 
 const toast = useToast();
 const { confirm } = useConfirm();
@@ -228,9 +228,10 @@ const completeTask = async (task: Task) => {
 
     // Update local state
     const taskIndex = tasks.value.findIndex((t) => t.id === task.id);
-    if (taskIndex !== -1) {
-      tasks.value[taskIndex].status_id = completedStatus.id;
-      tasks.value[taskIndex].status_name = completedStatus.name;
+    const taskToUpdate = tasks.value[taskIndex];
+    if (taskToUpdate) {
+      taskToUpdate.status_id = completedStatus.id;
+      taskToUpdate.status_name = completedStatus.name;
     }
 
     // Trigger confetti!
@@ -277,9 +278,10 @@ const uncompleteTask = async (task: Task) => {
 
     // Update local state
     const taskIndex = tasks.value.findIndex((t) => t.id === task.id);
-    if (taskIndex !== -1) {
-      tasks.value[taskIndex].status_id = pendingStatus.id;
-      tasks.value[taskIndex].status_name = pendingStatus.name;
+    const taskToUpdate = tasks.value[taskIndex];
+    if (taskToUpdate) {
+      taskToUpdate.status_id = pendingStatus.id;
+      taskToUpdate.status_name = pendingStatus.name;
     }
 
     toast.success("Tarea desmarcada", "La tarea volvió a estado pendiente");
@@ -473,7 +475,7 @@ onMounted(fetchData);
     </div>
 
     <!-- Modal Form -->
-    <Modal
+    <BaseModal
       :show="showModal"
       :title="form.id ? 'Editar Tarea' : 'Nueva Tarea'"
       @close="closeModal">
@@ -579,6 +581,6 @@ onMounted(fetchData);
           </button>
         </div>
       </form>
-    </Modal>
+    </BaseModal>
   </div>
 </template>

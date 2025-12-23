@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useTheme } from "../composables/useTheme";
+import { useTheme } from "../../composables/useTheme";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { Languages, LogOut } from "lucide-vue-next";

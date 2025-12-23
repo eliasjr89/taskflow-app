@@ -2,10 +2,10 @@
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
 import type { User } from "@/types";
-import Modal from "@/components/admin/Modal.vue";
+import BaseModal from "@/components/common/BaseModal.vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
-import EnhancedSelect from "@/components/EnhancedSelect.vue";
+import EnhancedSelect from "@/components/common/EnhancedSelect.vue";
 
 const toast = useToast();
 const { confirm } = useConfirm();
@@ -364,7 +364,7 @@ onMounted(fetchUsers);
     </div>
 
     <!-- User Modal -->
-    <Modal
+    <BaseModal
       :show="showModal"
       :title="form.id ? 'Editar Usuario' : 'Nuevo Usuario'"
       @close="closeModal">
@@ -508,6 +508,6 @@ onMounted(fetchUsers);
           </button>
         </div>
       </form>
-    </Modal>
+    </BaseModal>
   </div>
 </template>

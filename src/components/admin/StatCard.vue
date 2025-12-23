@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import CountUp from "@/components/CountUp.vue";
+import CountUp from "@/components/common/CountUp.vue";
 
 const props = defineProps<{
   label: string;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CheckCircle2, AlertCircle, XCircle, Info } from "lucide-vue-next";
-import { useFeedback } from "../composables/useFeedback";
+import { useFeedback } from "@/composables/useFeedback";
 
 const { isOpen, title, message, type, closeFeedback } = useFeedback();
 

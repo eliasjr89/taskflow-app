@@ -102,11 +102,13 @@ const handleAuth = async () => {
 const finalizeAuth = async (data: any) => {
   localStorage.setItem("token", data.token);
   localStorage.setItem("user", JSON.stringify(data.user));
-  await loadData();
 
   if (data.user.role === "admin" || data.user.role === "manager") {
+    // Admins don't need regular user tasks immediately, and it might fail/empty
     router.push("/admin/overview");
   } else {
+    // Only load data for regular users to avoid 401s if admin can't access /tasks
+    await loadData();
     router.push("/dashboard");
   }
 };

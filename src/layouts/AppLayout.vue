@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import Header from "./Header.vue";
-import AppSidebar from "./AppSidebar.vue";
-import BottomNav from "./BottomNav.vue";
-import DynamicBackground from "./DynamicBackground.vue";
+import Header from "@/components/layout/Header.vue";
+import AppSidebar from "@/components/layout/AppSidebar.vue";
+import BottomNav from "@/components/layout/BottomNav.vue";
+import DynamicBackground from "@/components/common/DynamicBackground.vue";
 import { useRoute } from "vue-router";
 import { computed } from "vue";
 

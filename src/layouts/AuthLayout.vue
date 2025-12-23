@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import DynamicBackground from "@/components/DynamicBackground.vue";
-import ToastNotification from "@/components/ToastNotification.vue";
+import DynamicBackground from "@/components/common/DynamicBackground.vue";
+import ToastNotification from "@/components/common/ToastNotification.vue";
 </script>
 
 <template>

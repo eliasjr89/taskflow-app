@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
-import AnimatedProgressBar from "@/components/admin/AnimatedProgressBar.vue";
+import ProgressBar from "@/components/common/ProgressBar.vue";
 
 interface DBStats {
   total_size: string;
@@ -91,7 +91,7 @@ onMounted(fetchStats);
         </div>
         <!-- Animated Progress -->
         <div class="mb-6">
-          <AnimatedProgressBar
+          <ProgressBar
             :percentage="45"
             colorClass="bg-linear-to-r from-blue-500 to-cyan-400"
             bgClass="bg-black/30 h-4" />
@@ -114,7 +114,7 @@ onMounted(fetchStats);
                 </span>
               </div>
             </div>
-            <AnimatedProgressBar
+            <ProgressBar
               :percentage="stats.rows.users * 5"
               colorClass="bg-blue-500"
               bgClass="bg-blue-200/10 mb-4" />
@@ -133,7 +133,7 @@ onMounted(fetchStats);
                 </span>
               </div>
             </div>
-            <AnimatedProgressBar
+            <ProgressBar
               :percentage="stats.rows.projects * 5"
               colorClass="bg-purple-500"
               bgClass="bg-purple-200/10 mb-4" />
@@ -152,7 +152,7 @@ onMounted(fetchStats);
                 </span>
               </div>
             </div>
-            <AnimatedProgressBar
+            <ProgressBar
               :percentage="stats.rows.tasks * 2"
               colorClass="bg-emerald-500"
               bgClass="bg-emerald-200/10 mb-4" />

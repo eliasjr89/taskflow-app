@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { X, Folder, Briefcase, Star, Heart, Zap, Coffee, Music, Book, Camera, Bell, Gift, Globe, Home } from 'lucide-vue-next';
-import type { Project } from '../types/global';
+import type { Project } from '@/types/global';
 
 const props = defineProps<{
   isOpen: boolean;

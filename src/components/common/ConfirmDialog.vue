@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useConfirm } from "@/composables/useConfirm";
+import { useConfirm } from "../../composables/useConfirm";
 
 const { dialogs, handleConfirm, handleCancel } = useConfirm();
 

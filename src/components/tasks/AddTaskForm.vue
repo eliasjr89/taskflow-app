@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useTasks } from "../composables/useTask";
-import { useProjectState } from "../composables/useProjectState";
-import { useTagState } from "../composables/useTagState";
+import { useTasks } from "../../composables/useTask";
+import { useProjectState } from "../../composables/useProjectState";
+import { useTagState } from "../../composables/useTagState";
 import {
   Folder,
   Briefcase,
@@ -17,7 +17,7 @@ import {
   Flag,
 } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
-import DatePicker from "./DatePicker.vue";
+import DatePicker from "@/components/common/DatePicker.vue";
 
 const { t } = useI18n();
 
@@ -77,7 +77,7 @@ function selectProject(projectId: string | undefined) {
 }
 
 function getSelectedProject() {
-  return projects.value.find((p) => p.id === selectedProjectId.value);
+  return projects.value.find((p: any) => p.id === selectedProjectId.value);
 }
 
 const getColorClass = (color: string) => {

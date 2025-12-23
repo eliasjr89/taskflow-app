@@ -49,7 +49,7 @@ const animatedStreak = useAnimatedNumber(currentStreak);
 
 import { useI18n } from "vue-i18n";
 
-import CountUp from "../components/CountUp.vue";
+import CountUp from "../components/common/CountUp.vue";
 import { useAnimatedNumber } from "../composables/useAnimatedNumber";
 import { ref, onMounted } from "vue";
 

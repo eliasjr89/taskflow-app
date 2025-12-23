@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
 import type { Project } from "@/types";
-import Modal from "@/components/admin/Modal.vue";
+import BaseModal from "@/components/common/BaseModal.vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 
@@ -277,7 +277,7 @@ onMounted(fetchProjects);
       </button>
     </div>
     <!-- Modal Form -->
-    <Modal
+    <BaseModal
       :show="showModal"
       :title="form.id ? 'Editar Proyecto' : 'Nuevo Proyecto'"
       @close="closeModal">
@@ -349,6 +349,6 @@ onMounted(fetchProjects);
           </button>
         </div>
       </form>
-    </Modal>
+    </BaseModal>
   </div>
 </template>

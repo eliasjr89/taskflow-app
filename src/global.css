@@ -20,9 +20,10 @@
   --color-danger: #ef4444;
   --color-success: #10b981;
   --color-border: rgba(255, 255, 255, 0.1);
-}
 
-/* Dark mode is handled automatically or by class if needed, let's rely on defaults to fix build */
+  /* Custom Z-Indices */
+  --z-index-300: 300;
+}
 
 /* Force dark mode to apply color-scheme */
 :root.dark {
@@ -50,6 +51,21 @@
   @apply bg-bg-card border border-border rounded-2xl backdrop-blur-md shadow-xl;
 }
 
+/* Kanban Utilities */
+@utility ghost-card {
+  @apply opacity-50 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-700;
+}
+
+@utility drag-card {
+  @apply rotate-3 scale-105 shadow-2xl z-50;
+}
+
+@utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+
 /* Estilos globales */
 * {
   box-sizing: border-box;
@@ -75,7 +91,6 @@ h6 {
   font-family: var(--font-outfit);
 }
 
-/* Imagen de fondo con overlay */
 /* Imagen de fondo con overlay */
 body::before {
   content: '';

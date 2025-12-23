@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useSectionTheme } from "../composables/useSectionTheme";
+import { useSectionTheme } from "@/composables/useSectionTheme";
 
 const { theme } = useSectionTheme();
 

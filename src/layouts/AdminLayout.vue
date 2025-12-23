@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import Sidebar from "@/components/admin/Sidebar.vue";
+import Sidebar from "@/components/admin/AdminSidebar.vue";
 import Header from "@/components/admin/Header.vue";
-import ToastNotification from "@/components/ToastNotification.vue";
-import ConfirmDialog from "@/components/ConfirmDialog.vue";
+import ToastNotification from "@/components/common/ToastNotification.vue";
 </script>
 
 <template>
@@ -25,11 +24,7 @@ import ConfirmDialog from "@/components/ConfirmDialog.vue";
       </div>
     </main>
 
-    <!-- Toast Notifications -->
     <ToastNotification />
-
-    <!-- Confirm Dialogs -->
-    <ConfirmDialog />
   </div>
 </template>
 

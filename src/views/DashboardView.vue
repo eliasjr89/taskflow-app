@@ -4,7 +4,7 @@ import { useTaskState } from "../composables/useTaskState";
 import { useTasks } from "../composables/useTask";
 import { useI18n } from "vue-i18n";
 import { RouterLink } from "vue-router";
-import SkeletonLoader from "../components/SkeletonLoader.vue";
+import SkeletonLoader from "../components/common/SkeletonLoader.vue";
 import {
   CheckCircle2,
   Clock,

@@ -28,11 +28,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "src/views/LogoutView.vue",
-    "src/components/admin/AnimatedProgressBar.vue"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
