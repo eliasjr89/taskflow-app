@@ -52,13 +52,27 @@ const toggleMode = () => {
     password: "",
     confirmPassword: "",
     name: "",
-    lastname: "",
   };
+};
+
+const switchRole = () => {
+  isLoginMode.value = true;
+  formData.value.username = "";
+  formData.value.password = "";
+  // If current role is admin, switch to user (remove role param or set to user)
+  // If current role is undefined or user, switch to admin (set role to admin)
+  if (isRoleAdmin.value) {
+    router.replace({ query: { ...route.query, role: undefined } });
+  } else {
+    router.replace({ query: { ...route.query, role: "admin" } });
+  }
 };
 
 const handleAuth = async () => {
   isLoading.value = true;
   try {
+    const targetRole = route.query.role as string;
+
     if (isLoginMode.value) {
       // Login
       const response = await api.post("/auth/login", {
@@ -67,6 +81,28 @@ const handleAuth = async () => {
       });
 
       const resData = response.data.data || response.data;
+      const userRole = resData.user.role;
+
+      // EXCLUSIVE ROLE CHECK
+      if (
+        targetRole === "admin" &&
+        userRole !== "admin" &&
+        userRole !== "manager"
+      ) {
+        toast.error(t("auth.error"), t("auth.admin_error"));
+        isLoading.value = false;
+        return;
+      }
+
+      if (
+        targetRole === "user" &&
+        (userRole === "admin" || userRole === "manager")
+      ) {
+        toast.error(t("auth.error"), t("auth.user_error"));
+        isLoading.value = false;
+        return;
+      }
+
       toast.success(
         t("auth.welcome"),
         `Bienvenido ${resData.user.name || resData.user.username}`
@@ -86,6 +122,7 @@ const handleAuth = async () => {
         password: formData.value.password,
         name: formData.value.name,
         lastname: formData.value.lastname,
+        role: targetRole, // Send target role (admin or user)
       });
       const resData = response.data.data || response.data;
       finalizeAuth(resData);
@@ -133,16 +170,16 @@ const finalizeAuth = async (data: any) => {
               {{
                 isLoginMode
                   ? isRoleAdmin
-                    ? "Acceso Administrativo"
+                    ? $t("auth.admin_access")
                     : $t("auth.welcome_back")
                   : $t("auth.create_account")
               }}
             </h2>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">
+            <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
               <span
                 v-if="isRoleAdmin && isLoginMode"
                 class="text-purple-400 font-medium"
-                >Panel de Control Global</span
+                >{{ $t("auth.global_panel") }}</span
               >
               <span v-else>
                 {{
@@ -152,6 +189,19 @@ const finalizeAuth = async (data: any) => {
                 }}
               </span>
             </p>
+
+            <!-- Quick Role Switcher -->
+            <button
+              v-if="isLoginMode"
+              @click="switchRole"
+              class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center justify-center gap-1 mx-auto transition-colors px-3 py-1 bg-indigo-500/10 rounded-full border border-indigo-500/20 hover:bg-indigo-500/20">
+              <template v-if="isRoleAdmin">
+                {{ t("auth.switch_user") || "Iniciar como Usuario" }}
+              </template>
+              <template v-else>
+                {{ t("auth.switch_admin") || "Iniciar como Admin" }}
+              </template>
+            </button>
           </div>
 
           <!-- Form -->

@@ -6,8 +6,11 @@ import BaseModal from "@/components/common/BaseModal.vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 
+import { useI18n } from "vue-i18n";
+
 const toast = useToast();
 const { confirm } = useConfirm();
+const { t } = useI18n();
 
 const projects = ref<Project[]>([]);
 const loading = ref(true);
@@ -48,10 +51,10 @@ const openModal = (project?: Project) => {
 const closeModal = async (force: boolean = false) => {
   if (!force && (form.value.name || form.value.description)) {
     const confirmed = await confirm({
-      title: "¿Cerrar sin guardar?",
-      message: "Los cambios no guardados se perderán.",
-      confirmText: "Cerrar",
-      cancelText: "Continuar editando",
+      title: t("admin_tasks.close_confirm"),
+      message: t("admin_tasks.close_msg"),
+      confirmText: t("common.close"),
+      cancelText: t("admin_tasks.continue_editing"),
       type: "warning",
     });
 
@@ -69,12 +72,15 @@ const handleSubmit = async () => {
     if (form.value.id) {
       await api.put(`/projects/${form.value.id}`, form.value);
       toast.success(
-        "Proyecto actualizado",
-        "El proyecto se ha actualizado correctamente"
+        t("admin_projects.update_success"),
+        t("admin_projects.update_msg")
       );
     } else {
       await api.post("/projects", form.value);
-      toast.success("Proyecto creado", "El proyecto se ha creado exitosamente");
+      toast.success(
+        t("admin_projects.create_success"),
+        t("admin_projects.create_msg")
+      );
     }
     await fetchProjects();
     closeModal(true);
@@ -89,11 +95,10 @@ const handleSubmit = async () => {
 
 const deleteProject = async (id: number) => {
   const confirmed = await confirm({
-    title: "¿Eliminar proyecto?",
-    message:
-      "Esta acción no se puede deshacer. Las tareas asociadas podrían verse afectadas.",
-    confirmText: "Eliminar",
-    cancelText: "Cancelar",
+    title: t("admin_projects.delete_confirm"),
+    message: t("admin_projects.delete_msg"),
+    confirmText: t("common.delete"),
+    cancelText: t("common.cancel"),
     type: "danger",
   });
 
@@ -103,8 +108,8 @@ const deleteProject = async (id: number) => {
     await api.delete(`/projects/${id}`);
     projects.value = projects.value.filter((p) => p.id !== id);
     toast.success(
-      "Proyecto eliminado",
-      "El proyecto se ha eliminado correctamente"
+      t("admin_projects.delete_success"),
+      t("admin_projects.delete_success_msg")
     );
   } catch (err: any) {
     const errorMsg =
@@ -120,7 +125,7 @@ const formatDate = (dateString?: string) => {
   const diffTime = Math.abs(now.getTime() - date.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "Hoy";
+  if (diffDays === 0) return t("calendar.today");
   if (diffDays === 1) return "Ayer";
   if (diffDays < 7) return `Hace ${diffDays} días`;
   if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
@@ -140,16 +145,18 @@ onMounted(fetchProjects);
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold text-white">Proyectos</h2>
+        <h2 class="text-2xl font-bold text-white">
+          {{ $t("admin_projects.title") }}
+        </h2>
         <p class="text-text-muted">
-          Gestiona los proyectos y asignaciones del equipo.
+          {{ $t("admin_projects.subtitle") }}
         </p>
       </div>
       <button
         @click="openModal()"
         class="bg-linear-to-r from-indigo-600 to-purple-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center gap-2">
         <i class="fa-solid fa-plus"></i>
-        <span>Nuevo Proyecto</span>
+        <span>{{ $t("admin_projects.new_project") }}</span>
       </button>
     </div>
 
@@ -192,13 +199,13 @@ onMounted(fetchProjects);
             <button
               @click="openModal(project)"
               class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
-              title="Editar">
+              :title="$t('common.edit')">
               <i class="fa-solid fa-pen text-sm"></i>
             </button>
             <button
               @click="deleteProject(project.id)"
               class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
-              title="Eliminar">
+              :title="$t('common.delete')">
               <i class="fa-solid fa-trash text-sm"></i>
             </button>
           </div>
@@ -206,7 +213,7 @@ onMounted(fetchProjects);
 
         <!-- Description -->
         <p class="text-gray-300 text-sm mb-4 line-clamp-2 min-h-10">
-          {{ project.description || "Sin descripción" }}
+          {{ project.description || $t("admin_projects.details.no_desc") }}
         </p>
 
         <!-- Stats -->
@@ -215,7 +222,9 @@ onMounted(fetchProjects);
             class="bg-slate-700/30 rounded-lg p-3 border border-slate-600/30">
             <div class="flex items-center gap-2 mb-1">
               <i class="fa-solid fa-list-check text-blue-400 text-xs"></i>
-              <span class="text-xs text-text-muted">Tareas</span>
+              <span class="text-xs text-text-muted">{{
+                $t("admin_projects.details.tasks")
+              }}</span>
             </div>
             <div class="text-xl font-bold text-white">
               {{ project.task_count || 0 }}
@@ -225,7 +234,9 @@ onMounted(fetchProjects);
             class="bg-slate-700/30 rounded-lg p-3 border border-slate-600/30">
             <div class="flex items-center gap-2 mb-1">
               <i class="fa-solid fa-users text-purple-400 text-xs"></i>
-              <span class="text-xs text-text-muted">Equipo</span>
+              <span class="text-xs text-text-muted">{{
+                $t("admin_projects.details.team")
+              }}</span>
             </div>
             <div class="text-xl font-bold text-white">
               {{ project.member_count || 0 }}
@@ -243,9 +254,14 @@ onMounted(fetchProjects);
             </div>
             <div>
               <div class="text-xs text-white font-medium">
-                {{ project.creator_username || "Sin asignar" }}
+                {{
+                  project.creator_username ||
+                  $t("admin_projects.details.unassigned")
+                }}
               </div>
-              <div class="text-[10px] text-text-muted">Creador</div>
+              <div class="text-[10px] text-text-muted">
+                {{ $t("admin_projects.details.creator") }}
+              </div>
             </div>
           </div>
           <div class="text-right">
@@ -265,27 +281,33 @@ onMounted(fetchProjects);
       <div class="inline-flex p-4 rounded-full bg-white/5 mb-4">
         <i class="fa-solid fa-briefcase text-4xl text-text-muted"></i>
       </div>
-      <h3 class="text-xl font-bold text-white mb-2">No hay proyectos</h3>
+      <h3 class="text-xl font-bold text-white mb-2">
+        {{ $t("admin_projects.empty_title") }}
+      </h3>
       <p class="text-text-muted mb-6">
-        Comienza creando tu primer proyecto para organizar el trabajo.
+        {{ $t("admin_projects.empty_msg") }}
       </p>
       <button
         @click="openModal()"
         class="bg-linear-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5">
         <i class="fa-solid fa-plus mr-2"></i>
-        Crear Primer Proyecto
+        {{ $t("admin_projects.create_first") }}
       </button>
     </div>
     <!-- Modal Form -->
     <BaseModal
       :show="showModal"
-      :title="form.id ? 'Editar Proyecto' : 'Nuevo Proyecto'"
+      :title="
+        form.id
+          ? $t('admin_projects.edit_project')
+          : $t('admin_projects.new_project')
+      "
       @close="closeModal">
       <form @submit.prevent="handleSubmit" class="space-y-5">
         <!-- Project Name -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-300">
-            Nombre del Proyecto
+            {{ $t("admin_projects.form.name") }}
             <span class="text-red-400 ml-1">*</span>
           </label>
           <div class="relative group">
@@ -299,14 +321,14 @@ onMounted(fetchProjects);
               type="text"
               class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 pl-11 pr-4 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all hover:border-slate-600"
               required
-              placeholder="Ej: Rediseño Web" />
+              :placeholder="$t('admin_projects.form.name_placeholder')" />
           </div>
         </div>
 
         <!-- Description -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-300">
-            Descripción
+            {{ $t("admin_projects.form.description") }}
           </label>
           <div class="relative group">
             <div class="absolute left-4 top-4 pointer-events-none">
@@ -317,7 +339,9 @@ onMounted(fetchProjects);
               v-model="form.description"
               rows="3"
               class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 pl-11 pr-4 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none hover:border-slate-600"
-              placeholder="Breve descripción del proyecto..."></textarea>
+              :placeholder="
+                $t('admin_projects.form.description_placeholder')
+              "></textarea>
           </div>
         </div>
 
@@ -329,7 +353,7 @@ onMounted(fetchProjects);
             class="flex-1 px-4 py-3 rounded-lg border border-slate-600 text-white hover:bg-slate-700/50 transition-all duration-200 font-medium flex items-center justify-center gap-2 group">
             <i
               class="fa-solid fa-xmark group-hover:rotate-90 transition-transform duration-200"></i>
-            Cancelar
+            {{ $t("common.cancel") }}
           </button>
           <button
             type="submit"
@@ -341,10 +365,10 @@ onMounted(fetchProjects);
             <i v-else class="fa-solid fa-spinner fa-spin"></i>
             {{
               submitting
-                ? "Guardando..."
+                ? $t("common.loading")
                 : form.id
-                ? "Guardar Cambios"
-                : "Crear Proyecto"
+                ? $t("common.save")
+                : $t("common.create")
             }}
           </button>
         </div>

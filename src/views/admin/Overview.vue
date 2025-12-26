@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import api from "@/services/api";
 import StatCard from "@/components/admin/StatCard.vue";
+import { useToast } from "@/composables/useToast";
+import { useConfirm } from "@/composables/useConfirm";
+import { useI18n } from "vue-i18n";
+
+const toast = useToast();
+const { confirm } = useConfirm();
+const { t } = useI18n();
 
 const stats = ref({
   users: 0,
@@ -10,26 +17,26 @@ const stats = ref({
   pendingTasks: 0,
 });
 
-const quickActions = [
+const quickActions = computed(() => [
   {
-    label: "Usuarios",
+    label: t("admin_dashboard.users"),
     icon: "fa-user-plus",
     route: "/admin/users",
     color: "bg-primary",
   },
   {
-    label: "Proyectos",
+    label: t("admin_dashboard.projects"),
     icon: "fa-folder-plus",
     route: "/admin/projects",
     color: "bg-accent",
   },
   {
-    label: "Tareas",
+    label: t("admin_dashboard.tasks"),
     icon: "fa-list-check",
     route: "/admin/tasks",
     color: "bg-success",
   },
-];
+]);
 
 const activities = ref<any[]>([]);
 const usersMap = ref<Record<number, any>>({});
@@ -82,9 +89,9 @@ const fetchActivities = async () => {
         allActivities.push({
           date: new Date(u.created_at),
           actor: getActor(u.id),
-          action: "Nuevo registro de usuario",
+          action: t("activity.user_created"),
           target: u.email,
-          context: "Gestión de Usuarios",
+          context: t("activity.context_user"),
           icon: "fa-user-plus",
           color: "bg-blue-500",
           type: "create",
@@ -94,9 +101,9 @@ const fetchActivities = async () => {
           allActivities.push({
             date: new Date(u.updated_at),
             actor: getActor(u.id),
-            action: "Actualizó su perfil",
-            target: "Datos personales / Avatar",
-            context: "Perfil de Usuario",
+            action: t("activity.user_updated"),
+            target: t("activity.target_data"),
+            context: t("activity.context_profile"),
             icon: "fa-user-pen",
             color: "bg-indigo-500",
             type: "update",
@@ -112,9 +119,9 @@ const fetchActivities = async () => {
         allActivities.push({
           date: new Date(p.created_at),
           actor: getActor(p.creator_id || 1),
-          action: "Creó un nuevo proyecto",
+          action: t("activity.project_created"),
           target: p.name,
-          context: "Gestión de Proyectos",
+          context: t("activity.context_project"),
           icon: "fa-folder-plus",
           color: "bg-purple-500",
           type: "create",
@@ -124,9 +131,9 @@ const fetchActivities = async () => {
           allActivities.push({
             date: new Date(p.updated_at),
             actor: getActor(p.creator_id || 1),
-            action: "Modificó el proyecto",
+            action: t("activity.project_updated"),
             target: p.name,
-            context: "Configuración de Proyecto",
+            context: t("activity.context_project_settings"),
             icon: "fa-sliders",
             color: "bg-purple-400",
             type: "update",
@@ -147,12 +154,12 @@ const fetchActivities = async () => {
         allActivities.push({
           date: new Date(t.created_at),
           actor: getActor(actorId),
-          action: "Creó una nueva tarea",
+          action: t("activity.task_created"),
           target: t.description,
           context:
             t.project_name ||
             projectsMap.value[t.project_id]?.name ||
-            "Proyecto General",
+            t("activity.context_general"),
           icon: "fa-list",
           color: "bg-emerald-500",
           type: "create",
@@ -165,12 +172,14 @@ const fetchActivities = async () => {
           allActivities.push({
             date: new Date(t.updated_at),
             actor: getActor(actorId),
-            action: isCompleted ? "Completó la tarea" : "Actualizó la tarea",
+            action: isCompleted
+              ? t("activity.task_completed")
+              : t("activity.task_updated"),
             target: t.description,
             context:
               t.project_name ||
               projectsMap.value[t.project_id]?.name ||
-              "Proyecto General",
+              t("activity.context_general"),
             icon: isCompleted ? "fa-check" : "fa-pen-to-square",
             color: isCompleted ? "bg-green-500" : "bg-yellow-500",
             type: "update",
@@ -188,6 +197,31 @@ const fetchActivities = async () => {
     // Error silently - feed refresh is not critical
   } finally {
     isRefreshing.value = false;
+  }
+};
+
+const deleteActivity = async () => {
+  const confirmed = await confirm({
+    title: t("admin_dashboard.confirm_clear_title"),
+    message: t("admin_dashboard.confirm_clear_msg"),
+    confirmText: t("admin_dashboard.clear_btn"),
+    type: "danger",
+  });
+
+  if (!confirmed) return;
+
+  try {
+    await api.delete("/admin/activity");
+    activities.value = [];
+    toast.success(
+      t("admin_dashboard.history_cleared"),
+      t("admin_dashboard.history_cleared_msg")
+    );
+  } catch {
+    toast.error(
+      t("admin_dashboard.clear_error"),
+      t("admin_dashboard.clear_error_msg")
+    );
   }
 };
 
@@ -234,22 +268,22 @@ onMounted(async () => {
       v-else
       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       <StatCard
-        label="Usuarios"
+        :label="t('admin_dashboard.users')"
         :value="stats.users"
         icon="fa-users"
         bgGradient="from-blue-500 to-blue-600" />
       <StatCard
-        label="Proyectos"
+        :label="t('admin_dashboard.projects')"
         :value="stats.projects"
         icon="fa-briefcase"
         bgGradient="from-purple-500 to-purple-600" />
       <StatCard
-        label="Tareas Totales"
+        :label="t('admin_dashboard.total_tasks')"
         :value="stats.tasks"
         icon="fa-list-check"
         bgGradient="from-emerald-500 to-emerald-600" />
       <StatCard
-        label="Pendientes"
+        :label="t('admin_dashboard.pending')"
         :value="stats.pendingTasks"
         icon="fa-clock"
         bgGradient="from-orange-500 to-red-500" />
@@ -260,7 +294,7 @@ onMounted(async () => {
       class="bg-slate-800/70 border border-white/10 rounded-xl shadow-sm p-8">
       <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
         <i class="fa-solid fa-bolt text-yellow-400"></i>
-        Accesos Rápidos
+        {{ $t("admin_dashboard.quick_actions") }}
       </h3>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <button
@@ -287,14 +321,21 @@ onMounted(async () => {
           @click="fetchActivities"
           :disabled="isRefreshing || loading"
           class="focus:outline-none hover:bg-slate-700/50 p-1.5 -ml-1.5 rounded-lg transition-all"
-          title="Actualizar feed en tiempo real">
+          :title="$t('admin_dashboard.refresh')">
           <i
             :class="[
               'fa-solid fa-clock-rotate-left text-blue-400 text-xl',
               isRefreshing ? 'animate-spin' : '',
             ]"></i>
         </button>
-        Actividad Reciente
+        {{ $t("admin_dashboard.recent_activity") }}
+        <button
+          @click="deleteActivity"
+          :disabled="isRefreshing || loading || activities.length === 0"
+          class="ml-auto focus:outline-none hover:bg-rose-500/10 p-2 rounded-lg transition-all text-rose-500 disabled:opacity-30 disabled:grayscale"
+          :title="$t('admin_dashboard.clear_history')">
+          <i class="fa-solid fa-trash-can text-lg"></i>
+        </button>
       </h3>
 
       <!-- Skeleton Loading for Feed -->
@@ -321,7 +362,7 @@ onMounted(async () => {
       </div>
 
       <div v-else-if="activities.length === 0" class="text-text-muted italic">
-        No hay actividad reciente registrada.
+        {{ $t("admin_dashboard.no_activity") }}
       </div>
 
       <div v-else class="space-y-0">

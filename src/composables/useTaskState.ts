@@ -21,7 +21,7 @@ const loadData = async () => {
   if (!localStorage.getItem("token")) return;
   isLoading.value = true;
   try {
-    const resTasks = await api.get("/tasks");
+    const resTasks = await api.get("/tasks?limit=1000");
 
     // Support unwrapped or wrapped responses
     const tasksRaw =

@@ -8,10 +8,12 @@ import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import { useConfetti } from "@/composables/useConfetti";
 import EnhancedSelect from "@/components/common/EnhancedSelect.vue";
+import { useI18n } from "vue-i18n";
 
 const toast = useToast();
 const { confirm } = useConfirm();
 const { triggerConfetti } = useConfetti();
+const { t } = useI18n();
 
 // Types
 interface TaskStatus {
@@ -42,7 +44,7 @@ const fetchData = async () => {
   try {
     // Parallel fetching for performance
     const [tasksRes, projectsRes, statusesRes] = await Promise.all([
-      api.get("/tasks"),
+      api.get("/tasks?limit=1000"),
       api.get("/projects"),
       api.get("/task-statuses"),
     ]);
@@ -110,10 +112,10 @@ const openModal = async (task?: Task) => {
 const closeModal = async (force: boolean = false) => {
   if (!force && (form.value.description || form.value.project_id)) {
     const confirmed = await confirm({
-      title: "¿Cerrar sin guardar?",
-      message: "Los cambios no guardados se perderán.",
-      confirmText: "Cerrar",
-      cancelText: "Continuar editando",
+      title: t("admin_tasks.close_confirm"),
+      message: t("admin_tasks.close_msg"),
+      confirmText: t("common.close"),
+      cancelText: t("admin_tasks.continue_editing"),
       type: "warning",
     });
 
@@ -156,12 +158,15 @@ const handleSubmit = async () => {
     if (form.value.id) {
       await api.put(`/tasks/${form.value.id}`, payload);
       toast.success(
-        "Tarea actualizada",
-        "La tarea se ha actualizado correctamente"
+        t("admin_tasks.update_success"),
+        t("admin_tasks.update_msg")
       );
     } else {
       await api.post("/tasks", payload);
-      toast.success("Tarea creada", "La tarea se ha creado exitosamente");
+      toast.success(
+        t("admin_tasks.create_success"),
+        t("admin_tasks.create_msg")
+      );
     }
     await fetchData(); // Refresh list
     closeModal(true);
@@ -175,11 +180,10 @@ const handleSubmit = async () => {
 
 const deleteTask = async (id: number) => {
   const confirmed = await confirm({
-    title: "¿Eliminar tarea?",
-    message:
-      "Esta acción no se puede deshacer. La tarea será eliminada permanentemente.",
-    confirmText: "Eliminar",
-    cancelText: "Cancelar",
+    title: t("admin_tasks.delete_confirm"),
+    message: t("admin_tasks.delete_msg"),
+    confirmText: t("common.delete"),
+    cancelText: t("common.cancel"),
     type: "danger",
   });
 
@@ -198,10 +202,11 @@ const deleteTask = async (id: number) => {
 
 const completeTask = async (task: Task) => {
   const confirmed = await confirm({
-    title: "¿Completar tarea?",
-    message: `¿Marcar "${task.description}" como completada?`,
-    confirmText: "Completar",
-    cancelText: "Cancelar",
+    title: t("admin_tasks.complete_confirm"),
+    // use simple replace for now or t() interpolation
+    message: t("admin_tasks.complete_msg", { task: task.description }),
+    confirmText: t("common.confirm"),
+    cancelText: t("common.cancel"),
     type: "success",
   });
 
@@ -237,7 +242,10 @@ const completeTask = async (task: Task) => {
     // Trigger confetti!
     triggerConfetti();
 
-    toast.success("¡Tarea completada!", "¡Excelente trabajo! 🎉");
+    toast.success(
+      t("admin_tasks.marked_completed"),
+      t("admin_tasks.marked_completed_msg")
+    );
   } catch (err: any) {
     const errorMsg =
       err.response?.data?.message || "Error al completar la tarea";
@@ -247,10 +255,10 @@ const completeTask = async (task: Task) => {
 
 const uncompleteTask = async (task: Task) => {
   const confirmed = await confirm({
-    title: "¿Desmarcar tarea?",
-    message: `¿Marcar "${task.description}" como pendiente nuevamente?`,
-    confirmText: "Desmarcar",
-    cancelText: "Cancelar",
+    title: t("admin_tasks.uncomplete_confirm"),
+    message: t("admin_tasks.uncomplete_msg", { task: task.description }),
+    confirmText: t("common.confirm"),
+    cancelText: t("common.cancel"),
     type: "warning",
   });
 
@@ -325,14 +333,16 @@ onMounted(fetchData);
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold text-white">Tareas</h2>
-        <p class="text-text-muted">Seguimiento de tareas y prioridades.</p>
+        <h2 class="text-2xl font-bold text-white">
+          {{ $t("admin_tasks.title") }}
+        </h2>
+        <p class="text-text-muted">{{ $t("admin_tasks.subtitle") }}</p>
       </div>
       <button
         @click="openModal()"
         class="bg-linear-to-r from-blue-500 to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center gap-2">
         <i class="fa-solid fa-plus"></i>
-        <span>Nueva Tarea</span>
+        <span>{{ $t("admin_tasks.new_task") }}</span>
       </button>
     </div>
 
@@ -371,14 +381,16 @@ onMounted(fetchData);
       <div class="inline-flex p-4 rounded-full bg-white/5 mb-4">
         <i class="fa-solid fa-clipboard-check text-4xl text-text-muted"></i>
       </div>
-      <h3 class="text-xl font-bold text-white mb-2">Todo listo por ahora</h3>
+      <h3 class="text-xl font-bold text-white mb-2">
+        {{ $t("admin_tasks.empty_title") }}
+      </h3>
       <p class="text-text-muted mb-6">
-        No hay tareas pendientes en el sistema.
+        {{ $t("admin_tasks.empty_msg") }}
       </p>
       <button
         @click="openModal()"
         class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm inline-flex items-center gap-2">
-        Crear primera tarea
+        {{ $t("admin_tasks.create_first") }}
       </button>
     </div>
 
@@ -477,7 +489,7 @@ onMounted(fetchData);
     <!-- Modal Form -->
     <BaseModal
       :show="showModal"
-      :title="form.id ? 'Editar Tarea' : 'Nueva Tarea'"
+      :title="form.id ? $t('tasks.edit_task') : $t('admin_tasks.new_task')"
       @close="closeModal">
       <form @submit.prevent="handleSubmit" class="space-y-5">
         <!-- Description -->
@@ -573,10 +585,10 @@ onMounted(fetchData);
             <i v-else class="fa-solid fa-spinner fa-spin"></i>
             {{
               submitting
-                ? "Guardando..."
+                ? $t("common.loading")
                 : form.id
-                ? "Guardar Cambios"
-                : "Crear Tarea"
+                ? $t("common.save")
+                : $t("common.create")
             }}
           </button>
         </div>

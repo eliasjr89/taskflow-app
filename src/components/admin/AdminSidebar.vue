@@ -1,16 +1,19 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useSectionTheme } from "@/composables/useSectionTheme";
 
 const { theme } = useSectionTheme();
+const { t } = useI18n();
 
-const menuItems = [
-  { name: "Overview", icon: "fa-chart-pie", path: "/admin/overview" },
-  { name: "Gestión Usuarios", icon: "fa-users", path: "/admin/users" },
-  { name: "Proyectos", icon: "fa-briefcase", path: "/admin/projects" },
-  { name: "Tareas", icon: "fa-list-check", path: "/admin/tasks" },
-  { name: "Base de Datos", icon: "fa-database", path: "/admin/database" },
-  { name: "Mi Perfil", icon: "fa-id-badge", path: "/admin/profile" },
-];
+const menuItems = computed(() => [
+  { name: t("admin.overview"), icon: "fa-chart-pie", path: "/admin/overview" },
+  { name: t("admin.users"), icon: "fa-users", path: "/admin/users" },
+  { name: t("admin.projects"), icon: "fa-briefcase", path: "/admin/projects" },
+  { name: t("admin.tasks"), icon: "fa-list-check", path: "/admin/tasks" },
+  { name: t("admin.database"), icon: "fa-database", path: "/admin/database" },
+  { name: t("admin.profile"), icon: "fa-id-badge", path: "/admin/profile" },
+]);
 
 const logout = async () => {
   try {
@@ -90,7 +93,7 @@ const logout = async () => {
         class="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-slate-400 border border-slate-700/50 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-all justify-center group">
         <i
           class="fa-solid fa-arrow-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
-        <span class="font-bold">Cerrar Sesión</span>
+        <span class="font-bold">{{ t("common.logout") }}</span>
       </button>
     </div>
   </aside>

@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import api from "@/services/api";
 import type { User } from "@/types";
 import BaseModal from "@/components/common/BaseModal.vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import EnhancedSelect from "@/components/common/EnhancedSelect.vue";
+import { useI18n } from "vue-i18n";
 
 const toast = useToast();
 const { confirm } = useConfirm();
+const { t } = useI18n();
 
 const users = ref<User[]>([]);
 const loading = ref(true);
@@ -28,11 +30,19 @@ const form = ref({
   profile_image: "",
 });
 
-const roles = [
-  { value: "user", label: "Usuario", icon: "fa-user" },
-  { value: "manager", label: "Manager", icon: "fa-user-tie" },
-  { value: "admin", label: "Administrador", icon: "fa-user-shield" },
-];
+const roles = computed(() => [
+  { value: "user", label: t("admin_users.roles.user"), icon: "fa-user" },
+  {
+    value: "manager",
+    label: t("admin_users.roles.manager"),
+    icon: "fa-user-tie",
+  },
+  {
+    value: "admin",
+    label: t("admin_users.roles.admin"),
+    icon: "fa-user-shield",
+  },
+]);
 
 const fetchUsers = async () => {
   loading.value = true;
@@ -82,12 +92,12 @@ const handleImageSelect = (event: Event) => {
 
   if (file) {
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Error", "La imagen no debe superar los 5MB");
+      toast.error(t("auth.error"), t("admin_users.image_size_error"));
       return;
     }
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Error", "Solo se permiten archivos de imagen");
+      toast.error(t("auth.error"), t("admin_users.image_type_error"));
       return;
     }
 
@@ -105,10 +115,10 @@ const closeModal = async (force: boolean = false) => {
 
   if (!force && (form.value.username || form.value.email)) {
     const confirmed = await confirm({
-      title: "¿Cerrar sin guardar?",
-      message: "Los cambios no guardados se perderán.",
-      confirmText: "Cerrar",
-      cancelText: "Continuar editando",
+      title: t("admin_tasks.close_confirm"),
+      message: t("admin_tasks.close_msg"),
+      confirmText: t("common.close"),
+      cancelText: t("admin_tasks.continue_editing"),
       type: "warning",
     });
 
@@ -153,14 +163,17 @@ const handleSubmit = async () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success(
-        "Usuario actualizado",
-        "Los cambios se guardaron correctamente"
+        t("admin_users.update_success"),
+        t("admin_users.update_msg")
       );
     } else {
       await api.post("/users", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      toast.success("Usuario creado", "El usuario se creó correctamente");
+      toast.success(
+        t("admin_users.create_success"),
+        t("admin_users.create_msg")
+      );
     }
 
     await fetchUsers();
@@ -176,11 +189,10 @@ const handleSubmit = async () => {
 
 const deleteUser = async (id: number) => {
   const confirmed = await confirm({
-    title: "¿Eliminar usuario?",
-    message:
-      "Esta acción no se puede deshacer. El usuario será eliminado permanentemente.",
-    confirmText: "Eliminar",
-    cancelText: "Cancelar",
+    title: t("admin_users.delete_confirm"),
+    message: t("admin_users.delete_msg"),
+    confirmText: t("common.delete"),
+    cancelText: t("common.cancel"),
     type: "danger",
   });
 
@@ -189,7 +201,10 @@ const deleteUser = async (id: number) => {
   try {
     await api.delete(`/users/${id}`);
     users.value = users.value.filter((u) => u.id !== id);
-    toast.success("Usuario eliminado", "El usuario se eliminó correctamente");
+    toast.success(
+      t("admin_users.delete_success"),
+      t("admin_users.delete_success_msg")
+    );
   } catch (err: any) {
     const errorMsg =
       err.response?.data?.message || "Error al eliminar el usuario";
@@ -204,7 +219,8 @@ const formatDate = (dateString?: string) => {
   const diffTime = Math.abs(now.getTime() - date.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "Hoy";
+  if (diffDays === 0) return t("calendar.today");
+  // using localized date format below, simple relative not fully localized here but OK
   if (diffDays === 1) return "Ayer";
   if (diffDays < 7) return `Hace ${diffDays} días`;
   if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
@@ -224,16 +240,18 @@ onMounted(fetchUsers);
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <div>
-        <h2 class="text-2xl font-bold text-white">Gestión de Usuarios</h2>
+        <h2 class="text-2xl font-bold text-white">
+          {{ $t("admin_users.title") }}
+        </h2>
         <p class="text-text-muted">
-          Administra los accesos y roles de la plataforma.
+          {{ $t("admin_users.subtitle") }}
         </p>
       </div>
       <button
         @click="openModal()"
         class="bg-linear-to-r from-indigo-600 to-purple-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center gap-2">
         <i class="fa-solid fa-plus"></i>
-        <span>Nuevo Usuario</span>
+        <span>{{ $t("admin_users.new_user") }}</span>
       </button>
     </div>
 
@@ -300,7 +318,10 @@ onMounted(fetchUsers);
           </div>
           <div class="flex items-center gap-2 text-sm text-gray-300">
             <i class="fa-solid fa-calendar text-indigo-400 w-5 text-center"></i>
-            <span>Unido {{ formatDate(user.created_at) }}</span>
+            <span
+              >{{ $t("admin_users.joined") }}
+              {{ formatDate(user.created_at) }}</span
+            >
           </div>
         </div>
 
@@ -336,7 +357,7 @@ onMounted(fetchUsers);
             <button
               @click="deleteUser(user.id)"
               class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center hover:scale-110"
-              title="Eliminar">
+              :title="$t('common.delete')">
               <i class="fa-solid fa-trash text-sm"></i>
             </button>
           </div>
@@ -351,28 +372,32 @@ onMounted(fetchUsers);
       <div class="inline-flex p-4 rounded-full bg-white/5 mb-4">
         <i class="fa-solid fa-users text-4xl text-text-muted"></i>
       </div>
-      <h3 class="text-xl font-bold text-white mb-2">No hay usuarios</h3>
+      <h3 class="text-xl font-bold text-white mb-2">
+        {{ $t("admin_users.empty_title") }}
+      </h3>
       <p class="text-text-muted mb-6">
-        Invita a nuevos miembros al equipo para comenzar a colaborar.
+        {{ $t("admin_users.empty_msg") }}
       </p>
       <button
         @click="openModal()"
         class="bg-linear-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5">
         <i class="fa-solid fa-plus mr-2"></i>
-        Crear Primer Usuario
+        {{ $t("admin_users.create_first") }}
       </button>
     </div>
 
     <!-- User Modal -->
     <BaseModal
       :show="showModal"
-      :title="form.id ? 'Editar Usuario' : 'Nuevo Usuario'"
+      :title="
+        form.id ? $t('admin_users.edit_user') : $t('admin_users.new_user')
+      "
       @close="closeModal">
       <form @submit.prevent="handleSubmit" class="space-y-5">
         <!-- Profile Image Upload -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-300">
-            Foto de Perfil
+            {{ $t("profile.form.profile_image") }}
           </label>
           <div class="flex items-center gap-4">
             <div class="relative">
@@ -397,8 +422,8 @@ onMounted(fetchUsers);
               </label>
             </div>
             <div class="text-sm text-gray-400">
-              <p>Tamaño máximo: 5MB</p>
-              <p>Formatos: JPG, PNG, GIF</p>
+              <p>{{ $t("admin_users.upload_hint") }}</p>
+              <p>{{ $t("admin_users.upload_formats") }}</p>
             </div>
           </div>
         </div>
@@ -407,7 +432,7 @@ onMounted(fetchUsers);
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-300">
-              Usuario <span class="text-red-400">*</span>
+              {{ $t("auth.username") }} <span class="text-red-400">*</span>
             </label>
             <input
               v-model="form.username"
@@ -418,7 +443,7 @@ onMounted(fetchUsers);
           </div>
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-300">
-              Email <span class="text-red-400">*</span>
+              {{ $t("auth.email") }} <span class="text-red-400">*</span>
             </label>
             <input
               v-model="form.email"
@@ -433,7 +458,7 @@ onMounted(fetchUsers);
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-300">
-              Nombre <span class="text-red-400">*</span>
+              {{ $t("auth.first_name") }} <span class="text-red-400">*</span>
             </label>
             <input
               v-model="form.name"
@@ -444,7 +469,7 @@ onMounted(fetchUsers);
           </div>
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-300">
-              Apellidos <span class="text-red-400">*</span>
+              {{ $t("auth.last_name") }} <span class="text-red-400">*</span>
             </label>
             <input
               v-model="form.lastname"
@@ -459,15 +484,15 @@ onMounted(fetchUsers);
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <EnhancedSelect
             v-model="form.role"
-            label="Rol"
+            :label="$t('profile.role')"
             icon="fa-user-shield"
             :options="roles"
             :required="true"
-            placeholder="Selecciona un rol" />
+            :placeholder="$t('common.filter')" />
 
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-300">
-              Contraseña {{ form.id ? "" : "*" }}
+              {{ $t("auth.password") }} {{ form.id ? "" : "*" }}
             </label>
             <input
               v-model="form.password"
@@ -475,7 +500,7 @@ onMounted(fetchUsers);
               :required="!form.id"
               class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all hover:border-slate-600"
               :placeholder="
-                form.id ? 'Dejar en blanco para no cambiar' : '••••••••'
+                form.id ? $t('admin_users.password_hint') : '••••••••'
               " />
           </div>
         </div>
@@ -488,7 +513,7 @@ onMounted(fetchUsers);
             class="flex-1 px-4 py-3 rounded-lg border border-slate-600 text-white hover:bg-slate-700/50 transition-all duration-200 font-medium flex items-center justify-center gap-2 group">
             <i
               class="fa-solid fa-xmark group-hover:rotate-90 transition-transform duration-200"></i>
-            Cancelar
+            {{ $t("common.cancel") }}
           </button>
           <button
             type="submit"
@@ -500,10 +525,10 @@ onMounted(fetchUsers);
             <i v-else class="fa-solid fa-spinner fa-spin"></i>
             {{
               submitting
-                ? "Guardando..."
+                ? $t("common.loading")
                 : form.id
-                ? "Guardar Cambios"
-                : "Crear Usuario"
+                ? $t("common.save")
+                : $t("common.create")
             }}
           </button>
         </div>

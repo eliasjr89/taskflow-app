@@ -1,89 +1,164 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useTaskState } from "../composables/useTaskState";
-
 import { useI18n } from "vue-i18n";
-import { useRouter } from "vue-router";
-import { useFeedback } from "../composables/useFeedback";
+import { useToast } from "../composables/useToast";
+import { useUserState } from "../composables/useUserState";
 import api from "../services/api";
-import { LogOut, Camera, Edit2, Save, X, Mail, Globe } from "lucide-vue-next";
+import {
+  Camera,
+  Mail,
+  Globe,
+  Check,
+  Pencil,
+  Shield,
+  MapPin,
+  Link as LinkIcon,
+  User as UserIcon,
+} from "lucide-vue-next";
 import { useSectionTheme } from "../composables/useSectionTheme";
 import SkeletonLoader from "../components/common/SkeletonLoader.vue";
 
-const { resetState } = useTaskState();
 const { t, locale } = useI18n();
+const { theme } = useSectionTheme();
+const toast = useToast();
+const { user, fetchUser, updateUserState } = useUserState();
 
 const toggleLanguage = () => {
   locale.value = locale.value === "es" ? "en" : "es";
 };
-const { theme } = useSectionTheme();
-const router = useRouter();
-const { showFeedback } = useFeedback();
 
-// User Data
-const userRaw = localStorage.getItem("user");
-let initialUser = null;
-try {
-  initialUser = userRaw ? JSON.parse(userRaw) : null;
-} catch {
-  localStorage.removeItem("user");
-}
-const currentUser = ref(initialUser);
-const isEditingProfile = ref(false);
-const isLoadingProfile = ref(false);
 const isLoading = ref(true);
+const saving = ref(false);
+const editingField = ref<string | null>(null);
 
-const profileForm = ref({
+const locations = [
+  "Madrid, España",
+  "Barcelona, España",
+  "Sevilla, España",
+  "Valencia, España",
+  "Mexico City, México",
+  "Buenos Aires, Argentina",
+  "Bogotá, Colombia",
+  "Santiago, Chile",
+  "Lima, Perú",
+  "Caracas, Venezuela",
+  "Quito, Ecuador",
+  "San José, Costa Rica",
+  "Panamá City, Panamá",
+  "Guatemala City, Guatemala",
+  "San Salvador, El Salvador",
+  "Tegucigalpa, Honduras",
+  "Managua, Nicaragua",
+  "Santo Domingo, República Dominicana",
+  "San Juan, Puerto Rico",
+  "Montevideo, Uruguay",
+  "Asunción, Paraguay",
+  "La Paz, Bolivia",
+  "New York, USA",
+  "London, UK",
+  "Paris, France",
+  "Berlin, Germany",
+  "Tokyo, Japan",
+];
+
+const filteredLocations = ref<string[]>([]);
+const showSuggestions = ref(false);
+
+const onLocationInput = () => {
+  const query = form.value.location.toLowerCase();
+  if (query.length < 2) {
+    filteredLocations.value = [];
+    showSuggestions.value = false;
+    return;
+  }
+  filteredLocations.value = locations
+    .filter((l) => l.toLowerCase().includes(query))
+    .slice(0, 5);
+  showSuggestions.value = filteredLocations.value.length > 0;
+};
+
+const selectLocation = (loc: string) => {
+  form.value.location = loc;
+  showSuggestions.value = false;
+  saveField("location");
+};
+
+const hideSuggestions = () => {
+  setTimeout(() => {
+    showSuggestions.value = false;
+  }, 200);
+};
+
+const form = ref({
   username: "",
   name: "",
   lastname: "",
   email: "",
-  profile_image: "",
+  bio: "",
+  location: "",
+  website: "",
+  password: "",
 });
 
-// Load full user data from API
-onMounted(async () => {
+const loadProfile = async () => {
+  isLoading.value = true;
   try {
-    const response = await api.get("/user/profile");
-    // Simulate generic delay for skeleton demo
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    // ...
+    if (!user.value) {
+      await fetchUser();
+    }
 
-    const userData = response.data.data || response.data;
-
-    if (userData) {
-      currentUser.value = userData;
-      localStorage.setItem("user", JSON.stringify(userData));
-
-      // Populate form
-      profileForm.value = {
-        username: userData.username || "",
-        name: userData.name || "",
-        lastname: userData.lastname || "",
-        email: userData.email || "",
-        profile_image: userData.profile_image || "",
+    if (user.value) {
+      form.value = {
+        username: user.value.username || "",
+        name: user.value.name || "",
+        lastname: user.value.lastname || "",
+        email: user.value.email || "",
+        bio: user.value.bio || "",
+        location: user.value.location || "",
+        website: user.value.website || "",
+        password: "",
       };
     }
-  } catch {
-    // Error loading profile - silent fail
   } finally {
     isLoading.value = false;
   }
-});
+};
 
-const handleLogout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  resetState();
-  router.push("/login");
+const saveField = async (field: string) => {
+  if (!user.value) return;
+  saving.value = true;
+  try {
+    const payload: any = { [field]: (form.value as any)[field] };
+    await api.put("/user/profile", payload);
+    updateUserState(payload);
+    editingField.value = null;
+    toast.success(
+      t("profile.success") || "Actualizado",
+      `${field} ${t("profile.saved_success") || "guardado correctamente"}.`
+    );
+  } catch (err: any) {
+    toast.error(
+      "Error",
+      err.response?.data?.message ||
+        t("profile.error_saving") ||
+        "No se pudo guardar."
+    );
+    loadProfile();
+  } finally {
+    saving.value = false;
+  }
+};
+
+const toggleEdit = (field: string) => {
+  if (editingField.value === field) {
+    saveField(field);
+  } else {
+    editingField.value = field;
+  }
 };
 
 // File Upload
 const fileInput = ref<HTMLInputElement | null>(null);
-
-const handleImageUpload = () => {
-  fileInput.value?.click();
-};
 
 const onFileChange = async (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -93,79 +168,45 @@ const onFileChange = async (event: Event) => {
     formData.append("avatar", file);
 
     try {
-      isLoadingProfile.value = true;
+      saving.value = true;
       const response = await api.post("/user/avatar", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       const imageUrl = response.data.data.imageUrl;
+      updateUserState({ profile_image: imageUrl });
 
-      if (currentUser.value) {
-        currentUser.value.profile_image = imageUrl;
-        localStorage.setItem("user", JSON.stringify(currentUser.value));
-      }
-
-      profileForm.value.profile_image = imageUrl;
-
-      showFeedback(
+      toast.success(
         t("profile.success") || "Éxito",
-        t("profile.profile_updated") || "Imagen actualizada correctamente",
-        "success"
+        t("profile.profile_updated") || "Imagen actualizada correctamente"
       );
     } catch {
-      showFeedback("Error", "Error al subir imagen", "error");
+      toast.error("Error", t("profile.error_image") || "Error al subir imagen");
     } finally {
-      isLoadingProfile.value = false;
-      // Reset input
+      saving.value = false;
       if (fileInput.value) fileInput.value.value = "";
     }
   }
 };
 
-const removeProfileImage = async () => {
-  profileForm.value.profile_image = "";
-  // Optional: Call API to clear it immediately or wait for save
-  await saveProfile();
-};
-
-// ... Rest of profile logic ...
-
-const saveProfile = async () => {
-  isLoadingProfile.value = true;
+const updatePassword = async () => {
+  if (!form.value.password || !user.value) return;
+  saving.value = true;
   try {
-    const response = await api.put("/user/profile", profileForm.value);
-    const updatedUser = response.data.data || response.data;
-
-    currentUser.value = updatedUser;
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-
-    showFeedback(
-      t("profile.success") || "Éxito",
-      t("profile.profile_updated") || "Perfil actualizado correctamente",
-      "success"
+    await api.put("/user/profile", { password: form.value.password });
+    form.value.password = "";
+    toast.success(t("profile.password_updated") || "Contraseña actualizada");
+  } catch {
+    toast.error(
+      "Error",
+      t("profile.error_password") || "No se pudo actualizar la contraseña."
     );
-    isEditingProfile.value = false;
-  } catch (error: any) {
-    const msg = error.response?.data?.message || "Error al actualizar perfil";
-    showFeedback("Error", msg, "error");
   } finally {
-    isLoadingProfile.value = false;
+    saving.value = false;
   }
 };
 
-const cancelEdit = () => {
-  // Restore original values
-  profileForm.value = {
-    username: currentUser.value?.username || "",
-    name: currentUser.value?.name || "",
-    lastname: currentUser.value?.lastname || "",
-    email: currentUser.value?.email || "",
-    profile_image: currentUser.value?.profile_image || "",
-  };
-  isEditingProfile.value = false;
-};
+onMounted(loadProfile);
 </script>
 
 <template>
@@ -173,10 +214,13 @@ const cancelEdit = () => {
     <!-- Skeleton Loading -->
     <div v-if="isLoading">
       <SkeletonLoader type="banner" class="h-64 rounded-3xl mb-6" />
-      <SkeletonLoader type="card" :count="1" class="h-40" />
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <SkeletonLoader type="card" class="h-80" />
+        <SkeletonLoader type="card" class="h-80 lg:col-span-2" />
+      </div>
     </div>
 
-    <div v-else class="space-y-6">
+    <div v-else class="space-y-8">
       <!-- Hidden File Input -->
       <input
         type="file"
@@ -185,7 +229,7 @@ const cancelEdit = () => {
         accept="image/png, image/jpeg, image/jpg, image/webp"
         @change="onFileChange" />
 
-      <!-- Profile Banner Card (Dark Theme Enforced) -->
+      <!-- Profile Banner Card -->
       <div
         class="relative rounded-3xl p-8 overflow-hidden bg-bg-dark border border-white/10 shadow-2xl min-h-[300px] flex flex-col justify-center">
         <!-- Dynamic Background Blobs -->
@@ -206,194 +250,385 @@ const cancelEdit = () => {
         </div>
 
         <div
-          class="relative z-10 flex flex-col-reverse md:flex-row items-center md:justify-between gap-10 w-full">
-          <!-- Info / Form Section (Left now) -->
-          <div class="flex-1 w-full text-center md:text-left">
-            <template v-if="!isEditingProfile">
-              <h2
-                class="text-4xl font-bold text-white font-outfit mb-2 drop-shadow-md">
-                {{ currentUser?.name || currentUser?.username }}
-                {{ currentUser?.lastname }}
-              </h2>
-              <p
-                class="text-xl text-indigo-200 font-medium mb-4 flex items-center justify-center md:justify-start gap-2">
-                <span class="text-white/60 text-base"
-                  >@{{ currentUser?.username }}</span
-                >
-                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                <span class="text-white/60 text-base">{{
-                  t("profile.role")
-                }}</span>
-              </p>
+          class="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-8 w-full">
+          <!-- Avatar Section -->
+          <div class="relative group shrink-0 mb-4 md:mb-0">
+            <div
+              class="w-40 h-40 md:w-48 md:h-48 rounded-full bg-slate-800 flex items-center justify-center shadow-2xl ring-4 ring-white/10 overflow-hidden relative border-4 border-white/5"
+              :class="[
+                !user?.profile_image
+                  ? theme.gradients.blob1.replace('blur', '')
+                  : '',
+              ]">
+              <img
+                v-if="user?.profile_image"
+                :src="user.profile_image"
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <span v-else class="text-7xl font-bold text-white">
+                {{ user?.username?.charAt(0).toUpperCase() }}
+              </span>
 
+              <!-- Hover Overlay -->
               <div
-                class="flex flex-wrap gap-3 justify-center md:justify-start mb-6">
-                <div
-                  class="px-4 py-2 rounded-xl bg-white/10 text-white text-sm backdrop-blur-md border border-white/5 flex items-center gap-2">
-                  <Mail class="w-4 h-4 text-indigo-300" />
-                  {{ currentUser?.email }}
-                </div>
-                <div
-                  class="px-4 py-2 rounded-xl bg-white/10 text-white text-sm backdrop-blur-md border border-white/5 flex items-center gap-2">
-                  <Globe class="w-4 h-4 text-indigo-300" />
-                  {{ t("profile.location") }}
-                </div>
+                class="absolute inset-0 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center cursor-pointer"
+                @click="fileInput?.click()">
+                <Camera class="w-10 h-10 text-white mb-1" />
+                <span
+                  class="text-[10px] text-white font-bold uppercase tracking-widest"
+                  >{{ t("common.edit") || "Editar" }}</span
+                >
               </div>
-            </template>
-
-            <template v-else>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="space-y-4">
-                  <input
-                    v-model="profileForm.username"
-                    type="text"
-                    :placeholder="t('profile.form.username')"
-                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
-                  <input
-                    v-model="profileForm.email"
-                    type="email"
-                    :placeholder="t('profile.form.email')"
-                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
-                </div>
-                <div class="space-y-4">
-                  <input
-                    v-model="profileForm.name"
-                    type="text"
-                    :placeholder="t('profile.form.name')"
-                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
-                  <input
-                    v-model="profileForm.lastname"
-                    type="text"
-                    :placeholder="t('profile.form.lastname')"
-                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all" />
-                </div>
-              </div>
-            </template>
-
-            <!-- Actions -->
-            <div class="flex gap-3 justify-center md:justify-start">
-              <button
-                v-if="!isEditingProfile"
-                @click="isEditingProfile = true"
-                class="px-6 py-2.5 bg-white text-indigo-900 hover:bg-indigo-50 rounded-xl font-bold shadow-lg transition-all hover:-translate-y-0.5 flex items-center gap-2">
-                <Edit2 class="w-4 h-4" /> {{ t("common.edit") }}
-              </button>
-              <template v-else>
-                <button
-                  @click="saveProfile"
-                  :disabled="isLoadingProfile"
-                  class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg transition-all hover:-translate-y-0.5 flex items-center gap-2">
-                  <Save class="w-4 h-4" /> {{ t("common.save") }}
-                </button>
-                <button
-                  @click="cancelEdit"
-                  class="px-6 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold shadow-lg transition-all hover:-translate-y-0.5 flex items-center gap-2 border border-white/10">
-                  <X class="w-4 h-4" /> {{ t("common.cancel") }}
-                </button>
-              </template>
             </div>
           </div>
 
-          <!-- Avatar Section (Right now) -->
-          <div class="relative group shrink-0">
+          <!-- Quick Info Section -->
+          <div class="flex-1 text-center md:text-left">
             <div
-              class="w-40 h-40 rounded-full bg-linear-to-br flex items-center justify-center shadow-2xl ring-4 ring-white/10 overflow-hidden"
-              :class="[
-                profileForm.profile_image
-                  ? ''
-                  : theme.gradients.blob1.replace('blur', ''),
-              ]">
-              <img
-                v-if="profileForm.profile_image"
-                :src="profileForm.profile_image"
-                class="w-full h-full object-cover" />
-              <span v-else class="text-6xl font-bold text-white">{{
-                currentUser?.username?.charAt(0).toUpperCase()
-              }}</span>
+              class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-3">
+              <h1
+                class="text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">
+                {{ user?.name }} {{ user?.lastname }}
+              </h1>
+              <div class="flex justify-center gap-2">
+                <span
+                  class="px-3 py-1 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/10 backdrop-blur-md flex items-center gap-1.5">
+                  <Shield class="w-3 h-3 text-indigo-300" /> {{ user?.role }}
+                </span>
+                <span
+                  class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 backdrop-blur-md">
+                  <span
+                    class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                  {{ t("profile.online") || "En Línea" }}
+                </span>
+              </div>
             </div>
-            <!-- Edit Overlay -->
+
             <div
-              v-if="isEditingProfile"
-              class="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              @click="handleImageUpload">
-              <Camera class="w-10 h-10 text-white" />
+              class="flex flex-wrap justify-center md:justify-start gap-4 text-white/60 text-sm mb-6">
+              <span
+                class="flex items-center gap-1.5 hover:text-white transition-colors">
+                <UserIcon class="w-4 h-4 text-indigo-400/70" />
+                @{{ user?.username }}
+              </span>
+              <span
+                class="flex items-center gap-1.5 hover:text-white transition-colors">
+                <Mail class="w-4 h-4 text-indigo-400/70" />
+                {{ user?.email }}
+              </span>
+              <a
+                v-if="user?.location"
+                :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  user.location
+                )}`"
+                target="_blank"
+                class="flex items-center gap-1.5 hover:text-white transition-colors group/loc">
+                <MapPin
+                  class="w-4 h-4 text-indigo-400 group-hover/loc:scale-110 transition-transform" />
+                <span
+                  class="border-b border-transparent group-hover/loc:border-indigo-400/50"
+                  >{{ user.location }}</span
+                >
+              </a>
             </div>
-            <!-- Remove Button -->
-            <button
-              v-if="isEditingProfile && profileForm.profile_image"
-              @click="removeProfileImage"
-              class="absolute -top-1 -right-1 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-              <X class="w-4 h-4 text-white" />
-            </button>
-            <div
-              class="absolute bottom-2 right-2 w-6 h-6 bg-emerald-500 border-4 border-bg-dark rounded-full"></div>
           </div>
         </div>
       </div>
 
-      <!-- Settings Panel (Matching Dark/Glass Style) -->
-      <div
-        class="relative rounded-2xl p-6 bg-bg-dark border border-white/10 shadow-xl overflow-hidden">
-        <div class="absolute inset-0 bg-white/5 z-0 pointer-events-none"></div>
-        <div class="relative z-10">
-          <h3
-            class="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-            ⚙️ {{ t("profile.preferences") }}
-          </h3>
-          <div class="space-y-4">
-            <!-- Language -->
-            <div
-              class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all">
-              <div class="flex items-center gap-3">
-                <div class="p-2 rounded-lg bg-white/10">
-                  <Globe class="w-5 h-5 text-indigo-200" />
-                </div>
-                <div>
-                  <p class="font-medium text-white">
-                    {{ t("profile.language") || "Idioma" }}
-                  </p>
-                  <p class="text-sm text-white/50">Español / English</p>
-                </div>
-              </div>
+      <!-- Main Content Body -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column: Bio & Identity -->
+        <div class="space-y-8">
+          <!-- Bio / Description -->
+          <div
+            class="bg-bg-dark border border-white/10 rounded-2xl p-6 shadow-xl relative overflow-hidden group/bio">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                <span class="text-indigo-400 font-serif text-2xl">"</span>
+                {{ t("profile.about_me") || "Sobre mí" }}
+              </h3>
               <button
-                @click="toggleLanguage"
-                class="relative inline-flex h-8 w-24 items-center justify-between rounded-full bg-white/20 p-1 transition-colors cursor-pointer border border-white/10">
-                <span
-                  class="absolute h-6 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-all duration-300"
-                  :class="
-                    locale === 'es' ? 'left-1' : 'left-[calc(50%+4px)]'
-                  "></span>
-                <span
-                  class="relative z-10 w-1/2 text-center text-xs font-bold transition-colors"
-                  :class="locale === 'es' ? 'text-indigo-600' : 'text-white/50'"
-                  >ES</span
-                >
-                <span
-                  class="relative z-10 w-1/2 text-center text-xs font-bold transition-colors"
-                  :class="locale === 'en' ? 'text-indigo-600' : 'text-white/50'"
-                  >EN</span
-                >
+                @click="toggleEdit('bio')"
+                class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-indigo-600 transition-all cursor-pointer">
+                <component
+                  :is="editingField === 'bio' ? Check : Pencil"
+                  class="w-4 h-4" />
               </button>
             </div>
 
-            <!-- Logout -->
-            <div
-              class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-red-900/20 hover:border-red-500/30 transition-all cursor-pointer group"
-              @click="handleLogout">
-              <div class="flex items-center gap-3">
-                <div
-                  class="p-2 rounded-lg bg-white/10 group-hover:bg-red-500/20 transition-colors">
-                  <LogOut class="w-5 h-5 text-red-300" />
+            <div v-if="editingField === 'bio'">
+              <textarea
+                v-model="form.bio"
+                rows="4"
+                class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm"
+                :placeholder="
+                  t('profile.bio_placeholder') || 'Cuéntanos algo sobre ti...'
+                "></textarea>
+              <p class="text-[10px] text-white/40 mt-2 italic text-right">
+                {{
+                  t("profile.save_instruction") ||
+                  "Haz clic en el check para guardar"
+                }}
+              </p>
+            </div>
+            <p
+              v-else
+              class="text-white/70 text-sm leading-relaxed min-h-[60px]">
+              {{
+                user?.bio ||
+                t("profile.no_bio") ||
+                "No has añadido una biografía todavía."
+              }}
+            </p>
+          </div>
+
+          <!-- Identity Details -->
+          <div
+            class="bg-bg-dark border border-white/10 rounded-2xl p-6 shadow-xl">
+            <h3
+              class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+              <UserIcon class="w-5 h-5 text-indigo-400" />
+              {{ t("profile.identity") || "Identidad Personal" }}
+            </h3>
+            <div class="space-y-5">
+              <!-- Field: Name -->
+              <div class="group/field relative">
+                <label
+                  class="text-[10px] font-bold text-white/40 uppercase tracking-widest block mb-1"
+                  >{{ t("profile.form.name") || "Nombre" }}</label
+                >
+                <div class="flex items-center justify-between">
+                  <input
+                    v-if="editingField === 'name'"
+                    v-model="form.name"
+                    @blur="saveField('name')"
+                    @keyup.enter="saveField('name')"
+                    class="bg-black/30 border-b border-indigo-500/50 p-1 text-white w-full outline-none" />
+                  <span v-else class="text-white font-medium">{{
+                    user?.name
+                  }}</span>
+                  <Pencil
+                    v-if="editingField !== 'name'"
+                    @click="editingField = 'name'"
+                    class="w-3 h-3 text-white/20 opacity-0 group-hover/field:opacity-100 cursor-pointer hover:text-white transition-all ml-2" />
                 </div>
-                <div>
-                  <p
-                    class="font-medium text-white group-hover:text-red-200 transition-colors">
-                    {{ t("common.logout") }}
-                  </p>
-                  <p
-                    class="text-sm text-white/50 group-hover:text-red-300/70 transition-colors">
-                    {{ t("profile.logout_msg") }}
-                  </p>
+              </div>
+              <!-- Field: Lastname -->
+              <div class="group/field relative">
+                <label
+                  class="text-[10px] font-bold text-white/40 uppercase tracking-widest block mb-1"
+                  >{{ t("profile.form.lastname") || "Apellido" }}</label
+                >
+                <div class="flex items-center justify-between">
+                  <input
+                    v-if="editingField === 'lastname'"
+                    v-model="form.lastname"
+                    @blur="saveField('lastname')"
+                    @keyup.enter="saveField('lastname')"
+                    class="bg-black/30 border-b border-indigo-500/50 p-1 text-white w-full outline-none" />
+                  <span v-else class="text-white font-medium">{{
+                    user?.lastname
+                  }}</span>
+                  <Pencil
+                    v-if="editingField !== 'lastname'"
+                    @click="editingField = 'lastname'"
+                    class="w-3 h-3 text-white/20 opacity-0 group-hover/field:opacity-100 cursor-pointer hover:text-white transition-all ml-2" />
+                </div>
+              </div>
+              <!-- Field: Username -->
+              <div class="group/field relative">
+                <label
+                  class="text-[10px] font-bold text-white/40 uppercase tracking-widest block mb-1"
+                  >{{ t("profile.form.username") || "Usuario" }}</label
+                >
+                <div class="flex items-center justify-between">
+                  <input
+                    v-if="editingField === 'username'"
+                    v-model="form.username"
+                    @blur="saveField('username')"
+                    @keyup.enter="saveField('username')"
+                    class="bg-black/30 border-b border-indigo-500/50 p-1 text-white w-full outline-none" />
+                  <span
+                    v-else
+                    class="text-white font-mono text-sm bg-white/5 px-2 py-0.5 rounded border border-white/5"
+                    >@{{ user?.username }}</span
+                  >
+                  <Pencil
+                    v-if="editingField !== 'username'"
+                    @click="editingField = 'username'"
+                    class="w-3 h-3 text-white/20 opacity-0 group-hover/field:opacity-100 cursor-pointer hover:text-white transition-all ml-2" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Contact & Security -->
+        <div class="lg:col-span-2 space-y-8">
+          <!-- Social & Contact -->
+          <div
+            class="bg-bg-dark border border-white/10 rounded-2xl p-6 shadow-xl">
+            <h3
+              class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+              <Globe class="w-5 h-5 text-indigo-400" />
+              {{ t("profile.contact") || "Contacto y Redes" }}
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Location -->
+              <div
+                class="group/field border border-white/5 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                @click="editingField = 'location'">
+                <div class="flex items-center gap-3 mb-2">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                    <MapPin class="w-4 h-4" />
+                  </div>
+                  <span
+                    class="text-[10px] font-bold text-white/40 uppercase tracking-widest"
+                    >{{ t("profile.location") || "Ubicación" }}</span
+                  >
+                </div>
+                <div v-if="editingField === 'location'" class="relative">
+                  <div class="flex gap-2">
+                    <input
+                      v-model="form.location"
+                      @input="onLocationInput"
+                      @keyup.enter="saveField('location')"
+                      @blur="hideSuggestions"
+                      class="bg-transparent border-b border-indigo-500 outline-none text-white w-full text-sm"
+                      autofocus />
+                    <button
+                      @click.stop="saveField('location')"
+                      class="text-emerald-500">
+                      <Check class="w-4 h-4" />
+                    </button>
+                  </div>
+                  <!-- Suggestions Dropdown -->
+                  <div
+                    v-if="showSuggestions"
+                    class="absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                    <div
+                      v-for="loc in filteredLocations"
+                      :key="loc"
+                      @click.stop="selectLocation(loc)"
+                      class="px-4 py-2 text-sm text-white hover:bg-indigo-600 cursor-pointer transition-colors">
+                      {{ loc }}
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="text-white text-sm font-medium h-6">
+                  {{
+                    user?.location ||
+                    t("profile.add_location") ||
+                    "Añadir ubicación..."
+                  }}
+                </div>
+              </div>
+
+              <!-- Website -->
+              <div
+                class="group/field border border-white/5 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
+                @click="editingField = 'website'">
+                <div class="flex items-center gap-3 mb-2">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                    <LinkIcon class="w-4 h-4" />
+                  </div>
+                  <span
+                    class="text-[10px] font-bold text-white/40 uppercase tracking-widest"
+                    >{{ t("profile.website") || "Sitio Web" }}</span
+                  >
+                </div>
+                <div v-if="editingField === 'website'" class="flex gap-2">
+                  <input
+                    v-model="form.website"
+                    @keyup.enter="saveField('website')"
+                    class="bg-transparent border-b border-indigo-500 outline-none text-white w-full text-sm" />
+                  <button
+                    @click.stop="saveField('website')"
+                    class="text-emerald-500">
+                    <Check class="w-4 h-4" />
+                  </button>
+                </div>
+                <div v-else class="text-white text-sm font-medium h-6 truncate">
+                  {{
+                    user?.website ||
+                    t("profile.add_website") ||
+                    "Añadir sitio web..."
+                  }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security & Preferences -->
+          <div
+            class="bg-bg-dark border border-white/10 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <h3
+              class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+              <Shield class="w-5 h-5 text-indigo-400" />
+              {{ t("profile.security") || "Seguridad y Acceso" }}
+            </h3>
+
+            <div class="space-y-6 max-w-lg relative z-10">
+              <div class="space-y-2">
+                <label
+                  class="text-[10px] font-bold text-white/40 uppercase tracking-widest block"
+                  >{{
+                    t("profile.update_password") || "Actualizar Contraseña"
+                  }}</label
+                >
+                <div class="flex gap-3">
+                  <input
+                    v-model="form.password"
+                    type="password"
+                    placeholder="••••••••••••"
+                    class="flex-1 bg-black/30 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-indigo-500 outline-none transition-all" />
+                  <button
+                    @click="updatePassword"
+                    :disabled="!form.password || saving"
+                    class="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20">
+                    {{ t("common.save") || "Guardar" }}
+                  </button>
+                </div>
+              </div>
+
+              <div
+                class="pt-6 border-t border-white/5 flex flex-wrap gap-4 items-center justify-between">
+                <!-- Toggle Localizations -->
+                <div class="flex items-center gap-3">
+                  <div class="p-2 rounded-lg bg-white/5">
+                    <Globe class="w-5 h-5 text-indigo-300" />
+                  </div>
+                  <div>
+                    <p class="text-sm font-bold text-white">
+                      {{ t("profile.language") || "Idioma" }}
+                    </p>
+                    <button
+                      @click="toggleLanguage"
+                      class="text-[10px] text-indigo-400 font-bold uppercase hover:underline">
+                      {{
+                        locale === "es"
+                          ? "Switch to English"
+                          : "Cambiar a Español"
+                      }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Double Factor -->
+                <div class="flex items-center gap-4">
+                  <div class="text-right mr-2">
+                    <h4 class="text-sm font-bold text-white mb-0.5">2FA</h4>
+                    <p class="text-[10px] text-white/40">
+                      {{ t("profile.coming_soon") || "Próximamente" }}
+                    </p>
+                  </div>
+                  <div
+                    class="w-12 h-6 bg-white/10 rounded-full relative opacity-50 cursor-not-allowed">
+                    <div
+                      class="absolute left-1 top-1 w-4 h-4 bg-white/20 rounded-full"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -403,3 +638,20 @@ const cancelEdit = () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

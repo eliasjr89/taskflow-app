@@ -5,11 +5,23 @@ import ProgressBar from "@/components/common/ProgressBar.vue";
 
 interface DBStats {
   total_size: string;
+  version: string;
+  uptime: {
+    hours?: number;
+    minutes?: number;
+    seconds?: number;
+    days?: number;
+  };
+  active_connections: number;
   rows: {
     users: number;
     projects: number;
     tasks: number;
   };
+  tables: Array<{
+    table_name: string;
+    row_count: number;
+  }>;
 }
 
 const stats = ref<DBStats | null>(null);
@@ -181,9 +193,85 @@ onMounted(fetchStats);
               </p>
             </div>
           </div>
+
+          <!-- Extended Metadata -->
+          <div class="mt-6 space-y-4">
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-text-muted">Versión de Motor</span>
+              <span class="text-white font-mono bg-white/5 px-2 py-1 rounded">{{
+                stats.version.split(",")[0]
+              }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-text-muted">Conexiones Activas</span>
+              <span class="text-white font-bold">{{
+                stats.active_connections
+              }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-text-muted">Tiempo de Actividad</span>
+              <span class="text-white font-mono">
+                {{ stats.uptime.days || 0 }}d {{ stats.uptime.hours || 0 }}h
+                {{ stats.uptime.minutes || 0 }}m
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div class="mt-8 border-t border-white/5 pt-8">
+        <!-- Tables Table -->
+        <div
+          class="mt-8 bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-xl col-span-1 md:col-span-2">
+          <div
+            class="px-6 py-4 border-b border-slate-700 bg-slate-700/30 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-indigo-400"></i>
+              Estadísticas por Tabla
+            </h3>
+            <span
+              class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+              >{{ stats.tables.length }} Tablas Públicas</span
+            >
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr
+                  class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700">
+                  <th class="px-6 py-4">Tabla</th>
+                  <th class="px-6 py-4 text-right">Registros Estimados</th>
+                  <th class="px-6 py-4 text-right">Salud</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700/50">
+                <tr
+                  v-for="table in stats.tables"
+                  :key="table.table_name"
+                  class="hover:bg-white/5 transition-colors">
+                  <td
+                    class="px-6 py-4 text-white font-medium flex items-center gap-2">
+                    <i
+                      class="fa-solid fa-database text-blue-500/50 text-[10px]"></i>
+                    {{ table.table_name }}
+                  </td>
+                  <td
+                    class="px-6 py-4 text-right text-slate-300 font-mono text-sm">
+                    {{ table.row_count }}
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    <span
+                      class="h-1.5 w-1.5 rounded-full inline-block bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] mr-2"></span>
+                    <span
+                      class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest"
+                      >Óptimo</span
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="mt-8 border-t border-white/5 pt-8 col-span-1 md:col-span-2">
           <div
             class="glass-card-admin p-8 text-center border-t-4 border-danger">
             <h3 class="text-xl font-bold text-white mb-4">Zona de Peligro</h3>

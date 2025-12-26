@@ -11,23 +11,39 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
-  Layers, // Added Layers icon
+  Layers,
+  LogOut,
 } from "lucide-vue-next";
 
 import { useI18n } from "vue-i18n";
 import { useSectionTheme } from "../../composables/useSectionTheme";
+import { useRouter } from "vue-router";
+import { useTaskState } from "../../composables/useTaskState";
 
 const route = useRoute();
+const router = useRouter(); // Added router
 const { t } = useI18n();
 const { theme } = useSectionTheme();
+const { resetState } = useTaskState(); // Added resetState
 const isCollapsed = ref(false);
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
+const logout = async () => {
+  try {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    resetState();
+    router.push("/login");
+  } catch {
+    // ignore
+  }
+};
+
 const navItems = computed(() => [
-  { name: t("nav.home"), path: "/dashboard", icon: Home }, // Updated path
+  { name: t("nav.home"), path: "/dashboard", icon: Home },
   { name: t("nav.tasks"), path: "/tasks", icon: CheckSquare },
   { name: t("nav.projects"), path: "/projects", icon: FolderKanban },
   { name: t("nav.calendar"), path: "/calendar", icon: Calendar },
@@ -112,5 +128,34 @@ const navItems = computed(() => [
         </div>
       </RouterLink>
     </nav>
+
+    <!-- Logout Section -->
+    <div
+      class="border-t border-gray-200/30 dark:border-gray-700/30 pt-2 mt-auto">
+      <button
+        @click="logout"
+        class="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium relative group overflow-hidden text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 group-logout"
+        :title="isCollapsed ? t('common.logout') : ''">
+        <LogOut
+          class="w-5 h-5 min-w-[20px] transition-transform duration-300 group-hover:scale-110" />
+
+        <span
+          class="transition-all duration-300 whitespace-nowrap font-bold"
+          :class="[
+            isCollapsed
+              ? 'opacity-0 w-0 translate-x-4'
+              : 'opacity-100 w-auto translate-x-0',
+          ]">
+          {{ t("common.logout") }}
+        </span>
+
+        <!-- Tooltip for collapsed -->
+        <div
+          v-if="isCollapsed"
+          class="absolute left-full ml-4 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+          {{ t("common.logout") }}
+        </div>
+      </button>
+    </div>
   </aside>
 </template>
