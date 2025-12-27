@@ -8,11 +8,27 @@ import {
   Tags,
   BarChart2,
   User,
+  LogOut,
 } from "lucide-vue-next";
 import { useSectionTheme } from "../../composables/useSectionTheme";
+import { useRouter } from "vue-router";
+import { useTaskState } from "../../composables/useTaskState";
 
 const route = useRoute();
+const router = useRouter();
 const { theme } = useSectionTheme();
+const { resetState } = useTaskState();
+
+const logout = async () => {
+  try {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    resetState();
+    router.push("/login");
+  } catch {
+    // ignore
+  }
+};
 
 const navItems = [
   { name: "Inicio", path: "/dashboard", icon: Home }, // Updated path to /dashboard to match router
@@ -63,6 +79,14 @@ const isActive = (path: string) =>
 
         <!-- No text label as requested -->
       </RouterLink>
+
+      <!-- Logout Button -->
+      <button
+        @click="logout"
+        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400">
+        <LogOut
+          class="w-6 h-6 transition-transform duration-300 group-active:scale-95" />
+      </button>
     </div>
   </nav>
 </template>

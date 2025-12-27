@@ -134,7 +134,7 @@ const navItems = computed(() => [
       class="border-t border-gray-200/30 dark:border-gray-700/30 pt-2 mt-auto">
       <button
         @click="logout"
-        class="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium relative group overflow-hidden text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 group-logout"
+        class="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium relative group overflow-hidden text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 group-logout cursor-pointer"
         :title="isCollapsed ? t('common.logout') : ''">
         <LogOut
           class="w-5 h-5 min-w-[20px] transition-transform duration-300 group-hover:scale-110" />
