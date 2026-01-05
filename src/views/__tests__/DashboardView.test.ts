@@ -1,140 +1,117 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
-import DashboardView from '../DashboardView.vue';
-import { createI18n } from 'vue-i18n';
-import { createRouter, createMemoryHistory } from 'vue-router';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { mount, flushPromises } from "@vue/test-utils";
+import DashboardView from "../DashboardView.vue";
+import { createI18n } from "vue-i18n";
+import { createRouter, createMemoryHistory } from "vue-router";
+import es from "../../locales/es";
+import { createTestingPinia } from "@pinia/testing";
 
 const i18n = createI18n({
   legacy: false,
-  locale: 'es',
-  messages: {
-    es: {
-      dashboard: {
-        title: 'Panel Principal',
-        subtitle: 'Bienvenido',
-        total_tasks: 'Total Tareas',
-        completed: 'Completadas',
-        pending: 'Pendientes',
-        success_rate: 'Tasa de Éxito',
-        general_progress: 'Progreso General',
-        recent_tasks: 'Tareas Recientes',
-        view_all: 'Ver Todas',
-        no_tasks: 'No hay tareas',
-        start_creating: 'Crear tarea',
-        go_to_tasks: 'Ir a Tareas',
-        tasks_completed_of: '{completed} de {total} tareas completadas',
-      },
-    },
-  },
+  locale: "es",
+  messages: { es },
 });
 
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
-    { path: '/', name: 'dashboard', component: DashboardView },
+    { path: "/", name: "dashboard", component: DashboardView },
+    {
+      path: "/tasks",
+      name: "tasks",
+      component: { template: "<div>Tasks</div>" },
+    },
   ],
 });
 
-describe('DashboardView', () => {
+describe("DashboardView", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   const mountView = async (props = {}) => {
     const wrapper = mount(DashboardView, {
       props,
       global: {
-        plugins: [i18n, router],
+        plugins: [
+          i18n,
+          router,
+          createTestingPinia({
+            createSpy: vi.fn,
+            initialState: {
+              tasks: {
+                tasks: [
+                  {
+                    id: 1,
+                    title: "Task 1",
+                    completed: false,
+                    createdAt: new Date(),
+                  },
+                  {
+                    id: 2,
+                    title: "Task 2",
+                    completed: true,
+                    createdAt: new Date(),
+                  },
+                ],
+              },
+            },
+          }),
+        ],
       },
     });
-    await router.isReady();
+    // Advance timers to bypass skeleton loader AND animation
+    await flushPromises();
+    vi.advanceTimersByTime(3000); // Increased time
     await flushPromises();
     return wrapper;
   };
 
-  it('debe renderizar la vista correctamente', async () => {
+  it("debe renderizar la vista correctamente", async () => {
     const wrapper = await mountView();
-    expect(wrapper.find('.flex-1').exists()).toBe(true);
+    expect(wrapper.find(".animate-fade-in").exists()).toBe(true);
   });
 
-  it('debe mostrar el título del dashboard', async () => {
+  it("debe mostrar tarjetas de estadísticas", async () => {
     const wrapper = await mountView();
-    
-    const hasTitle = wrapper.text().includes('Dashboard') ||
-                     wrapper.text().includes('📊') ||
-                     wrapper.find('h1, h2, h3').exists();
-    
-    expect(hasTitle).toBe(true);
+    const text = wrapper.text();
+    expect(text).toContain(es.dashboard.total_tasks);
+    expect(text).toContain(es.dashboard.completed);
+    expect(text).toContain(es.dashboard.pending);
+    expect(text).toContain(es.dashboard.success_rate);
   });
 
-  it('debe mostrar tarjetas de estadísticas', async () => {
+  it("debe renderizar el gráfico de progreso general", async () => {
     const wrapper = await mountView();
-    
-    // Buscar tarjetas con clase glass-card o similar
-    const cards = wrapper.findAll('.glass-card, .rounded-2xl, .rounded-xl');
-    
-    expect(cards.length).toBeGreaterThan(0);
+    const text = wrapper.text();
+    expect(text).toContain(es.dashboard.general_progress);
   });
 
-  it('debe mostrar métricas clave', async () => {
+  it("debe mostrar métricas numéricas correctas", async () => {
     const wrapper = await mountView();
-    
-    // Verificar que muestra números o porcentajes
-    const hasMetrics = wrapper.text().match(/\d+/) !== null;
-    
-    expect(hasMetrics).toBe(true);
+    const text = wrapper.text();
+    expect(text).toContain("50%"); // Success rate
+    expect(text).toContain("2"); // Total tasks
   });
 
-  it('debe tener iconos en las tarjetas', async () => {
+  it("debe mostrar tareas recientes", async () => {
     const wrapper = await mountView();
-    const icons = wrapper.findAll('svg');
-    
-    expect(icons.length).toBeGreaterThan(0);
+    const text = wrapper.text();
+    expect(text).toContain(es.dashboard.recent_tasks);
+    expect(text).toContain("Task 1");
+    expect(text).toContain("Task 2");
   });
 
-  it('debe mostrar información de proyectos', async () => {
+  it("debe tener enlace a ver todas las tareas", async () => {
     const wrapper = await mountView();
-    
-    const hasProjects = wrapper.text().includes('Proyectos') ||
-                        wrapper.text().includes('proyecto') ||
-                        wrapper.find('div').exists();
-    
-    expect(hasProjects).toBe(true);
-  });
-
-  it('debe mostrar información de tareas', async () => {
-    const wrapper = await mountView();
-    
-    const hasTasks = wrapper.text().includes('Tareas') ||
-                     wrapper.text().includes('tarea');
-    
-    expect(hasTasks).toBe(true);
-  });
-
-  it('debe tener animación fade-in', async () => {
-    const wrapper = await mountView();
-    const mainDiv = wrapper.find('.flex-1');
-    
-    expect(mainDiv.attributes('class')).toContain('animate-fade-in');
-  });
-
-  it('debe ser responsive', async () => {
-    const wrapper = await mountView();
-    
-    // Verificar que tiene clases responsive (md:, lg:, etc.)
-    const html = wrapper.html();
-    const hasResponsiveClasses = html.includes('md:') || html.includes('lg:');
-    
-    expect(hasResponsiveClasses).toBe(true);
-  });
-
-  it('debe mostrar gráficos o visualizaciones', async () => {
-    const wrapper = await mountView();
-    
-    // Buscar elementos que podrían ser gráficos (canvas, svg, etc.)
-    const hasVisuals = wrapper.findAll('svg, canvas').length > 0 ||
-                       wrapper.findAll('.h-2, .h-3, .h-4').length > 0; // Barras de progreso
-    
-    expect(hasVisuals).toBe(true);
+    const link = wrapper.find('a[href="/tasks"]');
+    expect(link.exists()).toBe(true);
+    // Use regex or partial match as text might include icon
+    expect(link.text()).toContain(es.dashboard.view_all);
   });
 });

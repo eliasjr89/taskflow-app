@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
-import LogoutView from "../views/LogoutView.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -8,6 +7,12 @@ const routes: RouteRecordRaw[] = [
     name: "Welcome",
     component: () => import("../views/WelcomeView.vue"),
     meta: { title: "Bienvenida", public: true, layout: "AuthLayout" },
+  },
+  {
+    path: "/about",
+    name: "About",
+    component: () => import("../views/AboutView.vue"),
+    meta: { title: "Sobre Nosotros", public: true, layout: "AuthLayout" },
   },
   {
     path: "/dashboard",
@@ -51,12 +56,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import("../views/ProfileView.vue"),
     meta: { title: "Perfil", requiresUser: true, layout: "AppLayout" },
   },
-  {
-    path: "/login",
-    name: "Login",
-    component: () => import("../views/LoginView.vue"),
-    meta: { title: "Iniciar Sesión", public: true, layout: "AuthLayout" },
-  },
+
   // Admin Routes
   {
     path: "/admin",
@@ -104,7 +104,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/exit",
     name: "Exit",
-    component: LogoutView,
+    component: () => import("../views/LogoutView.vue"),
     meta: { title: "Salida", public: true },
   },
 ];
@@ -122,23 +122,7 @@ router.beforeEach((to, _from, next) => {
   const isPublic = to.meta.public;
 
   if (!isPublic && !token) {
-    next({ name: "Login" });
-  } else if (to.name === "Login" && token) {
-    // Check role if possible, for now default to Dashboard (User App)
-    // Ideally, we decode token or check localStorage user
-    try {
-      const userStr = localStorage.getItem("user");
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.role === "admin" || user.role === "manager") {
-          next({ name: "AdminOverview" });
-          return;
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-    next({ name: "Dashboard" });
+    next({ name: "Welcome" });
   } else if (to.name === "Welcome" && token) {
     // If authenticated user hits Welcome, redirect to Dashboard/Admin
     try {

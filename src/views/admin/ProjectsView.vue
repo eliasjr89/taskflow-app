@@ -1,8 +1,10 @@
+```
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
 import type { Project } from "@/types";
 import BaseModal from "@/components/common/BaseModal.vue";
+import UserAvatar from "@/components/common/UserAvatar.vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 
@@ -10,7 +12,7 @@ import { useI18n } from "vue-i18n";
 
 const toast = useToast();
 const { confirm } = useConfirm();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const projects = ref<Project[]>([]);
 const loading = ref(true);
@@ -85,9 +87,8 @@ const handleSubmit = async () => {
     await fetchProjects();
     closeModal(true);
   } catch (err: any) {
-    const errorMsg =
-      err.response?.data?.message || "Error al guardar el proyecto";
-    toast.error("Error", errorMsg);
+    const errorMsg = err.response?.data?.message || t("common.save_error");
+    toast.error(t("common.error_title"), errorMsg);
   } finally {
     submitting.value = false;
   }
@@ -112,26 +113,27 @@ const deleteProject = async (id: number) => {
       t("admin_projects.delete_success_msg")
     );
   } catch (err: any) {
-    const errorMsg =
-      err.response?.data?.message || "Error al eliminar el proyecto";
-    toast.error("Error", errorMsg);
+    const errorMsg = err.response?.data?.message || t("common.delete_error");
+    toast.error(t("common.error_title"), errorMsg);
   }
 };
 
 const formatDate = (dateString?: string) => {
-  if (!dateString) return "Sin fecha";
+  if (!dateString) return t("date.no_date");
   const date = new Date(dateString);
   const now = new Date();
   const diffTime = Math.abs(now.getTime() - date.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return t("calendar.today");
-  if (diffDays === 1) return "Ayer";
-  if (diffDays < 7) return `Hace ${diffDays} días`;
-  if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
-  if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} meses`;
+  if (diffDays === 0) return t("date.today");
+  if (diffDays === 1) return t("date.yesterday");
+  if (diffDays < 7) return t("date.days_ago", { n: diffDays });
+  if (diffDays < 30)
+    return t("date.weeks_ago", { n: Math.floor(diffDays / 7) });
+  if (diffDays < 365)
+    return t("date.months_ago", { n: Math.floor(diffDays / 30) });
 
-  return date.toLocaleDateString("es-ES", {
+  return date.toLocaleDateString(locale.value === "es" ? "es-ES" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -186,60 +188,63 @@ onMounted(fetchProjects);
         v-for="project in projects"
         :key="project.id"
         class="group bg-slate-800/50 border border-slate-700 rounded-2xl p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1">
-        <!-- Header -->
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex-1">
+        <!-- Header with Avatar -->
+        <div class="flex items-center gap-4 mb-4">
+          <div
+            class="w-14 h-14 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl border-2 border-slate-600 group-hover:border-indigo-500 transition-colors shadow-lg">
+            {{ project.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="flex-1 min-w-0">
             <h3
-              class="text-xl font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors">
+              class="text-lg font-bold text-white truncate group-hover:text-indigo-400 transition-colors">
               {{ project.name }}
             </h3>
-            <p class="text-xs text-text-muted">ID: #{{ project.id }}</p>
-          </div>
-          <div class="flex gap-2">
-            <button
-              @click="openModal(project)"
-              class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
-              :title="$t('common.edit')">
-              <i class="fa-solid fa-pen text-sm"></i>
-            </button>
-            <button
-              @click="deleteProject(project.id)"
-              class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
-              :title="$t('common.delete')">
-              <i class="fa-solid fa-trash text-sm"></i>
-            </button>
+            <p class="text-xs text-text-muted truncate">
+              ID: #{{ project.id }}
+            </p>
           </div>
         </div>
 
-        <!-- Description -->
-        <p class="text-gray-300 text-sm mb-4 line-clamp-2 min-h-10">
-          {{ project.description || $t("admin_projects.details.no_desc") }}
-        </p>
-
-        <!-- Stats -->
-        <div class="grid grid-cols-2 gap-3 mb-4">
-          <div
-            class="bg-slate-700/30 rounded-lg p-3 border border-slate-600/30">
-            <div class="flex items-center gap-2 mb-1">
-              <i class="fa-solid fa-list-check text-blue-400 text-xs"></i>
-              <span class="text-xs text-text-muted">{{
-                $t("admin_projects.details.tasks")
-              }}</span>
-            </div>
-            <div class="text-xl font-bold text-white">
-              {{ project.task_count || 0 }}
-            </div>
+        <!-- Info -->
+        <div class="space-y-3 mb-6">
+          <div class="flex items-start gap-2 text-sm text-gray-300">
+            <i
+              class="fa-solid fa-align-left text-indigo-400 w-5 text-center mt-0.5"></i>
+            <span class="line-clamp-2 text-xs leading-relaxed">{{
+              project.description || $t("admin_projects.details.no_desc")
+            }}</span>
           </div>
-          <div
-            class="bg-slate-700/30 rounded-lg p-3 border border-slate-600/30">
-            <div class="flex items-center gap-2 mb-1">
-              <i class="fa-solid fa-users text-purple-400 text-xs"></i>
-              <span class="text-xs text-text-muted">{{
-                $t("admin_projects.details.team")
-              }}</span>
+          <div class="flex items-center gap-2 text-sm text-gray-300">
+            <i class="fa-solid fa-user text-indigo-400 w-5 text-center"></i>
+            <span class="truncate">{{
+              project.creator_username ||
+              $t("admin_projects.details.unassigned")
+            }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-gray-300">
+            <i class="fa-solid fa-calendar text-indigo-400 w-5 text-center"></i>
+            <span>{{ formatDate(project.created_at) }}</span>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <div
+              class="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-xs text-text-muted mb-1">
+                {{ $t("admin_projects.details.tasks") }}
+              </div>
+              <div class="text-lg font-bold text-white">
+                {{ project.task_count || 0 }}
+              </div>
             </div>
-            <div class="text-xl font-bold text-white">
-              {{ project.member_count || 0 }}
+            <div
+              class="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-xs text-text-muted mb-1">
+                {{ $t("admin_projects.details.team") }}
+              </div>
+              <div class="text-lg font-bold text-white">
+                {{ project.member_count || 0 }}
+              </div>
             </div>
           </div>
         </div>
@@ -247,28 +252,40 @@ onMounted(fetchProjects);
         <!-- Footer -->
         <div
           class="flex items-center justify-between pt-4 border-t border-slate-700/50">
-          <div class="flex items-center gap-2">
-            <div
-              class="w-7 h-7 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-lg">
-              {{ project.creator_username?.charAt(0).toUpperCase() || "?" }}
-            </div>
-            <div>
-              <div class="text-xs text-white font-medium">
-                {{
-                  project.creator_username ||
-                  $t("admin_projects.details.unassigned")
-                }}
+          <!-- Members Stack -->
+          <div class="flex -space-x-2">
+            <template v-if="project.users && project.users.length > 0">
+              <UserAvatar
+                v-for="user in project.users.slice(0, 3)"
+                :key="user.id"
+                :user="user"
+                size="w-8 h-8" />
+              <div
+                v-if="project.users.length > 3"
+                class="w-8 h-8 rounded-full border-2 border-slate-800 bg-slate-600 flex items-center justify-center text-[10px] text-white font-bold relative z-0"
+                :title="`+${project.users.length - 3} miembros más`">
+                +{{ project.users.length - 3 }}
               </div>
-              <div class="text-[10px] text-text-muted">
-                {{ $t("admin_projects.details.creator") }}
-              </div>
-            </div>
+            </template>
+            <span v-else class="text-xs text-text-muted italic px-2 py-1">{{
+              t("admin_projects.no_members")
+            }}</span>
           </div>
-          <div class="text-right">
-            <div class="text-xs text-text-muted">
-              <i class="fa-solid fa-calendar text-[10px] mr-1"></i>
-              {{ formatDate(project.created_at) }}
-            </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2">
+            <button
+              @click="openModal(project)"
+              class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-all flex items-center justify-center hover:scale-110"
+              :title="$t('common.edit')">
+              <i class="fa-solid fa-pen text-sm"></i>
+            </button>
+            <button
+              @click="deleteProject(project.id)"
+              class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center hover:scale-110"
+              :title="$t('common.delete')">
+              <i class="fa-solid fa-trash text-sm"></i>
+            </button>
           </div>
         </div>
       </div>

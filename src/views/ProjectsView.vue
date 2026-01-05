@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import CountUp from "@/components/common/CountUp.vue";
 import { ref, onMounted } from "vue";
-import { useProjectState } from "../composables/useProjectState";
+import { storeToRefs } from "pinia";
+import { useProjectStore } from "../stores/projects";
+import { useTaskStore } from "../stores/tasks";
 import SkeletonLoader from "@/components/common/SkeletonLoader.vue";
 import {
   Plus,
@@ -25,28 +27,79 @@ import { useI18n } from "vue-i18n";
 import ProjectModal from "@/components/projects/ProjectModal.vue";
 import { useConfirm } from "../composables/useConfirm";
 import type { Project } from "../types/global";
+import { useToast } from "@/composables/useToast";
 
 const { t } = useI18n();
-const {
-  projects,
-  addProject,
-  updateProject,
-  deleteProject,
-  getProjectProgress,
-  getTasksByProject,
-  loadProjects,
-} = useProjectState();
 const { confirm } = useConfirm();
+const toast = useToast();
+
+const projectStore = useProjectStore();
+const taskStore = useTaskStore();
+const { projects, isLoading } = storeToRefs(projectStore);
+const { tasks } = storeToRefs(taskStore);
+
+const getTasksByProject = (projectId: string) => {
+  return tasks.value.filter((t) => t.projectId === projectId);
+};
+
+const getProjectProgress = (projectId: string) => {
+  const projectTasks = getTasksByProject(projectId);
+  if (projectTasks.length === 0) return 0;
+  const completed = projectTasks.filter((t) => t.completed).length;
+  return Math.round((completed / projectTasks.length) * 100);
+};
+
+// Aliases for template compatibility
+// const loadProjects = projectStore.fetchProjects; // Not used
+
+const addProject = async (project: Project) => {
+  try {
+    await projectStore.addProject(project);
+    toast.success(t("projects.create_success") || "Project created");
+  } catch {
+    toast.error(t("projects.create_error") || "Failed to create project");
+  }
+};
+const updateProject = async (project: Project) => {
+  try {
+    await projectStore.updateProject(project);
+    toast.success(t("projects.update_success") || "Project updated");
+  } catch {
+    toast.error(t("projects.update_error") || "Failed to update project");
+  }
+};
+
+const deleteProject = async (id: string) => {
+  try {
+    await projectStore.deleteProject(id);
+    toast.success(t("projects.delete_success") || "Project deleted");
+  } catch {
+    toast.error(t("projects.delete_error") || "Failed to delete project");
+  }
+};
+
 const isModalOpen = ref(false);
 const projectToEdit = ref<Project | null>(null);
 const isMounted = ref(false);
-const isLoading = ref(true);
+// isLoading ref is now coming from store, handled by storeToRefs destructure
+// But wait, the component had its own isLoading logic with timeout?
+// "setTimeout... isMounted.value = true; isLoading.value = false"
+// I should rely on store's isLoading, but the animation timeout is purely visual.
+// I'll keep the local `isLoading` if it's for initial transition, but store has `isLoading` too.
+// The template uses `isLoading`.
+// I'll rename local one to `isInitialLoading` or just override if store is done.
 
-onMounted(() => {
-  loadProjects();
+// Let's rely on store for data loading, and `isMounted` for animations.
+// If I use `isLoading` from store, it might be true/false.
+// The original code: onMounted calls loadProjects() then sets isLoading=false after 600ms.
+// I can keep that logic for smooth UX.
+const isInitialLoading = ref(true);
+
+onMounted(async () => {
+  await Promise.all([projectStore.fetchProjects(), taskStore.fetchTasks()]);
   setTimeout(() => {
     isMounted.value = true;
-    isLoading.value = false;
+    isInitialLoading.value = false;
   }, 600);
 });
 
@@ -143,14 +196,28 @@ const getProgressColor = (color: string) => {
 
 <template>
   <div class="flex-1 flex flex-col w-full px-4 md:px-0 animate-fade-in">
-    <!-- Actions Bar (Replaces redundant title) -->
-    <div class="flex justify-end mb-6">
-      <button
-        @click="openCreateModal"
-        class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5 cursor-pointer">
-        <Plus class="w-5 h-5" />
-        {{ t("projects.new_project") }}
-      </button>
+    <!-- Header with Actions -->
+    <div class="flex items-center justify-between mb-6">
+      <!-- Left: Title -->
+      <div class="flex items-center gap-2">
+        <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+          <Folder class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">
+          {{ t("nav.projects") }}
+        </h1>
+      </div>
+
+      <!-- Center/Right: Action Button -->
+      <div class="flex-1 flex justify-end md:justify-end">
+        <button
+          @click="openCreateModal"
+          class="w-12 h-12 md:w-auto md:h-auto md:px-5 md:py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full md:rounded-xl font-medium transition-all shadow-lg hover:shadow-indigo-500/30 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          :title="t('projects.new_project')">
+          <Plus class="w-6 h-6" />
+          <span class="hidden md:inline">{{ t("projects.new_project") }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- SKELETON LOADING -->

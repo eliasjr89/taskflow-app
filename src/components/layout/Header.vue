@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRoute } from "vue-router";
-import { useUserState } from "../../composables/useUserState";
+import { useAuthStore } from "../../stores/auth";
+import { storeToRefs } from "pinia";
 import { useI18n } from "vue-i18n";
 import { useSectionTheme } from "../../composables/useSectionTheme";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 
 const route = useRoute();
 const { t, locale } = useI18n();
 const { theme } = useSectionTheme();
-const { user, fetchUser } = useUserState();
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
+const { fetchProfile: fetchUser } = authStore;
 
 const currentTime = ref("");
 const currentDate = ref("");
@@ -99,35 +103,35 @@ onUnmounted(() => {
     <!-- MOBILE CONTENT LAYOUT (Only visible < md) -->
     <!-- ========================================== -->
     <div
-      class="md:hidden flex justify-between items-center w-full relative z-10 px-1">
+      class="md:hidden flex justify-between items-stretch w-full relative z-10 px-1">
       <!-- Left: TaskFlow (Dominant) + Page Title (Small) -->
-      <div class="flex flex-col gap-2 justify-center h-full">
-        <!-- TaskFlow Brand (Big & Prominent) -->
-        <div class="flex items-center gap-3">
+      <div class="flex flex-col gap-2 justify-center h-full pb-1">
+        <!-- TaskFlow Brand (Prominent but smaller) -->
+        <div class="flex items-center gap-2">
           <div
             :class="[
-              'w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg bg-linear-to-br border border-white/20',
+              'w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-linear-to-br border border-white/20',
               theme.sidebar.active
                 .split(' ')
                 .filter((c) => c.startsWith('from-') || c.startsWith('to-'))
                 .join(' '),
             ]">
-            <i class="fa-solid fa-layer-group text-xl text-white"></i>
+            <i class="fa-solid fa-layer-group text-lg text-white"></i>
           </div>
           <div class="flex flex-col leading-none">
             <span
-              class="font-bold text-4xl text-white tracking-wide font-outfit drop-shadow-md"
+              class="font-bold text-2xl text-white tracking-wide font-outfit drop-shadow-md"
               >TaskFlow<span class="text-white/60">.</span></span
             >
           </div>
         </div>
 
         <!-- Page Title (Small & Integrated) -->
-        <div class="flex items-center gap-2 ml-1 opacity-90 mt-1">
+        <div class="flex items-center gap-1.5 ml-1 opacity-90 mt-2">
           <!-- Mini Icon -->
           <div
             :class="[
-              'w-5 h-5 rounded-lg flex items-center justify-center text-[9px] text-white shadow-md bg-linear-to-br border border-white/10',
+              'w-4 h-4 rounded-md flex items-center justify-center text-[8px] text-white shadow-md bg-linear-to-br border border-white/10',
               theme.sidebar.active
                 .split(' ')
                 .filter((c) => c.startsWith('from-') || c.startsWith('to-'))
@@ -139,7 +143,8 @@ onUnmounted(() => {
           </div>
           <!-- Mini Title -->
           <div class="flex flex-col">
-            <h2 class="text-xs font-bold text-white leading-none">
+            <h2
+              class="text-[10px] font-bold text-white leading-none uppercase tracking-wider">
               <transition name="fade" mode="out-in">
                 <span :key="pageTitle">{{ pageTitle }}</span>
               </transition>
@@ -148,38 +153,48 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Right: Clock (Left of Avatar) + Avatar (Large) -->
-      <div v-if="user" class="flex items-center gap-3">
-        <!-- Clock (Centered vertically to left of avatar) -->
-        <div class="text-right flex flex-col justify-center">
-          <div
-            class="text-sm font-bold text-white font-mono leading-none drop-shadow-md">
-            {{ currentTime }}
+      <!-- Right: Clock + Avatar (Top) & Language (Bottom) -->
+      <div v-if="user" class="flex flex-col justify-between items-end py-1">
+        <!-- Top: Clock & Avatar -->
+        <div class="flex items-center gap-3">
+          <!-- Clock (Left of Avatar) -->
+          <div class="text-right flex flex-col justify-center">
+            <div
+              class="text-xs font-bold text-white font-mono leading-none drop-shadow-md">
+              {{ currentTime }}
+            </div>
+            <div
+              class="text-[8px] text-indigo-100/80 font-bold uppercase tracking-wide mt-0.5">
+              {{ currentDate.split(",")[0] }}
+            </div>
           </div>
-          <div
-            class="text-[10px] text-indigo-100/80 font-bold uppercase tracking-wide mt-0.5">
-            {{ currentDate.split(",")[0] }}
-          </div>
+
+          <!-- Avatar -->
+          <router-link
+            to="/profile"
+            class="relative group cursor-pointer block">
+            <img
+              v-if="user.profile_image"
+              :src="user.profile_image"
+              class="w-12 h-12 rounded-full object-cover border-2 border-bg-dark shadow-lg relative z-10" />
+            <div
+              v-else
+              :class="[
+                'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-lg border-2 border-bg-dark relative z-10 bg-linear-to-br',
+                theme.gradients.blob1.replace('blur', ''),
+              ]">
+              {{ user.username?.charAt(0).toUpperCase() }}
+            </div>
+            <!-- Online Dot -->
+            <div
+              class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-bg-dark rounded-full z-20"></div>
+          </router-link>
         </div>
 
-        <!-- Avatar (Large - fills height approx) -->
-        <router-link to="/profile" class="relative group cursor-pointer block">
-          <img
-            v-if="user.profile_image"
-            :src="user.profile_image"
-            class="w-24 h-24 rounded-full object-cover border-4 border-bg-dark shadow-2xl relative z-10" />
-          <div
-            v-else
-            :class="[
-              'w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-2xl border-4 border-bg-dark relative z-10 bg-linear-to-br',
-              theme.gradients.blob1.replace('blur', ''),
-            ]">
-            {{ user.username?.charAt(0).toUpperCase() }}
-          </div>
-          <!-- Online Dot -->
-          <div
-            class="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-bg-dark rounded-full z-20"></div>
-        </router-link>
+        <!-- Bottom: Language Switcher -->
+        <div class="mt-2">
+          <LanguageSwitcher />
+        </div>
       </div>
     </div>
 
@@ -221,6 +236,7 @@ onUnmounted(() => {
 
       <!-- Right Content: Clock & Avatar (Desktop Standard) -->
       <div v-if="user" class="flex items-center gap-10 mr-4">
+        <LanguageSwitcher />
         <!-- Digital Clock -->
         <div class="text-right">
           <div

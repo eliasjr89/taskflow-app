@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useTaskFilter } from "../../composables/useTaskFilter";
-import { useProjectState } from "../../composables/useProjectState";
+import { useProjectStore } from "../../stores/projects";
+import { storeToRefs } from "pinia";
 import { useTagState } from "../../composables/useTagState";
 import { useI18n } from "vue-i18n";
 import {
@@ -20,7 +21,8 @@ import {
 
 const { t } = useI18n();
 const { filters } = useTaskFilter();
-const { projects } = useProjectState();
+const projectStore = useProjectStore();
+const { projects } = storeToRefs(projectStore);
 const { tags } = useTagState();
 
 defineProps<{
@@ -74,10 +76,9 @@ const getProjectColor = (color: string) => {
 <template>
   <div
     class="glass-card p-4 rounded-2xl mb-6 flex flex-col lg:flex-row gap-4 items-center justify-between sticky top-0 z-20">
-    <!-- Search & Filters Group -->
-    <div class="flex flex-1 w-full lg:w-auto gap-3 items-center">
-      <!-- Search Input -->
-      <div class="relative flex-1 max-w-xs group">
+    <!-- Row 1 (Mobile): Search Input -->
+    <div class="w-full lg:w-64 shrink-0">
+      <div class="relative group">
         <div
           class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Search
@@ -87,24 +88,27 @@ const getProjectColor = (color: string) => {
           type="text"
           :placeholder="t('common.search')"
           v-model="filters.search"
-          class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl leading-5 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all sm:text-sm" />
+          class="block w-full pl-10 pr-3 h-9 border border-gray-200 dark:border-gray-700 rounded-xl leading-5 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all sm:text-sm" />
       </div>
+    </div>
 
-      <!-- Filters -->
-      <div
-        class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 no-scrollbar">
+    <!-- Row 2 (Mobile): Filters & Add Button -->
+    <div
+      class="w-full lg:w-auto flex items-center gap-2 order-2 lg:order-0 overflow-hidden">
+      <!-- Filters Wrapper -->
+      <div class="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar">
         <!-- Project Filter -->
-        <div class="relative">
+        <div class="relative shrink-0">
           <button
             @click="toggleDropdown('project')"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors border flex items-center gap-2 whitespace-nowrap"
+            class="h-9 px-3 rounded-lg text-sm font-medium transition-colors border flex items-center gap-2 whitespace-nowrap cursor-pointer"
             :class="
               filters.projectIds.length > 0
                 ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-900/20 dark:border-indigo-700/50 dark:text-indigo-400'
                 : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50'
             ">
             <Folder class="w-4 h-4" />
-            Projects
+            <span class="hidden lg:inline">{{ t("nav.projects") }}</span>
             <span
               v-if="filters.projectIds.length"
               class="ml-1 bg-indigo-200 dark:bg-indigo-800 px-1.5 py-0.5 rounded-full text-xs"
@@ -126,7 +130,7 @@ const getProjectColor = (color: string) => {
                       ))
                     : filters.projectIds.push(project.id)
                 "
-                class="w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                class="w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer">
                 <div
                   class="w-2 h-2 rounded-full"
                   :class="
@@ -142,17 +146,17 @@ const getProjectColor = (color: string) => {
         </div>
 
         <!-- Priority Filter -->
-        <div class="relative">
+        <div class="relative shrink-0">
           <button
             @click="toggleDropdown('priority')"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors border flex items-center gap-2 whitespace-nowrap"
+            class="h-9 px-3 rounded-lg text-sm font-medium transition-colors border flex items-center gap-2 whitespace-nowrap cursor-pointer"
             :class="
               filters.priorities.length > 0
                 ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-700/50 dark:text-amber-400'
                 : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50'
             ">
             <Flag class="w-4 h-4" />
-            Priority
+            <span class="hidden lg:inline">{{ t("tasks.priority") }}</span>
             <span
               v-if="filters.priorities.length"
               class="ml-1 bg-amber-200 dark:bg-amber-800 px-1.5 py-0.5 rounded-full text-xs"
@@ -174,8 +178,8 @@ const getProjectColor = (color: string) => {
                       ))
                     : filters.priorities.push(p)
                 "
-                class="w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 capitalize">
-                <span class="flex-1">{{ p }}</span>
+                class="w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 capitalize cursor-pointer">
+                <span class="flex-1">{{ t("tasks." + p) }}</span>
                 <CheckCircle2
                   v-if="filters.priorities.includes(p)"
                   class="w-4 h-4 text-indigo-500" />
@@ -185,17 +189,17 @@ const getProjectColor = (color: string) => {
         </div>
 
         <!-- Tags Filter -->
-        <div class="relative" v-if="tags.length > 0">
+        <div class="relative shrink-0" v-if="tags.length > 0">
           <button
             @click="toggleDropdown('tag')"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors border flex items-center gap-2 whitespace-nowrap"
+            class="h-9 px-3 rounded-lg text-sm font-medium transition-colors border flex items-center gap-2 whitespace-nowrap cursor-pointer"
             :class="
               filters.tagIds.length > 0
                 ? 'bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-900/20 dark:border-purple-700/50 dark:text-purple-400'
                 : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50'
             ">
             <Hash class="w-4 h-4" />
-            Tags
+            <span class="hidden lg:inline">{{ t("nav.tags") }}</span>
             <span
               v-if="filters.tagIds.length"
               class="ml-1 bg-purple-200 dark:bg-purple-800 px-1.5 py-0.5 rounded-full text-xs"
@@ -217,7 +221,7 @@ const getProjectColor = (color: string) => {
                       ))
                     : filters.tagIds.push(tag.id)
                 "
-                class="w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50">
+                class="w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer">
                 <span class="flex-1 truncate">{{ tag.name }}</span>
                 <CheckCircle2
                   v-if="filters.tagIds.includes(tag.id)"
@@ -227,78 +231,99 @@ const getProjectColor = (color: string) => {
           </div>
         </div>
       </div>
+
+      <!-- Mobile Add Task Button (Visible lg:hidden) -->
+      <button
+        @click="emit('add')"
+        class="lg:hidden shrink-0 w-9 h-9 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-lg hover:shadow-indigo-500/30 cursor-pointer">
+        <Plus class="w-5 h-5" />
+      </button>
     </div>
 
-    <!-- Actions Group -->
-    <div class="flex items-center gap-3 w-full lg:w-auto justify-end">
+    <!-- Row 3 (Mobile): Actions -->
+    <div
+      class="flex items-center justify-between w-full lg:w-auto gap-3 lg:ml-auto order-3 lg:order-0 overflow-x-auto no-scrollbar">
       <!-- View Switcher -->
       <div
-        class="flex items-center p-1 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        class="flex items-center p-1 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shrink-0">
         <button
           @click="emit('update:viewMode', 'board')"
           :title="t('tasks.board_view')"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium"
+          class="flex items-center gap-1.5 h-9 px-3 rounded-md transition-all font-medium cursor-pointer"
           :class="
             viewMode === 'board'
               ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
           ">
           <LayoutGrid class="w-4 h-4" />
-          <span class="hidden sm:inline">Tablero</span>
+          <span class="text-[10px] lg:text-sm">{{
+            t("tasks.board_view")
+          }}</span>
         </button>
         <button
           @click="emit('update:viewMode', 'table')"
-          :title="'Vista Tabla'"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium"
+          :title="t('tasks.table_view')"
+          class="flex items-center gap-1.5 h-9 px-3 rounded-md transition-all font-medium cursor-pointer"
           :class="
             viewMode === 'table'
               ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
           ">
           <TableIcon class="w-4 h-4" />
-          <span class="hidden sm:inline">Tabla</span>
+          <span class="text-[10px] lg:text-sm">{{
+            t("tasks.table_view")
+          }}</span>
         </button>
         <button
           @click="emit('update:viewMode', 'matrix')"
-          :title="'Matriz de Prioridades'"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium"
+          :title="t('tasks.matrix_view')"
+          class="flex items-center gap-1.5 h-9 px-3 rounded-md transition-all font-medium cursor-pointer"
           :class="
             viewMode === 'matrix'
               ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
           ">
           <LayoutDashboard class="w-4 h-4" />
-          <span class="hidden sm:inline">Matriz</span>
+          <span class="text-[10px] lg:text-sm">{{
+            t("tasks.matrix_view")
+          }}</span>
         </button>
         <button
           @click="emit('update:viewMode', 'timeline')"
-          :title="'Cronograma'"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium"
+          :title="t('tasks.timeline_view')"
+          class="flex items-center gap-1.5 h-9 px-3 rounded-md transition-all font-medium cursor-pointer"
           :class="
             viewMode === 'timeline'
               ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'
           ">
           <GanttChartSquare class="w-4 h-4" />
-          <span class="hidden sm:inline">Timeline</span>
+          <span class="text-[10px] lg:text-sm">{{
+            t("tasks.timeline_view")
+          }}</span>
+        </button>
+
+        <!-- Divider -->
+        <div class="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+
+        <!-- Export Button (Inside Box) -->
+        <button
+          @click="emit('export')"
+          :title="t('common.export')"
+          class="flex items-center justify-center h-9 w-9 rounded-md transition-all font-medium text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-gray-700 cursor-pointer">
+          <DownloadCloud class="w-4 h-4" />
         </button>
       </div>
 
-      <!-- Export Button -->
-      <button
-        @click="emit('export')"
-        title="Export CSV"
-        class="p-2.5 rounded-xl bg-white dark:bg-gray-800 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 border border-gray-200 dark:border-gray-700 hover:border-indigo-200 dark:hover:border-indigo-700/50 transition-all shadow-sm">
-        <DownloadCloud class="w-5 h-5" />
-      </button>
-
-      <!-- Add Task Button -->
-      <button
-        @click="emit('add')"
-        class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 whitespace-nowrap cursor-pointer">
-        <Plus class="w-5 h-5" />
-        <span>{{ t("tasks.add_task") }}</span>
-      </button>
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Add Task Button -->
+        <button
+          @click="emit('add')"
+          class="hidden lg:flex items-center gap-2 h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 whitespace-nowrap cursor-pointer">
+          <Plus class="w-5 h-5" />
+          <span>{{ t("tasks.add_task") }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Backdrop for dropdowns -->

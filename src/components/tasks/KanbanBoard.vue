@@ -3,6 +3,9 @@ import { ref, watch } from "vue";
 import type { Task } from "@/types/global";
 import draggable from "vuedraggable";
 import TaskCard from "./TaskCard.vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   tasks: Task[];
@@ -18,8 +21,9 @@ const emit = defineEmits<{
 // Internal state for columns to allow immediate UI update while dragging
 const pendingTasks = ref<Task[]>([]);
 const completedTasks = ref<Task[]>([]);
+const activeTab = ref<"pending" | "completed">("pending");
 
-// Watch prompt tasks change to re-distribute (e.g. initial load or external filter change)
+// Watch prompt tasks change
 watch(
   () => props.tasks,
   (newTasks) => {
@@ -32,7 +36,6 @@ watch(
 const onChange = (evt: any, isCompletedColumn: boolean) => {
   if (evt.added) {
     const task = evt.added.element as Task;
-    // Emit event to parent to sync with backend
     emit("update:status", task.id, isCompletedColumn);
   }
 };
@@ -43,107 +46,133 @@ const handleSelectTask = (task: Task) => {
 </script>
 
 <template>
-  <div class="flex flex-col md:flex-row gap-6 h-full overflow-x-auto pb-4">
-    <!-- Pending Column -->
-    <div class="flex-1 min-w-[300px] flex flex-col h-full">
-      <div
-        class="flex items-center justify-between mb-4 bg-gray-100 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-200 dark:border-gray-700/50">
-        <h3
-          class="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-          Pendiente
-        </h3>
-        <span
-          class="bg-white dark:bg-gray-700 px-2 py-0.5 rounded-md text-xs font-mono font-bold text-gray-500 dark:text-gray-400">
-          {{ pendingTasks.length }}
-        </span>
-      </div>
-
-      <div
-        class="flex-1 bg-gray-50/50 dark:bg-gray-900/30 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 p-2 overflow-y-auto custom-scrollbar">
-        <draggable
-          v-model="pendingTasks"
-          group="tasks"
-          item-key="id"
-          @change="onChange($event, false)"
-          class="flex flex-col gap-3 min-h-[200px]"
-          ghost-class="ghost-card"
-          drag-class="drag-card"
-          :disabled="disableDrag">
-          <template #item="{ element }">
-            <div class="cursor-grab active:cursor-grabbing">
-              <TaskCard
-                :task="element"
-                :compact="true"
-                @click="handleSelectTask(element)"
-                @focus-task="emit('focus-task', $event)"
-                @toggle-completion="
-                  () => emit('update:status', element.id, true)
-                " />
-            </div>
-          </template>
-        </draggable>
-      </div>
+  <div class="flex flex-col md:h-full md:overflow-hidden">
+    <!-- Mobile Tabs -->
+    <div
+      class="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-4 md:hidden shrink-0">
+      <button
+        @click="activeTab = 'pending'"
+        class="flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer"
+        :class="
+          activeTab === 'pending'
+            ? 'bg-white dark:bg-gray-700 shadow-sm text-indigo-600 dark:text-indigo-400'
+            : 'text-gray-500 dark:text-gray-400'
+        ">
+        {{ t("tasks.kanban_pending") }} ({{ pendingTasks.length }})
+      </button>
+      <button
+        @click="activeTab = 'completed'"
+        class="flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer"
+        :class="
+          activeTab === 'completed'
+            ? 'bg-white dark:bg-gray-700 shadow-sm text-green-600 dark:text-green-400'
+            : 'text-gray-500 dark:text-gray-400'
+        ">
+        {{ t("tasks.kanban_completed") }} ({{ completedTasks.length }})
+      </button>
     </div>
 
-    <!-- Completed Column -->
-    <div class="flex-1 min-w-[300px] flex flex-col h-full">
+    <!-- Columns Container -->
+    <div
+      class="flex flex-col md:flex-row gap-6 md:h-full md:overflow-x-auto pb-4">
+      <!-- Pending Column -->
       <div
-        class="flex items-center justify-between mb-4 bg-gray-100 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-200 dark:border-gray-700/50">
-        <h3
-          class="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-          Completado
-        </h3>
-        <span
-          class="bg-white dark:bg-gray-700 px-2 py-0.5 rounded-md text-xs font-mono font-bold text-gray-500 dark:text-gray-400">
-          {{ completedTasks.length }}
-        </span>
+        class="flex-1 flex-col h-full w-full md:min-w-[300px]"
+        :class="activeTab === 'pending' ? 'flex' : 'hidden md:flex'">
+        <div
+          class="flex items-center justify-between mb-4 bg-gray-100 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-200 dark:border-gray-700/50">
+          <h3
+            class="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+            {{ t("tasks.kanban_pending") }}
+          </h3>
+          <span
+            class="bg-white dark:bg-gray-700 px-2 py-0.5 rounded-md text-xs font-mono font-bold text-gray-500 dark:text-gray-400">
+            {{ pendingTasks.length }}
+          </span>
+        </div>
+
+        <div
+          class="md:flex-1 md:bg-gray-50/50 md:dark:bg-gray-900/30 md:rounded-2xl md:border-2 md:border-dashed md:border-gray-200 md:dark:border-gray-800 md:p-2 md:overflow-y-auto scrollbar-hide">
+          <draggable
+            v-model="pendingTasks"
+            group="tasks"
+            item-key="id"
+            @change="onChange($event, false)"
+            class="flex flex-col gap-3 min-h-[200px]"
+            ghost-class="ghost-card"
+            drag-class="drag-card"
+            :disabled="disableDrag">
+            <template #item="{ element }">
+              <div class="cursor-grab active:cursor-grabbing">
+                <TaskCard
+                  :task="element"
+                  :compact="true"
+                  @click="handleSelectTask(element)"
+                  @focus-task="emit('focus-task', $event)"
+                  @toggle-complete="
+                    () => emit('update:status', element.id, true)
+                  " />
+              </div>
+            </template>
+          </draggable>
+        </div>
       </div>
 
+      <!-- Completed Column -->
       <div
-        class="flex-1 bg-gray-50/50 dark:bg-gray-900/30 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 p-2 overflow-y-auto custom-scrollbar">
-        <draggable
-          v-model="completedTasks"
-          group="tasks"
-          item-key="id"
-          @change="onChange($event, true)"
-          class="flex flex-col gap-3 min-h-[200px]"
-          ghost-class="ghost-card"
-          drag-class="drag-card"
-          :disabled="disableDrag">
-          <template #item="{ element }">
-            <div
-              class="cursor-grab active:cursor-grabbing opacity-75 hover:opacity-100 transition-opacity">
-              <TaskCard
-                :task="element"
-                :compact="true"
-                @click="handleSelectTask(element)"
-                @focus-task="emit('focus-task', $event)"
-                @toggle-completion="
-                  () => emit('update:status', element.id, false)
-                " />
-            </div>
-          </template>
-        </draggable>
+        class="flex-1 flex-col h-full w-full md:min-w-[300px]"
+        :class="activeTab === 'completed' ? 'flex' : 'hidden md:flex'">
+        <div
+          class="flex items-center justify-between mb-4 bg-gray-100 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-200 dark:border-gray-700/50">
+          <h3
+            class="font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+            {{ t("tasks.kanban_completed") }}
+          </h3>
+          <span
+            class="bg-white dark:bg-gray-700 px-2 py-0.5 rounded-md text-xs font-mono font-bold text-gray-500 dark:text-gray-400">
+            {{ completedTasks.length }}
+          </span>
+        </div>
+
+        <div
+          class="md:flex-1 md:bg-gray-50/50 md:dark:bg-gray-900/30 md:rounded-2xl md:border-2 md:border-dashed md:border-gray-200 md:dark:border-gray-800 md:p-2 md:overflow-y-auto scrollbar-hide">
+          <draggable
+            v-model="completedTasks"
+            group="tasks"
+            item-key="id"
+            @change="onChange($event, true)"
+            class="flex flex-col gap-3 min-h-[200px]"
+            ghost-class="ghost-card"
+            drag-class="drag-card"
+            :disabled="disableDrag">
+            <template #item="{ element }">
+              <div
+                class="cursor-grab active:cursor-grabbing opacity-75 hover:opacity-100 transition-opacity">
+                <TaskCard
+                  :task="element"
+                  :compact="true"
+                  @click="handleSelectTask(element)"
+                  @focus-task="emit('focus-task', $event)"
+                  @toggle-complete="
+                    () => emit('update:status', element.id, false)
+                  " />
+              </div>
+            </template>
+          </draggable>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #334155;
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 </style>

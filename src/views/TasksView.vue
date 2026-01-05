@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useTaskState } from "../composables/useTaskState";
+
 import { useTasks } from "../composables/useTask";
-import { useProjectState } from "../composables/useProjectState";
+import { useProjectStore } from "../stores/projects";
+import { storeToRefs } from "pinia";
 import { useTaskFilter } from "@/composables/useTaskFilter";
 import SkeletonLoader from "@/components/common/SkeletonLoader.vue";
 
@@ -14,10 +15,15 @@ import TaskTimeline from "@/components/tasks/TaskTimeline.vue";
 import FocusMode from "@/components/tasks/FocusMode.vue";
 import TasksToolbar from "@/components/tasks/TasksToolbar.vue";
 
-const { tasks } = useTaskState();
-const { loadTask, toggleTaskCompletion } = useTasks();
-const { loadProjects, projects } = useProjectState();
+const projectStore = useProjectStore();
+const { projects } = storeToRefs(projectStore);
+const loadProjects = projectStore.fetchProjects;
+const { t, locale } = useI18n();
+import { useI18n } from "vue-i18n";
+
 const { filteredTasks } = useTaskFilter();
+
+const { tasks, loadTask, toggleTaskCompletion } = useTasks();
 
 // View Mode State
 const viewMode = ref<"board" | "table" | "matrix" | "timeline">("board");
@@ -48,16 +54,28 @@ const handleCompleteTask = async (task: (typeof tasks.value)[0]) => {
 };
 
 const handleExportCSV = () => {
-  const headers = ["ID", "Title", "Status", "Priority", "Project", "Due Date"];
-  const rows = filteredTasks.value.map((t) => [
-    t.id,
-    `"${t.title.replace(/"/g, '""')}"`, // Escape quotes
-    t.completed ? "Completed" : "Pending",
-    t.priority || "None",
+  const headers = [
+    t("common.id"),
+    t("tasks.task_title"),
+    t("tasks.status"),
+    t("tasks.priority"),
+    t("tasks.project"),
+    t("tasks.due_date"),
+  ];
+  const rows = filteredTasks.value.map((taskItem) => [
+    taskItem.id,
+    `"${taskItem.title.replace(/"/g, '""')}"`,
+    taskItem.completed ? t("tasks.completed") : t("tasks.pending_title"),
+    taskItem.priority ? t(`tasks.${taskItem.priority}`) : t("common.none"),
     `"${(
-      projects.value.find((p) => p.id === t.projectId)?.title || "Uncategorized"
+      projects.value.find((p) => p.id === taskItem.projectId)?.title ||
+      t("projects.uncategorized")
     ).replace(/"/g, '""')}"`,
-    t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "N/A",
+    taskItem.dueDate
+      ? new Date(taskItem.dueDate).toLocaleDateString(
+          locale.value === "es" ? "es-ES" : "en-US"
+        )
+      : t("common.na"),
   ]);
 
   const csvContent = [headers.join(","), ...rows.map((e) => e.join(","))].join(
@@ -107,7 +125,7 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
       </div>
 
       <!-- MAIN CONTENT -->
-      <div v-else class="h-[calc(100vh-140px)] flex flex-col">
+      <div v-else class="h-[calc(100vh-240px)] flex flex-col">
         <!-- Header Controls Panel -->
         <TasksToolbar
           v-model:viewMode="viewMode"
@@ -118,7 +136,8 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
           " />
 
         <!-- CONTENT AREA -->
-        <div class="flex-1 overflow-hidden min-h-0 relative">
+        <div
+          class="flex-1 overflow-y-auto md:overflow-hidden min-h-0 relative scrollbar-hide">
           <!-- KANBAN VIEW -->
           <Transition name="fade" mode="out-in">
             <div v-if="viewMode === 'board'" class="h-full pb-4" :key="'board'">

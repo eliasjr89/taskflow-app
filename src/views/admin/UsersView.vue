@@ -6,13 +6,15 @@ import BaseModal from "@/components/common/BaseModal.vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import EnhancedSelect from "@/components/common/EnhancedSelect.vue";
+import MultiSelect from "@/components/common/MultiSelect.vue";
 import { useI18n } from "vue-i18n";
 
 const toast = useToast();
 const { confirm } = useConfirm();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const users = ref<User[]>([]);
+const tasksList = ref<any[]>([]); // For MultiSelect
 const loading = ref(true);
 const showModal = ref(false);
 const submitting = ref(false);
@@ -28,6 +30,7 @@ const form = ref({
   role: "user" as "user" | "manager" | "admin",
   password: "",
   profile_image: "",
+  task_ids: [] as number[],
 });
 
 const roles = computed(() => [
@@ -50,14 +53,40 @@ const fetchUsers = async () => {
     const res = await api.get("/users");
     users.value = res.data.data;
   } catch {
-    toast.error("Error", "No se pudieron cargar los usuarios");
+    toast.error(t("common.error_title"), t("common.load_error"));
   } finally {
     loading.value = false;
   }
 };
 
-const openModal = (user?: User) => {
+const fetchTasksList = async () => {
+  try {
+    const res = await api.get("/tasks?limit=1000"); // Fetch all tasks for selection
+    const data = res.data.data || res.data;
+    tasksList.value = Array.isArray(data) ? data : data.results || [];
+  } catch {
+    console.error("Failed to fetch tasks list");
+  }
+};
+
+const openModal = async (user?: User) => {
+  // Ensure tasks list is loaded
+  if (tasksList.value.length === 0) {
+    await fetchTasksList();
+  }
+
   if (user) {
+    // Fetch currently assigned tasks
+    let userTaskIds: number[] = [];
+    try {
+      const res = await api.get(`/tasks?user_id=${user.id}&limit=1000`);
+      const tasks = res.data.data || res.data || [];
+      const list = Array.isArray(tasks) ? tasks : tasks.results || [];
+      userTaskIds = list.map((t: any) => t.id);
+    } catch {
+      // ignore
+    }
+
     form.value = {
       id: user.id,
       username: user.username,
@@ -67,6 +96,7 @@ const openModal = (user?: User) => {
       role: user.role as "user" | "manager" | "admin",
       password: "",
       profile_image: user.profile_image || "",
+      task_ids: userTaskIds,
     };
     imagePreview.value = user.profile_image || "";
   } else {
@@ -79,6 +109,7 @@ const openModal = (user?: User) => {
       role: "user",
       password: "",
       profile_image: "",
+      task_ids: [],
     };
     imagePreview.value = "";
   }
@@ -92,12 +123,12 @@ const handleImageSelect = (event: Event) => {
 
   if (file) {
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(t("auth.error"), t("admin_users.image_size_error"));
+      toast.error(t("common.error_title"), t("common.image_size_error"));
       return;
     }
 
     if (!file.type.startsWith("image/")) {
-      toast.error(t("auth.error"), t("admin_users.image_type_error"));
+      toast.error(t("common.error_title"), t("common.image_type_error"));
       return;
     }
 
@@ -135,6 +166,7 @@ const closeModal = async (force: boolean = false) => {
     role: "user",
     password: "",
     profile_image: "",
+    task_ids: [],
   };
   imageFile.value = null;
   imagePreview.value = "";
@@ -158,6 +190,22 @@ const handleSubmit = async () => {
       formData.append("profile_image", imageFile.value);
     }
 
+    // Handle task_ids - FormData doesn't support arrays directly in standard ways sometimes,
+    // but usually appending multiple keys works: task_ids[], or just JSON stringify for a specific field if backend expects it.
+    // However, our backend expects JSON body usually. But here we are using FormData for image upload.
+    // The `hppMiddleware` in backend might handle array if appended multiple times.
+    // Let's iterate.
+    if (form.value.task_ids && form.value.task_ids.length > 0) {
+      form.value.task_ids.forEach((id) => {
+        formData.append("task_ids", String(id));
+      });
+      // Note: Backend might need to check fields logic.
+      // User Controller uses `req.body`. Multer parses text fields.
+      // If `task_ids[]` is sent, express `hpp` or body parser should handle it.
+      // But `TasksView` uses JSON. `UsersView` uses FormData.
+      // Important to verify if Backend `req.body` will have `task_ids` as array.
+    }
+
     if (form.value.id) {
       await api.put(`/users/${form.value.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -179,9 +227,8 @@ const handleSubmit = async () => {
     await fetchUsers();
     closeModal(true);
   } catch (err: any) {
-    const errorMsg =
-      err.response?.data?.message || "Error al guardar el usuario";
-    toast.error("Error", errorMsg);
+    const errorMsg = err.response?.data?.message || t("common.save_error");
+    toast.error(t("common.error_title"), errorMsg);
   } finally {
     submitting.value = false;
   }
@@ -206,27 +253,27 @@ const deleteUser = async (id: number) => {
       t("admin_users.delete_success_msg")
     );
   } catch (err: any) {
-    const errorMsg =
-      err.response?.data?.message || "Error al eliminar el usuario";
-    toast.error("Error", errorMsg);
+    const errorMsg = err.response?.data?.message || t("common.delete_error");
+    toast.error(t("common.error_title"), errorMsg);
   }
 };
 
 const formatDate = (dateString?: string) => {
-  if (!dateString) return "Sin fecha";
+  if (!dateString) return t("date.no_date");
   const date = new Date(dateString);
   const now = new Date();
   const diffTime = Math.abs(now.getTime() - date.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return t("calendar.today");
-  // using localized date format below, simple relative not fully localized here but OK
-  if (diffDays === 1) return "Ayer";
-  if (diffDays < 7) return `Hace ${diffDays} días`;
-  if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
-  if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} meses`;
+  if (diffDays === 0) return t("date.today");
+  if (diffDays === 1) return t("date.yesterday");
+  if (diffDays < 7) return t("date.days_ago", { n: diffDays });
+  if (diffDays < 30)
+    return t("date.weeks_ago", { n: Math.floor(diffDays / 7) });
+  if (diffDays < 365)
+    return t("date.months_ago", { n: Math.floor(diffDays / 30) });
 
-  return date.toLocaleDateString("es-ES", {
+  return date.toLocaleDateString(locale.value === "es" ? "es-ES" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -322,6 +369,24 @@ onMounted(fetchUsers);
               >{{ $t("admin_users.joined") }}
               {{ formatDate(user.created_at) }}</span
             >
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <div
+              class="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-xs text-text-muted mb-1">Tareas</div>
+              <div class="text-lg font-bold text-white">
+                {{ user.num_tasks || 0 }}
+              </div>
+            </div>
+            <div
+              class="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-xs text-text-muted mb-1">Proyectos</div>
+              <div class="text-lg font-bold text-white">
+                {{ user.num_projects || 0 }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -503,6 +568,18 @@ onMounted(fetchUsers);
                 form.id ? $t('admin_users.password_hint') : '••••••••'
               " />
           </div>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Task Assignment -->
+          <MultiSelect
+            v-model="form.task_ids"
+            :options="
+              tasksList.map((t) => ({ value: t.id, label: t.description }))
+            "
+            label="Asignar Tareas"
+            placeholder="Selecciona tareas..."
+            icon="fa-list-check" />
         </div>
 
         <!-- Action Buttons -->

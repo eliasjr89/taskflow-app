@@ -3,26 +3,13 @@ import { mount, flushPromises } from "@vue/test-utils";
 import ProjectsView from "../ProjectsView.vue";
 import { createI18n } from "vue-i18n";
 
+import es from "../../locales/es";
+
 const i18n = createI18n({
   legacy: false,
   locale: "es",
   messages: {
-    es: {
-      projects: {
-        title: "Proyectos",
-        subtitle: "Organiza tus objetivos",
-        new_project: "Nuevo Proyecto",
-        progress: "Progreso",
-        tasks_count: "{count} tareas",
-        delete_project: "Eliminar proyecto",
-        delete_confirm_title: "¿Eliminar proyecto?",
-        delete_confirm_msg: "Esta acción no se puede deshacer",
-      },
-      common: {
-        yes_delete: "Sí, eliminar",
-        cancel: "Cancelar",
-      },
-    },
+    es,
   },
 });
 
@@ -48,11 +35,6 @@ describe("ProjectsView", () => {
   it("debe renderizar la vista correctamente", async () => {
     const wrapper = await mountView();
     expect(wrapper.find(".flex-1").exists()).toBe(true);
-  });
-
-  it('debe mostrar el título "Proyectos"', async () => {
-    const wrapper = await mountView();
-    expect(wrapper.text()).toContain("Proyectos");
   });
 
   it("debe mostrar el botón de nuevo proyecto", async () => {

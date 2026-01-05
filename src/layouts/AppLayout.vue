@@ -3,6 +3,7 @@ import Header from "@/components/layout/Header.vue";
 import AppSidebar from "@/components/layout/AppSidebar.vue";
 import BottomNav from "@/components/layout/BottomNav.vue";
 import DynamicBackground from "@/components/common/DynamicBackground.vue";
+import ToastNotification from "@/components/common/ToastNotification.vue";
 import { useRoute } from "vue-router";
 import { computed } from "vue";
 
@@ -25,7 +26,7 @@ const isPublic = computed(() => route.meta.public === true);
         <AppSidebar v-if="!isPublic" />
 
         <main
-          class="flex-1 flex flex-col w-full min-w-0 px-4 md:px-8 pb-24 md:pb-8 h-screen overflow-y-auto no-scrollbar">
+          class="flex-1 flex flex-col w-full min-w-0 px-4 md:px-8 pb-24 md:pb-8 h-auto md:h-screen overflow-visible md:overflow-y-auto no-scrollbar">
           <!-- Header Banner inside Main -->
           <Header v-if="!isPublic" />
 
@@ -38,5 +39,8 @@ const isPublic = computed(() => route.meta.public === true);
 
       <BottomNav v-if="!isPublic" />
     </div>
+
+    <!-- Toast Notifications persistent across layout -->
+    <ToastNotification />
   </div>
 </template>

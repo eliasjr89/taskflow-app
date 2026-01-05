@@ -69,7 +69,7 @@ const formatDate = (dateString?: Date | string) => {
 
 <template>
   <div class="glass-card rounded-2xl overflow-hidden flex flex-col h-full">
-    <div class="overflow-x-auto flex-1 custom-scrollbar">
+    <div class="overflow-auto flex-1 scrollbar-hide">
       <table class="w-full text-left border-collapse">
         <thead
           class="bg-gray-50/50 dark:bg-gray-900/50 sticky top-0 z-10 backdrop-blur-sm">
@@ -200,3 +200,12 @@ const formatDate = (dateString?: Date | string) => {
     </div>
   </div>
 </template>
+<style scoped>
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+</style>

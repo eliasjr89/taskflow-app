@@ -11,20 +11,21 @@ import {
   LogOut,
 } from "lucide-vue-next";
 import { useSectionTheme } from "../../composables/useSectionTheme";
-import { useRouter } from "vue-router";
-import { useTaskState } from "../../composables/useTaskState";
+
+import { useTaskStore } from "../../stores/tasks";
+import { useAuthStore } from "../../stores/auth";
 
 const route = useRoute();
-const router = useRouter();
 const { theme } = useSectionTheme();
-const { resetState } = useTaskState();
+const taskStore = useTaskStore();
+const authStore = useAuthStore();
 
 const logout = async () => {
   try {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    resetState();
-    router.push("/login");
+    taskStore.reset();
+    authStore.logout();
+    // AuthStore handles navigation usually, but just in case:
+    // router.push("/login"); // AuthStore does this too
   } catch {
     // ignore
   }

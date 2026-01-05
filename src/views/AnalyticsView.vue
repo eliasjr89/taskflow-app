@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useTaskState } from "../composables/useTaskState";
-import { useProjectState } from "../composables/useProjectState";
+import { computed, ref, onMounted } from "vue";
+import { storeToRefs } from "pinia";
+import { useTaskStore } from "../stores/tasks";
+import { useProjectStore } from "../stores/projects";
+import { useI18n } from "vue-i18n";
+import CountUp from "../components/common/CountUp.vue";
+import { useAnimatedNumber } from "../composables/useAnimatedNumber";
 import {
   TrendingUp,
   Target,
@@ -12,12 +16,25 @@ import {
   Zap,
   Trophy,
 } from "lucide-vue-next";
-// ... rest imports ...
 
-// ... (existing computed vars)
+const { t, locale } = useI18n();
+const taskStore = useTaskStore();
+const projectStore = useProjectStore();
+const { tasks } = storeToRefs(taskStore);
+const { projects } = storeToRefs(projectStore);
 
-const { tasks, loadData } = useTaskState();
-const { projects, loadProjects } = useProjectState();
+const loadData = taskStore.fetchTasks;
+const loadProjects = projectStore.fetchProjects;
+
+const isMounted = ref(false);
+
+onMounted(() => {
+  loadData();
+  loadProjects();
+  setTimeout(() => {
+    isMounted.value = true;
+  }, 100);
+});
 
 // Racha actual (Tasks completed in last 7 days)
 const currentStreak = computed(() => {
@@ -46,24 +63,6 @@ const mostProductiveProject = computed(() => {
 });
 
 const animatedStreak = useAnimatedNumber(currentStreak);
-
-import { useI18n } from "vue-i18n";
-
-import CountUp from "../components/common/CountUp.vue";
-import { useAnimatedNumber } from "../composables/useAnimatedNumber";
-import { ref, onMounted } from "vue";
-
-const { t, locale } = useI18n();
-
-const isMounted = ref(false);
-
-onMounted(() => {
-  loadData();
-  loadProjects();
-  setTimeout(() => {
-    isMounted.value = true;
-  }, 100);
-});
 
 // Estadísticas generales
 const totalTasks = computed(() => tasks.value.length);
@@ -162,18 +161,17 @@ const maxDailyTasks = computed(() => {
 <template>
   <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
     <!-- Header -->
-    <div class="mb-8 text-center md:text-left">
+    <div class="mb-8 text-left">
       <h1
-        class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
-        📊
+        class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-start gap-4">
+        <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
+          <BarChart2 class="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+        </div>
         <span
           class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent"
           >{{ t("analytics.title") }}</span
         >
       </h1>
-      <p class="text-gray-600 dark:text-gray-400">
-        {{ t("analytics.subtitle") }}
-      </p>
     </div>
 
     <div class="space-y-6">
@@ -267,65 +265,97 @@ const maxDailyTasks = computed(() => {
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div
-          class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
-          <div class="flex items-center justify-between mb-3">
-            <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
-              <Target class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+          class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div
+            class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Target class="w-20 h-20 text-indigo-500" />
+          </div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-3">
+              <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
+                <Target class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {{ t("analytics.total_tasks") }}
+              </p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {{ animatedTotal }}
+              </p>
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            {{ t("analytics.total_tasks") }}
-          </p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {{ animatedTotal }}
-          </p>
         </div>
 
         <div
-          class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
-          <div class="flex items-center justify-between mb-3">
-            <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
-              <CheckCircle2
-                class="w-6 h-6 text-green-600 dark:text-green-400" />
+          class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div
+            class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <CheckCircle2 class="w-20 h-20 text-green-500" />
+          </div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-3">
+              <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                <CheckCircle2
+                  class="w-6 h-6 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {{ t("analytics.completed_tasks") }}
+              </p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {{ animatedCompleted }}
+              </p>
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            {{ t("analytics.completed_tasks") }}
-          </p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {{ animatedCompleted }}
-          </p>
         </div>
 
         <div
-          class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
-          <div class="flex items-center justify-between mb-3">
-            <div class="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
-              <Clock class="w-6 h-6 text-orange-600 dark:text-orange-400" />
+          class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div
+            class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Clock class="w-20 h-20 text-orange-500" />
+          </div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-3">
+              <div class="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
+                <Clock class="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {{ t("analytics.pending_tasks") }}
+              </p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {{ animatedPending }}
+              </p>
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            {{ t("analytics.pending_tasks") }}
-          </p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {{ animatedPending }}
-          </p>
         </div>
 
         <div
-          class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
-          <div class="flex items-center justify-between mb-3">
-            <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
-              <TrendingUp
-                class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          class="glass-card p-6 rounded-2xl hover:-translate-y-1 transition-transform duration-300 relative overflow-hidden group">
+          <div
+            class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <TrendingUp class="w-20 h-20 text-purple-500" />
+          </div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-3">
+              <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                <TrendingUp
+                  class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {{ t("analytics.completion_rate") }}
+              </p>
+              <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {{ animatedRate }}%
+              </p>
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            {{ t("analytics.completion_rate") }}
-          </p>
-          <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {{ animatedRate }}%
-          </p>
         </div>
       </div>
 

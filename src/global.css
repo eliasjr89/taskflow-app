@@ -60,11 +60,20 @@
   @apply rotate-3 scale-105 shadow-2xl z-50;
 }
 
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+
 @utility custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
-
 
 /* Estilos globales */
 * {

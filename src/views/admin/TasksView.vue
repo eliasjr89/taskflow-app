@@ -3,17 +3,19 @@ import { ref, onMounted } from "vue";
 import api from "@/services/api";
 import type { Task, Project } from "@/types";
 import BaseModal from "@/components/common/BaseModal.vue";
-import Badge from "@/components/admin/Badge.vue";
+import UserAvatar from "@/components/common/UserAvatar.vue";
+// Badge removed as we use inline styles for consistency with UsersView card design
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import { useConfetti } from "@/composables/useConfetti";
 import EnhancedSelect from "@/components/common/EnhancedSelect.vue";
+import MultiSelect from "@/components/common/MultiSelect.vue";
 import { useI18n } from "vue-i18n";
 
 const toast = useToast();
 const { confirm } = useConfirm();
 const { triggerConfetti } = useConfetti();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // Types
 interface TaskStatus {
@@ -25,6 +27,7 @@ interface TaskStatus {
 const tasks = ref<Task[]>([]);
 const projects = ref<Project[]>([]);
 const statuses = ref<TaskStatus[]>([]);
+const users = ref<any[]>([]);
 const loading = ref(true);
 const showModal = ref(false);
 const submitting = ref(false);
@@ -36,6 +39,7 @@ const form = ref({
   status_id: null as number | null,
   priority: "low" as "low" | "medium" | "high",
   due_date: null as string | null,
+  user_ids: [] as number[],
 });
 
 // Fetch Data
@@ -52,8 +56,14 @@ const fetchData = async () => {
     tasks.value = tasksRes.data.data || tasksRes.data || [];
     projects.value = projectsRes.data.data || projectsRes.data || [];
     statuses.value = statusesRes.data.data || statusesRes.data || [];
+
+    // Fetch users for assignment (silent fail permissible or independent)
+    try {
+      const usersRes = await api.get("/users");
+      users.value = usersRes.data.data || usersRes.data || [];
+    } catch (e) {}
   } catch {
-    toast.error("Error", "No se pudieron cargar las tareas");
+    toast.error(t("common.error_title"), t("common.load_error"));
   } finally {
     loading.value = false;
   }
@@ -95,6 +105,7 @@ const openModal = async (task?: Task) => {
       status_id: task.status_id,
       priority: task.priority,
       due_date: task.due_date || null,
+      user_ids: task.users ? task.users.map((u: any) => u.id) : [],
     };
   } else {
     form.value = {
@@ -104,6 +115,7 @@ const openModal = async (task?: Task) => {
       status_id: statuses.value[0]?.id ?? 1, // Default status
       priority: "low",
       due_date: null,
+      user_ids: [],
     };
   }
   showModal.value = true;
@@ -130,6 +142,7 @@ const closeModal = async (force: boolean = false) => {
     status_id: null,
     priority: "low",
     due_date: null,
+    user_ids: [],
   };
 };
 
@@ -148,6 +161,7 @@ const handleSubmit = async () => {
       project_id: form.value.project_id,
       status_id: form.value.status_id,
       priority: form.value.priority,
+      user_ids: form.value.user_ids,
     };
 
     // Add due_date if it exists
@@ -171,8 +185,8 @@ const handleSubmit = async () => {
     await fetchData(); // Refresh list
     closeModal(true);
   } catch (err: any) {
-    const errorMsg = err.response?.data?.message || "Error al guardar la tarea";
-    toast.error("Error", errorMsg);
+    const errorMsg = err.response?.data?.message || t("common.save_error");
+    toast.error(t("common.error_title"), errorMsg);
   } finally {
     submitting.value = false;
   }
@@ -192,11 +206,13 @@ const deleteTask = async (id: number) => {
   try {
     await api.delete(`/tasks/${id}`);
     tasks.value = tasks.value.filter((t) => t.id !== id);
-    toast.success("Tarea eliminada", "La tarea se ha eliminado correctamente");
+    toast.success(
+      t("admin_tasks.delete_success"),
+      t("admin_tasks.delete_success_msg")
+    );
   } catch (err: any) {
-    const errorMsg =
-      err.response?.data?.message || "Error al eliminar la tarea";
-    toast.error("Error", errorMsg);
+    const errorMsg = err.response?.data?.message || t("common.delete_error");
+    toast.error(t("common.error_title"), errorMsg);
   }
 };
 
@@ -221,7 +237,7 @@ const completeTask = async (task: Task) => {
     );
 
     if (!completedStatus) {
-      toast.error("Error", 'No se encontró el estado "Completado"');
+      toast.error(t("common.error_title"), t("common.error_occurred"));
       return;
     }
 
@@ -247,9 +263,8 @@ const completeTask = async (task: Task) => {
       t("admin_tasks.marked_completed_msg")
     );
   } catch (err: any) {
-    const errorMsg =
-      err.response?.data?.message || "Error al completar la tarea";
-    toast.error("Error", errorMsg);
+    const errorMsg = err.response?.data?.message || t("common.error_occurred");
+    toast.error(t("common.error_title"), errorMsg);
   }
 };
 
@@ -274,7 +289,7 @@ const uncompleteTask = async (task: Task) => {
     );
 
     if (!pendingStatus) {
-      toast.error("Error", 'No se encontró el estado "Pendiente"');
+      toast.error(t("common.error_title"), t("common.error_occurred"));
       return;
     }
 
@@ -292,11 +307,13 @@ const uncompleteTask = async (task: Task) => {
       taskToUpdate.status_name = pendingStatus.name;
     }
 
-    toast.success("Tarea desmarcada", "La tarea volvió a estado pendiente");
+    toast.success(
+      t("admin_tasks.marked_pending"),
+      t("admin_tasks.marked_pending_msg")
+    );
   } catch (err: any) {
-    const errorMsg =
-      err.response?.data?.message || "Error al desmarcar la tarea";
-    toast.error("Error", errorMsg);
+    const errorMsg = err.response?.data?.message || t("common.error_occurred");
+    toast.error(t("common.error_title"), errorMsg);
   }
 };
 
@@ -307,19 +324,21 @@ const isTaskCompleted = (task: Task): boolean => {
 };
 
 const formatDate = (dateString?: string | null) => {
-  if (!dateString) return "Sin fecha";
+  if (!dateString) return t("date.no_date");
   const date = new Date(dateString);
   const now = new Date();
   const diffTime = Math.abs(now.getTime() - date.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "Hoy";
-  if (diffDays === 1) return "Ayer";
-  if (diffDays < 7) return `Hace ${diffDays} días`;
-  if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
-  if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} meses`;
+  if (diffDays === 0) return t("date.today");
+  if (diffDays === 1) return t("date.yesterday");
+  if (diffDays < 7) return t("date.days_ago", { n: diffDays });
+  if (diffDays < 30)
+    return t("date.weeks_ago", { n: Math.floor(diffDays / 7) });
+  if (diffDays < 365)
+    return t("date.months_ago", { n: Math.floor(diffDays / 30) });
 
-  return date.toLocaleDateString("es-ES", {
+  return date.toLocaleDateString(locale.value === "es" ? "es-ES" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -399,89 +418,164 @@ onMounted(fetchData);
       <div
         v-for="task in tasks"
         :key="task.id"
-        class="group bg-slate-800/50 border border-slate-700 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 relative overflow-hidden">
+        class="group bg-slate-800/50 border border-slate-700 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 relative">
         <!-- Status Stripe -->
         <div
           :class="[
-            'absolute top-0 left-0 w-1 h-full transition-colors',
+            'absolute top-0 left-0 w-1 h-full transition-colors rounded-l-2xl',
             isTaskCompleted(task) ? 'bg-emerald-500' : 'bg-blue-500',
           ]"></div>
-
-        <!-- Header -->
-        <div class="flex items-start justify-between mb-3 pl-3">
-          <Badge type="priority" :value="task.priority" />
+        <!-- Header with Avatar/Icon -->
+        <div class="flex items-center gap-4 mb-4">
           <div
-            class="flex gap-2 opactiy-0 group-hover:opacity-100 transition-opacity">
+            :class="[
+              'w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl border-2 border-slate-600 group-hover:border-blue-500 transition-colors shadow-lg',
+              isTaskCompleted(task) ? 'bg-emerald-600' : 'bg-blue-600',
+            ]">
+            <i
+              :class="[
+                'fa-solid',
+                isTaskCompleted(task) ? 'fa-check' : 'fa-list-check',
+              ]"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3
+              :class="[
+                'text-lg font-bold text-white truncate transition-colors',
+                isTaskCompleted(task)
+                  ? 'line-through opacity-60'
+                  : 'group-hover:text-blue-400',
+              ]">
+              {{ task.description }}
+            </h3>
+            <p class="text-xs text-text-muted truncate flex items-center gap-1">
+              <i class="fa-solid fa-briefcase text-[10px]"></i>
+              {{
+                task.project_name ||
+                $t("admin_tasks.without_project", "Sin proyecto")
+              }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center gap-2 text-sm text-gray-300">
+            <i
+              class="fa-solid fa-layer-group text-blue-400 w-5 text-center"></i>
+            <span class="capitalize">{{ task.priority }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-gray-300">
+            <i class="fa-solid fa-calendar text-blue-400 w-5 text-center"></i>
+            <span>{{ formatDate(task.due_date) }}</span>
+          </div>
+          <div
+            v-if="task.tags && task.tags.length > 0"
+            class="flex items-center gap-2 text-sm text-gray-300">
+            <i class="fa-solid fa-tags text-blue-400 w-5 text-center"></i>
+            <div class="flex flex-wrap gap-1">
+              <span
+                v-for="tag in task.tags.slice(0, 2)"
+                :key="tag.id"
+                class="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
+                #{{ tag.name }}
+              </span>
+              <span
+                v-if="task.tags.length > 2"
+                class="text-[10px] text-text-muted"
+                >+{{ task.tags.length - 2 }}</span
+              >
+            </div>
+          </div>
+
+          <!-- Stats / Status Grid -->
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <div
+              class="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-xs text-text-muted mb-1">
+                {{ t("tasks.status") }}
+              </div>
+              <div class="text-sm font-bold text-white truncate px-1">
+                {{ task.status || task.status_name || "Unknown" }}
+              </div>
+            </div>
+            <div
+              class="bg-white/5 rounded-lg p-2 text-center border border-white/5">
+              <div class="text-xs text-text-muted mb-1">
+                {{ t("tasks.priority") }}
+              </div>
+              <!-- Using Badge component logic inline or text -->
+              <div
+                :class="[
+                  'text-sm font-bold capitalize',
+                  task.priority === 'urgent'
+                    ? 'text-red-400'
+                    : task.priority === 'high'
+                    ? 'text-orange-400'
+                    : task.priority === 'medium'
+                    ? 'text-yellow-400'
+                    : 'text-green-400',
+                ]">
+                {{ task.priority }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div
+          class="flex items-center justify-between pt-4 border-t border-slate-700/50">
+          <!-- Assigned Users -->
+          <div class="flex -space-x-2">
+            <template v-if="task.users && task.users.length > 0">
+              <UserAvatar
+                v-for="user in task.users.slice(0, 3)"
+                :key="user.id"
+                :user="user"
+                size="w-8 h-8" />
+              <div
+                v-if="task.users.length > 3"
+                class="w-8 h-8 rounded-full border-2 border-slate-800 bg-slate-500 flex items-center justify-center text-[10px] text-white font-bold relative z-0"
+                :title="`${task.users.length - 3} más`">
+                +{{ task.users.length - 3 }}
+              </div>
+            </template>
+            <span v-else class="text-xs text-text-muted italic px-2 py-1">{{
+              t("admin_projects.details.unassigned")
+            }}</span>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2">
             <button
               v-if="!isTaskCompleted(task)"
               @click="completeTask(task)"
-              class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center justify-center"
-              title="Completar">
+              class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all flex items-center justify-center hover:scale-110"
+              :title="t('common.complete')">
               <i class="fa-solid fa-check text-sm"></i>
             </button>
             <button
               v-else
               @click="uncompleteTask(task)"
-              class="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-all flex items-center justify-center"
-              title="Desmarcar">
+              class="w-8 h-8 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 transition-all flex items-center justify-center hover:scale-110"
+              :title="t('admin_tasks.uncomplete') || 'Desmarcar'">
               <i class="fa-solid fa-rotate-left text-sm"></i>
             </button>
+
+            <button
+              @click="openModal(task)"
+              class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all flex items-center justify-center hover:scale-110"
+              :title="t('common.edit')">
+              <i class="fa-solid fa-pen text-sm"></i>
+            </button>
+
+            <button
+              @click="deleteTask(task.id)"
+              class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center hover:scale-110"
+              :title="t('common.delete')">
+              <i class="fa-solid fa-trash text-sm"></i>
+            </button>
           </div>
-        </div>
-
-        <!-- Content -->
-        <div class="pl-3 mb-4">
-          <h3
-            :class="[
-              'text-lg font-bold text-white mb-2 transition-all',
-              isTaskCompleted(task) ? 'line-through opacity-60' : '',
-            ]">
-            {{ task.description }}
-          </h3>
-
-          <div class="flex flex-wrap gap-2 mb-3">
-            <Badge
-              type="status"
-              :value="task.status || task.status_name || 'Unknown'" />
-            <span
-              class="text-xs px-2 py-1 rounded-md bg-slate-700 text-text-muted flex items-center gap-1">
-              <i class="fa-solid fa-folder text-[10px]"></i>
-              {{ task.project_name || "Sin proyecto" }}
-            </span>
-            <span
-              v-if="task.due_date"
-              class="text-xs px-2 py-1 rounded-md bg-slate-700 text-text-muted flex items-center gap-1">
-              <i class="fa-solid fa-calendar text-[10px]"></i>
-              {{ formatDate(task.due_date) }}
-            </span>
-          </div>
-
-          <!-- Tags -->
-          <div
-            v-if="task.tags && task.tags.length > 0"
-            class="flex flex-wrap gap-1">
-            <span
-              v-for="tag in task.tags"
-              :key="tag.id"
-              class="text-[10px] px-2 py-0.5 rounded bg-white/5 text-gray-400 border border-white/10">
-              #{{ tag.name }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Footer Actions (Edit/Delete) -->
-        <div
-          class="flex justify-end gap-2 pt-4 border-t border-slate-700/50 pl-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-          <button
-            @click="openModal(task)"
-            class="text-xs font-medium text-text-muted hover:text-white transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-white/5">
-            <i class="fa-solid fa-pen"></i> Editar
-          </button>
-          <button
-            @click="deleteTask(task.id)"
-            class="text-xs font-medium text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-red-500/10">
-            <i class="fa-solid fa-trash"></i> Eliminar
-          </button>
         </div>
       </div>
     </div>
@@ -517,8 +611,10 @@ onMounted(fetchData);
           <EnhancedSelect
             v-model="form.project_id"
             :options="projects.map((p) => ({ value: p.id, label: p.name }))"
-            label="Proyecto"
-            placeholder="Selecciona un proyecto..."
+            :label="t('tasks.project')"
+            :placeholder="
+              t('tasks.select_project', 'Selecciona un proyecto...')
+            "
             icon="fa-briefcase"
             :required="true" />
 
@@ -526,11 +622,24 @@ onMounted(fetchData);
           <EnhancedSelect
             v-model="form.status_id"
             :options="statuses.map((s) => ({ value: s.id, label: s.name }))"
-            label="Estado"
-            placeholder="Selecciona un estado..."
+            :label="t('tasks.status')"
+            :placeholder="t('tasks.select_status', 'Selecciona un estado...')"
             icon="fa-spinner"
             :required="true" />
         </div>
+
+        <!-- User Assignment -->
+        <MultiSelect
+          v-model="form.user_ids"
+          :options="
+            users.map((u) => ({
+              value: u.id,
+              label: `${u.name} ${u.lastname} (@${u.username})`,
+            }))
+          "
+          :label="t('admin_tasks.assign_users', 'Asignar Usuarios')"
+          :placeholder="t('admin_tasks.select_users', 'Selecciona usuarios...')"
+          icon="fa-users" />
 
         <!-- Priority Select -->
         <EnhancedSelect
@@ -538,31 +647,31 @@ onMounted(fetchData);
           :options="[
             {
               value: 'low',
-              label: 'Baja',
+              label: t('tasks.low'),
               icon: 'fa-arrow-down',
               color: 'text-green-400',
             },
             {
               value: 'medium',
-              label: 'Media',
+              label: t('tasks.medium'),
               icon: 'fa-minus',
               color: 'text-yellow-400',
             },
             {
               value: 'high',
-              label: 'Alta',
+              label: t('tasks.high'),
               icon: 'fa-arrow-up',
               color: 'text-orange-400',
             },
             {
               value: 'urgent',
-              label: 'Urgente',
+              label: t('tasks.urgent'),
               icon: 'fa-fire',
               color: 'text-red-400',
             },
           ]"
-          label="Prioridad"
-          placeholder="Selecciona prioridad..."
+          :label="t('tasks.priority')"
+          :placeholder="t('tasks.select_priority', 'Selecciona prioridad...')"
           icon="fa-layer-group" />
 
         <!-- Action Buttons -->
@@ -573,7 +682,7 @@ onMounted(fetchData);
             class="flex-1 px-4 py-3 rounded-lg border border-slate-600 text-white hover:bg-slate-700/50 transition-all duration-200 font-medium flex items-center justify-center gap-2 group">
             <i
               class="fa-solid fa-xmark group-hover:rotate-90 transition-transform duration-200"></i>
-            Cancelar
+            {{ t("common.cancel") }}
           </button>
           <button
             type="submit"

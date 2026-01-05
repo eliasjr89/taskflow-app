@@ -9,11 +9,13 @@ import {
   X,
 } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
-import { useTaskState } from "../composables/useTaskState";
+import { useTaskStore } from "../stores/tasks";
+import { storeToRefs } from "pinia";
 import AddTaskForm from "@/components/tasks/AddTaskForm.vue";
 
 const { t, locale } = useI18n();
-const { tasks } = useTaskState();
+const taskStore = useTaskStore();
+const { tasks } = storeToRefs(taskStore);
 
 const isTaskModalOpen = ref(false);
 
@@ -165,38 +167,45 @@ const weekDays = computed(() => {
 <template>
   <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
     <!-- Header -->
-    <div
-      class="flex flex-col md:flex-row items-center md:justify-between gap-4 mb-8 text-center md:text-left">
-      <div class="flex flex-col items-center md:items-start">
-        <h1
-          class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
-          <span>📅</span>
-          <span
-            class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent"
-            >{{ t("calendar.title") }}</span
-          >
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-          {{ t("calendar.subtitle") }}
-        </p>
+    <div class="flex flex-col gap-6 mb-8">
+      <!-- Top Row: Title & Main Actions -->
+      <div class="flex flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+            <CalendarIcon
+              class="w-6 h-6 text-orange-600 dark:text-orange-400" />
+          </div>
+          <div>
+            <h1
+              class="text-2xl font-bold font-heading text-gray-900 dark:text-gray-100">
+              {{ t("calendar.title") }}
+            </h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 hidden md:block">
+              {{ t("calendar.subtitle") }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-2 self-end md:self-auto">
+          <button
+            @click="goToToday"
+            class="px-4 py-2 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ t("calendar.today") }}
+          </button>
+          <button
+            @click="isTaskModalOpen = true"
+            class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all text-sm font-medium shadow-lg shadow-indigo-500/30 flex items-center gap-2">
+            <Plus class="w-4 h-4" />
+            <span class="hidden md:inline">{{ t("tasks.add_task") }}</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Navigation -->
-      <div class="flex items-center gap-3">
-        <button
-          @click="isTaskModalOpen = true"
-          class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all text-sm font-medium shadow-lg shadow-indigo-500/30 flex items-center gap-2">
-          <Plus class="w-4 h-4" />
-          {{ t("tasks.add_task") }}
-        </button>
-
-        <button
-          @click="goToToday"
-          class="px-4 py-2 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all text-sm font-medium text-gray-700 dark:text-gray-300">
-          {{ t("calendar.today") }}
-        </button>
-
-        <div class="flex items-center gap-2 glass-card px-2 py-1.5 rounded-xl">
+      <!-- Bottom Row: Navigation (Centered on mobile) -->
+      <div class="flex items-center justify-center md:justify-end">
+        <div
+          class="flex items-center gap-2 glass-card px-2 py-1.5 rounded-xl w-full md:w-auto justify-between md:justify-start">
           <button
             @click="previousMonth"
             class="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors"
@@ -205,7 +214,7 @@ const weekDays = computed(() => {
           </button>
 
           <span
-            class="px-4 text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize min-w-[180px] text-center">
+            class="px-4 text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize min-w-[140px] text-center">
             {{ monthName }}
           </span>
 
@@ -315,23 +324,22 @@ const weekDays = computed(() => {
             <!-- Tasks List -->
             <div
               v-if="selectedDayTasks.length > 0"
-              class="space-y-2 max-h-[500px] overflow-y-auto">
+              class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
               <div
                 v-for="task in selectedDayTasks"
                 :key="task.id"
-                class="p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200/30 dark:border-gray-700/30 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-colors">
-                <div class="flex items-start gap-2">
-                  <input
-                    type="checkbox"
-                    :checked="task.completed"
-                    disabled
-                    class="mt-1 h-4 w-4 rounded-full border-2 border-indigo-500"
-                    :class="
-                      task.completed ? 'bg-indigo-500' : 'bg-transparent'
-                    " />
+                class="group p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200/30 dark:border-gray-700/30 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all hover:shadow-sm">
+                <div class="flex items-start gap-3">
+                  <div class="pt-1">
+                    <input
+                      type="checkbox"
+                      :checked="task.completed"
+                      disabled
+                      class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-not-allowed" />
+                  </div>
                   <div class="flex-1 min-w-0">
                     <p
-                      class="text-sm font-medium truncate"
+                      class="text-sm font-medium leading-tight mb-1"
                       :class="
                         task.completed
                           ? 'text-gray-400 dark:text-gray-500 line-through'
@@ -339,6 +347,32 @@ const weekDays = computed(() => {
                       ">
                       {{ task.title }}
                     </p>
+
+                    <!-- Metadata Row -->
+                    <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                      <!-- Project Badge -->
+                      <span
+                        v-if="task.projectName"
+                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        📁 {{ task.projectName }}
+                      </span>
+
+                      <!-- Priority Badge -->
+                      <span
+                        v-if="task.priority"
+                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider"
+                        :class="{
+                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400':
+                            task.priority === 'high' ||
+                            task.priority === 'urgent',
+                          'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400':
+                            task.priority === 'medium',
+                          'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400':
+                            task.priority === 'low',
+                        }">
+                        {{ task.priority }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

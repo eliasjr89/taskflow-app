@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useTasks } from "../../composables/useTask";
-import { useProjectState } from "../../composables/useProjectState";
+import { useProjectStore } from "../../stores/projects";
+import { storeToRefs } from "pinia";
 import { useTagState } from "../../composables/useTagState";
 import {
   Folder,
@@ -31,7 +32,8 @@ const isTagDropdownOpen = ref(false);
 const isPriorityDropdownOpen = ref(false);
 
 const { addTask } = useTasks();
-const { projects } = useProjectState();
+const projectStore = useProjectStore();
+const { projects } = storeToRefs(projectStore);
 const { tags } = useTagState();
 
 const iconMap: Record<string, any> = {
@@ -177,15 +179,15 @@ function getPriorityLabel(priority: string) {
     @submit.prevent="handleSubmit"
     class="relative w-full glass-card rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/30 dark:border-gray-700/30 overflow-visible z-40">
     <!-- Desktop: Grid with button spanning 2 rows, Mobile: Stack -->
-    <div class="flex flex-col gap-3 p-4 md:p-5">
+    <div class="flex flex-col gap-3 p-3 md:p-5">
       <!-- Row 1: Selectors -->
       <div class="flex flex-wrap items-center gap-2 w-full">
         <!-- Project Selector -->
-        <div class="relative shrink-0">
+        <div class="relative shrink-0 w-full md:w-auto">
           <button
             type="button"
             @click="toggleDropdown"
-            class="px-4 py-3 rounded-xl border border-gray-200/50 shadow-lg dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[140px]"
+            class="w-full md:w-auto px-4 py-2.5 md:py-3 rounded-xl border border-gray-200/50 shadow-lg dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[140px]"
             :class="[
             getSelectedProject() ? getColorClass(getSelectedProject()!.color) : 'text-gray-500 dark:text-gray-400'
           ]">
@@ -212,6 +214,7 @@ function getPriorityLabel(priority: string) {
             v-if="isDropdownOpen"
             class="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-10000 animate-fade-in">
             <div class="p-2 space-y-1 max-h-60 overflow-y-auto">
+              <!-- ... entries ... -->
               <button
                 type="button"
                 @click="selectProject(undefined)"
@@ -255,11 +258,13 @@ function getPriorityLabel(priority: string) {
         </div>
 
         <!-- Tag Selector -->
-        <div v-if="tags.length > 0" class="relative shrink-0">
+        <div
+          v-if="tags.length > 0"
+          class="relative shrink-0 flex-1 md:flex-none">
           <button
             type="button"
             @click="toggleTagDropdown"
-            class="px-4 py-3 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[120px]"
+            class="w-full md:w-auto px-4 py-2.5 md:py-3 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[120px]"
             :class="
               selectedTags.length > 0 ? '' : 'text-gray-500 dark:text-gray-400'
             ">
@@ -268,16 +273,14 @@ function getPriorityLabel(priority: string) {
               class="text-sm font-medium flex-1 text-left whitespace-nowrap">
               {{
                 selectedTags.length > 0
-                  ? `${selectedTags.length} ${t("tasks.tags")}${
-                      selectedTags.length > 1 ? "s" : ""
-                    }`
+                  ? `${selectedTags.length}`
                   : t("tasks.tags")
               }}
             </span>
             <ChevronDown class="w-4 h-4 opacity-50 shrink-0" />
           </button>
 
-          <!-- Tag Dropdown - Opens DOWNWARD -->
+          <!-- ... Tag Dropdown ... -->
           <div
             v-if="isTagDropdownOpen"
             class="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-10000 animate-fade-in">
@@ -318,11 +321,11 @@ function getPriorityLabel(priority: string) {
         </div>
 
         <!-- Priority Selector -->
-        <div class="relative shrink-0">
+        <div class="relative shrink-0 flex-1 md:flex-none">
           <button
             type="button"
             @click="isPriorityDropdownOpen = !isPriorityDropdownOpen"
-            class="px-4 py-3 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[120px]"
+            class="w-full md:w-auto px-4 py-2.5 md:py-3 rounded-xl border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 min-w-[120px]"
             :class="
               selectedPriority
                 ? getPriorityColor(selectedPriority)
@@ -342,7 +345,7 @@ function getPriorityLabel(priority: string) {
             <ChevronDown class="w-4 h-4 opacity-50 shrink-0" />
           </button>
 
-          <!-- Priority Dropdown - Opens DOWNWARD -->
+          <!-- ... Priority Dropdown ... -->
           <div
             v-if="isPriorityDropdownOpen"
             class="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden z-10000 animate-fade-in">
@@ -383,7 +386,9 @@ function getPriorityLabel(priority: string) {
         </div>
 
         <!-- Due Date Selector -->
-        <DatePicker v-model="selectedDueDate" />
+        <div class="w-full md:w-auto mt-2 md:mt-0">
+          <DatePicker v-model="selectedDueDate" class="w-full" />
+        </div>
       </div>
 
       <!-- Row 2: Input + Button -->
@@ -394,15 +399,15 @@ function getPriorityLabel(priority: string) {
           type="text"
           v-model="newTask"
           :placeholder="t('tasks.placeholder')"
-          class="w-full md:w-[75%] min-w-0 bg-transparent border-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 text-base md:text-lg px-2" />
+          class="w-full md:w-[75%] min-w-0 bg-transparent border-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 text-sm md:text-lg px-2 py-2" />
 
         <!-- Submit Button (25% on desktop) -->
         <button
           type="submit"
           :disabled="!newTask.trim()"
-          class="w-full md:w-[25%] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-5 py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-medium text-sm md:text-base shrink-0">
+          class="w-full md:w-[25%] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 md:px-5 py-2.5 md:py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2 font-medium text-sm md:text-base shrink-0">
           <Plus class="w-5 h-5" />
-          <span class="hidden md:inline">{{ t("tasks.add_task") }}</span>
+          <span>{{ t("tasks.add_task") }}</span>
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
+import { useI18n } from "vue-i18n";
 import ProgressBar from "@/components/common/ProgressBar.vue";
 
 interface DBStats {
@@ -27,6 +28,7 @@ interface DBStats {
 const stats = ref<DBStats | null>(null);
 const loading = ref(true);
 const resetting = ref(false);
+const { t } = useI18n();
 
 const fetchStats = async () => {
   loading.value = true;
@@ -43,20 +45,15 @@ const fetchStats = async () => {
 };
 
 const resetDatabase = async () => {
-  if (
-    !confirm(
-      "⚠ PELIGRO EXTREMO: ¿Estás seguro de que quieres borrar TODOS los datos y reiniciar la base de datos? Esta acción es irreversible."
-    )
-  )
-    return;
+  if (!confirm(t("admin_database.reset_confirm"))) return;
 
   try {
     await api.post("/admin/reset-db");
-    alert("Base de datos reiniciada correctamente. Serás redirigido al login.");
+    alert(t("admin_database.reset_success"));
     document.cookie = "token=; Max-Age=0; path=/;";
     window.location.href = "/login";
   } catch {
-    alert("Error al reiniciar la base de datos.");
+    alert(t("admin_database.reset_error"));
   }
 };
 
@@ -66,8 +63,10 @@ onMounted(fetchStats);
 <template>
   <div class="space-y-8">
     <div>
-      <h2 class="text-2xl font-bold text-white">Base de Datos</h2>
-      <p class="text-text-muted">Monitoreo y mantenimiento del sistema.</p>
+      <h2 class="text-2xl font-bold text-white">
+        {{ t("admin_database.title") }}
+      </h2>
+      <p class="text-text-muted">{{ t("admin_database.subtitle") }}</p>
     </div>
 
     <!-- Loading -->
@@ -94,11 +93,11 @@ onMounted(fetchStats);
         class="bg-slate-800 border border-slate-700 rounded-xl shadow-sm p-6">
         <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
           <i class="fa-solid fa-hard-drive text-blue-400"></i>
-          Almacenamiento
+          {{ t("admin_database.storage") }}
         </h3>
 
         <div class="mb-2 flex justify-between text-sm text-text-muted">
-          <span>Espacio Usado</span>
+          <span>{{ t("admin_database.used_space") }}</span>
           <span class="text-white font-mono">{{ stats.total_size }}</span>
         </div>
         <!-- Animated Progress -->
@@ -111,14 +110,14 @@ onMounted(fetchStats);
 
         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <i class="fa-solid fa-table text-purple-400"></i>
-          Registros
+          {{ t("admin_database.records") }}
         </h3>
         <div class="space-y-4">
           <div class="relative pt-1">
             <div class="flex mb-2 items-center justify-between">
               <span
                 class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-200 bg-blue-200/10">
-                Usuarios
+                {{ t("admin_dashboard.users") }}
               </span>
               <div class="text-right">
                 <span class="text-xs font-semibold inline-block text-blue-200">
@@ -136,7 +135,7 @@ onMounted(fetchStats);
             <div class="flex mb-2 items-center justify-between">
               <span
                 class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-purple-200 bg-purple-200/10">
-                Proyectos
+                {{ t("admin_dashboard.projects") }}
               </span>
               <div class="text-right">
                 <span
@@ -155,7 +154,7 @@ onMounted(fetchStats);
             <div class="flex mb-2 items-center justify-between">
               <span
                 class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-emerald-200 bg-emerald-200/10">
-                Tareas
+                {{ t("admin_dashboard.tasks") }}
               </span>
               <div class="text-right">
                 <span
@@ -178,7 +177,7 @@ onMounted(fetchStats);
         <div>
           <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
             <i class="fa-solid fa-heart-pulse text-red-400"></i>
-            Salud del Sistema
+            {{ t("admin_database.health") }}
           </h3>
           <div
             class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center gap-4">
@@ -187,9 +186,11 @@ onMounted(fetchStats);
               <i class="fa-solid fa-check"></i>
             </div>
             <div>
-              <h4 class="font-bold text-white">Online</h4>
+              <h4 class="font-bold text-white">
+                {{ t("admin_database.online") }}
+              </h4>
               <p class="text-sm text-green-200/70">
-                Todos los servicios operando normalmente.
+                {{ t("admin_database.online_msg") }}
               </p>
             </div>
           </div>
@@ -197,19 +198,25 @@ onMounted(fetchStats);
           <!-- Extended Metadata -->
           <div class="mt-6 space-y-4">
             <div class="flex justify-between items-center text-sm">
-              <span class="text-text-muted">Versión de Motor</span>
+              <span class="text-text-muted">{{
+                t("admin_database.version")
+              }}</span>
               <span class="text-white font-mono bg-white/5 px-2 py-1 rounded">{{
                 stats.version.split(",")[0]
               }}</span>
             </div>
             <div class="flex justify-between items-center text-sm">
-              <span class="text-text-muted">Conexiones Activas</span>
+              <span class="text-text-muted">{{
+                t("admin_database.active_connections")
+              }}</span>
               <span class="text-white font-bold">{{
                 stats.active_connections
               }}</span>
             </div>
             <div class="flex justify-between items-center text-sm">
-              <span class="text-text-muted">Tiempo de Actividad</span>
+              <span class="text-text-muted">{{
+                t("admin_database.uptime")
+              }}</span>
               <span class="text-white font-mono">
                 {{ stats.uptime.days || 0 }}d {{ stats.uptime.hours || 0 }}h
                 {{ stats.uptime.minutes || 0 }}m
@@ -225,11 +232,12 @@ onMounted(fetchStats);
             class="px-6 py-4 border-b border-slate-700 bg-slate-700/30 flex items-center justify-between">
             <h3 class="text-lg font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-list-check text-indigo-400"></i>
-              Estadísticas por Tabla
+              {{ t("admin_database.table_stats") }}
             </h3>
             <span
               class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-              >{{ stats.tables.length }} Tablas Públicas</span
+              >{{ stats.tables.length }}
+              {{ t("admin_database.public_tables") }}</span
             >
           </div>
           <div class="overflow-x-auto">
@@ -237,9 +245,15 @@ onMounted(fetchStats);
               <thead>
                 <tr
                   class="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-700">
-                  <th class="px-6 py-4">Tabla</th>
-                  <th class="px-6 py-4 text-right">Registros Estimados</th>
-                  <th class="px-6 py-4 text-right">Salud</th>
+                  <th class="px-6 py-4">
+                    {{ t("admin_database.table_header") }}
+                  </th>
+                  <th class="px-6 py-4 text-right">
+                    {{ t("admin_database.rows_header") }}
+                  </th>
+                  <th class="px-6 py-4 text-right">
+                    {{ t("admin_database.health_header") }}
+                  </th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-700/50">
@@ -262,7 +276,7 @@ onMounted(fetchStats);
                       class="h-1.5 w-1.5 rounded-full inline-block bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] mr-2"></span>
                     <span
                       class="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest"
-                      >Óptimo</span
+                      >{{ t("admin_database.optimal") }}</span
                     >
                   </td>
                 </tr>
@@ -274,16 +288,18 @@ onMounted(fetchStats);
         <div class="mt-8 border-t border-white/5 pt-8 col-span-1 md:col-span-2">
           <div
             class="glass-card-admin p-8 text-center border-t-4 border-danger">
-            <h3 class="text-xl font-bold text-white mb-4">Zona de Peligro</h3>
+            <h3 class="text-xl font-bold text-white mb-4">
+              {{ t("admin_database.danger_zone") }}
+            </h3>
             <p class="text-text-muted mb-6 max-w-xl mx-auto">
-              Estas acciones son irreversibles. Ten cuidado.
+              {{ t("admin_database.danger_msg") }}
             </p>
             <button
               @click="resetDatabase"
               :disabled="resetting"
               class="px-6 py-3 bg-linear-to-r from-red-500 to-red-700 text-white font-bold rounded-xl shadow-lg hover:from-red-600 hover:to-red-800 transition-all flex items-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed">
               <i class="fa-solid fa-radiation"></i>
-              Resetear Base de Datos
+              {{ t("admin_database.reset_btn") }}
             </button>
           </div>
         </div>

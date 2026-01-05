@@ -3,11 +3,21 @@ import { ref, onMounted } from "vue";
 import api from "@/services/api";
 import { useToast } from "@/composables/useToast";
 import { useSectionTheme } from "@/composables/useSectionTheme";
-import { useUserState } from "@/composables/useUserState";
+import { useAuthStore } from "@/stores/auth";
+import { storeToRefs } from "pinia";
+import { useI18n } from "vue-i18n";
 
 const toast = useToast();
 const { theme } = useSectionTheme();
-const { user, fetchUser, updateUserState } = useUserState();
+const authStore = useAuthStore();
+const { t, locale } = useI18n();
+const { user } = storeToRefs(authStore);
+const { fetchProfile: fetchUser, updateUser: updateUserState } = authStore;
+
+const changeLanguage = (lang: string) => {
+  locale.value = lang;
+  localStorage.setItem("locale", lang);
+};
 
 const profileImage = ref<string | null>(null);
 const loading = ref(true);
@@ -137,9 +147,9 @@ const handleImageUpload = (e: Event) => {
         profileImage.value = imageUrl;
         updateUserState({ profile_image: imageUrl });
 
-        toast.success("Foto actualizada", "Tu avatar ha sido actualizado.");
+        toast.success(t("common.success"), t("profile.saved_success"));
       } catch {
-        toast.error("Error", "No se pudo subir la imagen.");
+        toast.error(t("common.error_title"), t("profile.error_image"));
       }
     });
   }
@@ -201,9 +211,12 @@ const saveField = async (field: string) => {
     await api.put(`/users/${user.value.id}`, payload);
     updateUserState(payload);
     editingField.value = null;
-    toast.success("Actualizado", `${field} guardado correctamente.`);
+    toast.success(t("common.success"), t("profile.saved_success"));
   } catch (err: any) {
-    toast.error("Error", err.response?.data?.message || "No se pudo guardar.");
+    toast.error(
+      t("common.error_title"),
+      err.response?.data?.message || t("profile.error_saving")
+    );
     // Revert form state if error (optional, but good)
     loadProfile();
   } finally {
@@ -225,9 +238,9 @@ const updatePassword = async () => {
   try {
     await api.put(`/users/${user.value.id}`, { password: form.value.password });
     form.value.password = "";
-    toast.success("Contraseña actualizada", "Tu contraseña ha sido cambiada.");
+    toast.success(t("common.success"), t("profile.saved_success"));
   } catch {
-    toast.error("Error", "No se pudo actualizar la contraseña.");
+    toast.error(t("common.error_title"), t("profile.error_password"));
   } finally {
     saving.value = false;
   }
@@ -291,7 +304,7 @@ onMounted(loadProfile);
                 <i class="fa-solid fa-camera text-3xl text-white mb-1"></i>
                 <span
                   class="text-[10px] text-white font-bold uppercase tracking-widest"
-                  >Cambiar</span
+                  >{{ t("profile.change_photo") }}</span
                 >
               </div>
             </div>
@@ -319,7 +332,7 @@ onMounted(loadProfile);
                   class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
                   <span
                     class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                  En Línea
+                  {{ t("profile.online") }}
                 </span>
               </div>
             </div>
@@ -364,7 +377,8 @@ onMounted(loadProfile);
           class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl relative overflow-hidden group/bio">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-quote-left text-indigo-500"></i> Sobre mí
+              <i class="fa-solid fa-quote-left text-indigo-500"></i>
+              {{ t("profile.about_me") }}
             </h3>
             <button
               @click="toggleEdit('bio')"
@@ -382,16 +396,13 @@ onMounted(loadProfile);
               v-model="form.bio"
               rows="4"
               class="w-full bg-slate-900 border border-indigo-500/50 rounded-xl p-4 text-white outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm"
-              placeholder="Cuéntanos algo sobre ti..."></textarea>
+              :placeholder="t('profile.bio_placeholder')"></textarea>
             <p class="text-[10px] text-slate-500 mt-2 italic text-right">
-              Presiona el check para guardar
+              {{ t("profile.save_instruction") }}
             </p>
           </div>
           <p v-else class="text-slate-300 text-sm leading-relaxed min-h-[60px]">
-            {{
-              user?.bio ||
-              "No has añadido una biografía todavía. Haz clic en el lápiz para presentarte al equipo."
-            }}
+            {{ user?.bio || t("profile.no_bio") }}
           </p>
         </div>
 
@@ -399,15 +410,15 @@ onMounted(loadProfile);
         <div
           class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
           <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fa-solid fa-address-card text-indigo-500"></i> Identidad
-            Personal
+            <i class="fa-solid fa-address-card text-indigo-500"></i>
+            {{ t("profile.identity") }}
           </h3>
           <div class="space-y-5">
             <!-- Field: Name -->
             <div class="group/field relative">
               <label
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1"
-                >Nombre</label
+                >{{ t("profile.form.name") }}</label
               >
               <div class="flex items-center justify-between">
                 <input
@@ -429,7 +440,7 @@ onMounted(loadProfile);
             <div class="group/field relative">
               <label
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1"
-                >Apellido</label
+                >{{ t("profile.form.lastname") }}</label
               >
               <div class="flex items-center justify-between">
                 <input
@@ -451,7 +462,7 @@ onMounted(loadProfile);
             <div class="group/field relative">
               <label
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1"
-                >Usuario</label
+                >{{ t("profile.form.username") }}</label
               >
               <div class="flex items-center justify-between">
                 <input
@@ -481,8 +492,8 @@ onMounted(loadProfile);
         <div
           class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
           <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fa-solid fa-earth-americas text-indigo-500"></i> Contacto
-            y Redes
+            <i class="fa-solid fa-earth-americas text-indigo-500"></i>
+            {{ t("profile.contact") }}
           </h3>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -497,7 +508,7 @@ onMounted(loadProfile);
                 </div>
                 <span
                   class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-                  >Ubicación</span
+                  >{{ t("profile.location") }}</span
                 >
               </div>
               <div v-if="editingField === 'location'" class="relative">
@@ -529,7 +540,7 @@ onMounted(loadProfile);
                 </div>
               </div>
               <div v-else class="text-white text-sm font-medium h-6">
-                {{ user?.location || "Añadir ubicación..." }}
+                {{ user?.location || t("profile.add_location") }}
               </div>
             </div>
 
@@ -544,7 +555,7 @@ onMounted(loadProfile);
                 </div>
                 <span
                   class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-                  >Sitio Web / Portfolio</span
+                  >{{ t("profile.website") }}</span
                 >
               </div>
               <div v-if="editingField === 'website'" class="flex gap-2">
@@ -559,7 +570,7 @@ onMounted(loadProfile);
                 </button>
               </div>
               <div v-else class="text-white text-sm font-medium h-6 truncate">
-                {{ user?.website || "Añadir sitio web..." }}
+                {{ user?.website || t("profile.add_website") }}
               </div>
             </div>
           </div>
@@ -574,14 +585,15 @@ onMounted(loadProfile);
           </div>
 
           <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fa-solid fa-lock text-indigo-500"></i> Seguridad y Acceso
+            <i class="fa-solid fa-lock text-indigo-500"></i>
+            {{ t("profile.security") }}
           </h3>
 
-          <div class="space-y-6 max-w-lg">
+          <div class="space-y-6 max-w-lg relative z-10">
             <div class="space-y-2">
               <label
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block"
-                >Actualizar Contraseña</label
+                >{{ t("profile.update_password") }}</label
               >
               <div class="flex gap-3">
                 <input
@@ -593,28 +605,65 @@ onMounted(loadProfile);
                   @click="updatePassword"
                   :disabled="!form.password || saving"
                   class="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/20">
-                  Cambiar
+                  {{ t("profile.change_password_btn") }}
                 </button>
               </div>
               <p class="text-[10px] text-slate-500 italic">
-                Tu contraseña debe tener al menos 8 caracteres por seguridad.
+                {{ t("profile.password_hint") }}
               </p>
             </div>
 
-            <div
-              class="pt-6 border-t border-slate-700/50 flex items-center justify-between">
-              <div>
-                <h4 class="text-sm font-bold text-white mb-1">
-                  Doble Factor (2FA)
-                </h4>
-                <p class="text-[10px] text-slate-500">
-                  Aumenta la seguridad de tu cuenta con autenticación por móvil.
-                </p>
+            <div class="pt-6 border-t border-slate-700/50 space-y-6">
+              <!-- Language Switch -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-bold text-white mb-1">
+                    {{ t("profile.language") }}
+                  </h4>
+                </div>
+                <div
+                  class="flex bg-slate-900/50 rounded-lg p-1 border border-slate-700/50 w-fit">
+                  <button
+                    @click="changeLanguage('es')"
+                    type="button"
+                    class="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all w-12 flex justify-center cursor-pointer border border-transparent"
+                    :class="
+                      locale === 'es'
+                        ? 'bg-indigo-500 text-white shadow-md border-indigo-400/50'
+                        : 'text-slate-500 hover:text-white hover:bg-slate-800'
+                    ">
+                    ES
+                  </button>
+                  <button
+                    @click="changeLanguage('en')"
+                    type="button"
+                    class="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all w-12 flex justify-center cursor-pointer border border-transparent"
+                    :class="
+                      locale === 'en'
+                        ? 'bg-indigo-500 text-white shadow-md border-indigo-400/50'
+                        : 'text-slate-500 hover:text-white hover:bg-slate-800'
+                    ">
+                    EN
+                  </button>
+                </div>
               </div>
-              <span
-                class="px-3 py-1 bg-slate-700 text-slate-500 text-[10px] font-bold rounded-full uppercase cursor-not-allowed"
-                >Próximamente</span
-              >
+
+              <!-- 2FA -->
+              <div
+                class="flex items-center justify-between border-t border-slate-700/50 pt-6">
+                <div>
+                  <h4 class="text-sm font-bold text-white mb-1">
+                    {{ t("profile.two_factor") }}
+                  </h4>
+                  <p class="text-[10px] text-slate-500">
+                    {{ t("profile.two_factor_desc") }}
+                  </p>
+                </div>
+                <span
+                  class="px-3 py-1 bg-slate-700 text-slate-500 text-[10px] font-bold rounded-full uppercase cursor-not-allowed"
+                  >{{ t("profile.coming_soon") }}</span
+                >
+              </div>
             </div>
           </div>
         </div>

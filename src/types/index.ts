@@ -5,8 +5,13 @@ export interface User {
   name: string;
   lastname: string;
   role: "admin" | "user" | "manager";
+  num_tasks?: number;
+  num_projects?: number;
   profile_image?: string;
   created_at?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
 }
 
 export interface Project {
@@ -18,6 +23,11 @@ export interface Project {
   created_at?: string;
   task_count?: number;
   member_count?: number;
+  // Mapped from backend typically as num_... or we should unify.
+  // For now adding both to support current repo transform
+  num_tasks?: number;
+  num_team_members?: number;
+  users?: User[];
 }
 
 export interface Tag {
@@ -34,10 +44,11 @@ export interface Task {
   status_id: number;
   status?: string;
   status_name?: string;
-  priority: "low" | "medium" | "high";
+  priority: "low" | "medium" | "high" | "urgent";
   tags?: Tag[];
   created_at?: string;
   due_date?: string | null;
+  users?: User[];
 }
 
 export interface TaskStatus {

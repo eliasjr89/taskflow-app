@@ -1,208 +1,110 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { nextTick } from 'vue';
-import { useTagState } from '../useTagState';
-import type { Tag } from '../../types/global';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { useTagState } from "../useTagState";
+import api from "../../services/api";
 
-describe('useTagState', () => {
+// Mock API
+vi.mock("../../services/api", () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+describe("useTagState", () => {
   beforeEach(() => {
     localStorage.clear();
     const { tags } = useTagState();
     tags.value = [];
+    vi.clearAllMocks();
+
+    // Default GET behavior: return empty array
+    (api.get as any).mockResolvedValue({ data: [] });
+    (api.post as any).mockResolvedValue({ data: {} });
+    (api.put as any).mockResolvedValue({ data: {} });
+    (api.delete as any).mockResolvedValue({ data: {} });
   });
 
-  it('debe inicializar con un array vacío de etiquetas', () => {
+  it("debe inicializar con un array vacío de etiquetas", () => {
     const { tags } = useTagState();
     expect(tags.value).toEqual([]);
   });
 
-  describe('addTag', () => {
-    it('debe agregar una nueva etiqueta', () => {
+  describe("addTag", () => {
+    it("debe agregar una nueva etiqueta", async () => {
       const { tags, addTag } = useTagState();
-      
-      const newTag: Tag = {
-        id: '1',
-        name: 'Urgente',
-        color: 'red',
+
+      const newTag = {
+        id: "1",
+        name: "Urgente",
+        color: "red",
         createdAt: new Date(),
       };
 
-      addTag(newTag);
-      
+      // When addTag calls loadTags, return the new tag
+      (api.get as any).mockResolvedValueOnce({ data: [newTag] });
+
+      await addTag(newTag);
+
+      expect(api.post).toHaveBeenCalledWith("/tags", {
+        name: newTag.name,
+        color: newTag.color,
+      });
       expect(tags.value).toHaveLength(1);
       expect(tags.value[0]).toMatchObject({
-        name: 'Urgente',
-        color: 'red',
+        name: "Urgente",
+        color: "red",
       });
-    });
-
-    it('debe generar un ID único si no se proporciona', () => {
-      const { tags, addTag } = useTagState();
-      
-      const tag1: Tag = {
-        id: `tag-${Date.now()}-1`,
-        name: 'Tag 1',
-        color: 'blue',
-        createdAt: new Date(),
-      };
-
-      const tag2: Tag = {
-        id: `tag-${Date.now()}-2`,
-        name: 'Tag 2',
-        color: 'green',
-        createdAt: new Date(),
-      };
-
-      addTag(tag1);
-      addTag(tag2);
-      
-      expect(tags.value[0]?.id).toBeTruthy();
-      expect(tags.value[1]?.id).toBeTruthy();
-      expect(tags.value[0]?.id).not.toBe(tags.value[1]?.id);
     });
   });
 
-  describe('updateTag', () => {
-    it('debe actualizar una etiqueta existente', () => {
-      const { tags, addTag, updateTag } = useTagState();
-      
-      const tag: Tag = {
-        id: 'test-id',
-        name: 'Original',
-        color: 'blue',
-        createdAt: new Date(),
-      };
-
-      addTag(tag);
-      
-      updateTag('test-id', { ...tag, name: 'Actualizado', color: 'red' });
-      
-      expect(tags.value[0]?.name).toBe('Actualizado');
-      expect(tags.value[0]?.color).toBe('red');
-    });
-
-    it('no debe hacer nada si la etiqueta no existe', () => {
+  describe("updateTag", () => {
+    it("debe actualizar una etiqueta existente", async () => {
       const { tags, updateTag } = useTagState();
-      
-      const tag: Tag = {
-        id: 'non-existent',
-        name: 'Test',
-        color: 'blue',
-        createdAt: new Date(),
+
+      const tag = {
+        id: "test-id",
+        name: "Original",
+        color: "blue",
+        created_at: new Date().toISOString(),
       };
 
-      updateTag('non-existent', tag);
-      
-      expect(tags.value).toHaveLength(0);
-    });
-  });
+      // Initial state
+      tags.value = [tag as any];
 
-  describe('deleteTag', () => {
-    it('debe eliminar una etiqueta existente', () => {
-      const { tags, addTag, deleteTag } = useTagState();
-      
-      const tag1: Tag = {
-        id: '1',
-        name: 'Tag 1',
-        color: 'blue',
-        createdAt: new Date(),
-      };
+      const updatedTag = { ...tag, name: "Actualizado", color: "red" };
 
-      const tag2: Tag = {
-        id: '2',
-        name: 'Tag 2',
-        color: 'red',
-        createdAt: new Date(),
-      };
+      // When updateTag calls loadTags, return updated tag
+      (api.get as any).mockResolvedValueOnce({ data: [updatedTag] });
 
-      addTag(tag1);
-      addTag(tag2);
-      
-      expect(tags.value).toHaveLength(2);
-      
-      deleteTag('1');
-      
-      expect(tags.value).toHaveLength(1);
-      expect(tags.value[0]?.id).toBe('2');
-    });
+      await updateTag("test-id", { name: "Actualizado" });
 
-    it('no debe hacer nada si la etiqueta no existe', () => {
-      const { tags, addTag, deleteTag } = useTagState();
-      
-      const tag: Tag = {
-        id: '1',
-        name: 'Tag 1',
-        color: 'blue',
-        createdAt: new Date(),
-      };
-
-      addTag(tag);
-      deleteTag('non-existent');
-      
-      expect(tags.value).toHaveLength(1);
-    });
-  });
-
-  describe('localStorage persistence', () => {
-    it('debe guardar etiquetas en localStorage cuando cambian', async () => {
-      const { tags } = useTagState();
-      
-      tags.value = [{
-        id: '1',
-        name: 'Test Tag',
-        color: 'blue',
-        createdAt: new Date(),
-      }];
-
-      await nextTick();
-
-      const savedTags = localStorage.getItem('tags');
-      expect(savedTags).toBeDefined();
-      
-      const parsed = JSON.parse(savedTags!);
-      expect(parsed).toHaveLength(1);
-      expect(parsed[0].name).toBe('Test Tag');
-    });
-
-    it('debe cargar etiquetas desde localStorage al inicializar', () => {
-      // First clear everything
-      localStorage.clear();
-      
-      const testTags = [{
-        id: '1',
-        name: 'Saved Tag',
-        color: 'purple',
-        createdAt: new Date().toISOString(),
-      }];
-
-      localStorage.setItem('tags', JSON.stringify(testTags));
-      
-      // Force a reload by importing the module again
-      // Since useTagState is a singleton, we need to check if it loaded
-      const storedData = localStorage.getItem('tags');
-      expect(storedData).toBeDefined();
-      
-      const parsed = JSON.parse(storedData!);
-      expect(parsed).toHaveLength(1);
-      expect(parsed[0].name).toBe('Saved Tag');
-    });
-  });
-
-  describe('color validation', () => {
-    it('debe aceptar colores válidos', () => {
-      const { addTag, tags } = useTagState();
-      
-      const validColors = ['indigo', 'purple', 'pink', 'rose', 'orange', 'amber', 'green', 'teal', 'cyan', 'blue'];
-      
-      validColors.forEach((color, index) => {
-        addTag({
-          id: `${index}`,
-          name: `Tag ${index}`,
-          color,
-          createdAt: new Date(),
-        });
+      expect(api.put).toHaveBeenCalledWith("/tags/test-id", {
+        name: "Actualizado",
       });
-      
-      expect(tags.value).toHaveLength(validColors.length);
+      expect(tags.value[0].name).toBe("Actualizado");
+    });
+  });
+
+  describe("deleteTag", () => {
+    it("debe eliminar una etiqueta existente", async () => {
+      const { tags, deleteTag } = useTagState();
+
+      const tag1 = { id: "1", name: "Tag 1" };
+      const tag2 = { id: "2", name: "Tag 2" };
+
+      // Initial state
+      tags.value = [tag1 as any, tag2 as any];
+
+      // When deleteTag calls loadTags, return only tag2
+      (api.get as any).mockResolvedValueOnce({ data: [tag2] });
+
+      await deleteTag("1");
+
+      expect(api.delete).toHaveBeenCalledWith("/tags/1");
+      expect(tags.value).toHaveLength(1);
+      expect(tags.value[0].id).toBe("2");
     });
   });
 });

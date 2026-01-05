@@ -1,5 +1,6 @@
 import { ref, computed } from "vue";
-import { useTaskState } from "./useTaskState";
+import { storeToRefs } from "pinia";
+import { useTaskStore } from "../stores/tasks"; // Update import
 import type { FilterState } from "../types/global";
 
 // Global filter state to persist across views if needed, or we can make it local.
@@ -16,7 +17,8 @@ const filters = ref<FilterState>({
 });
 
 export function useTaskFilter() {
-  const { tasks } = useTaskState();
+  const taskStore = useTaskStore();
+  const { tasks } = storeToRefs(taskStore);
 
   const filteredTasks = computed(() => {
     return tasks.value.filter((task) => {

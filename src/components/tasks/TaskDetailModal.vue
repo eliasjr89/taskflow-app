@@ -17,7 +17,8 @@ import {
 import type { Task, Priority } from "@/types/global";
 import { useTasks } from "@/composables/useTask";
 
-import { useProjectState } from "@/composables/useProjectState";
+import { useProjectStore } from "../../stores/projects";
+import { storeToRefs } from "pinia";
 import { useTagState } from "@/composables/useTagState";
 import DatePicker from "@/components/common/DatePicker.vue";
 
@@ -33,7 +34,8 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const { updateTask, removeTask, toggleTaskCompletion } = useTasks();
-const { projects } = useProjectState();
+const projectStore = useProjectStore();
+const { projects } = storeToRefs(projectStore);
 const { tags } = useTagState();
 
 const editedTask = ref<Partial<Task>>({});

@@ -17,14 +17,16 @@ import {
 
 import { useI18n } from "vue-i18n";
 import { useSectionTheme } from "../../composables/useSectionTheme";
-import { useRouter } from "vue-router";
-import { useTaskState } from "../../composables/useTaskState";
+import { useTaskStore } from "../../stores/tasks";
+import { useAuthStore } from "../../stores/auth";
 
 const route = useRoute();
-const router = useRouter(); // Added router
 const { t } = useI18n();
 const { theme } = useSectionTheme();
-const { resetState } = useTaskState(); // Added resetState
+const taskStore = useTaskStore();
+const { reset } = taskStore;
+const authStore = useAuthStore();
+
 const isCollapsed = ref(false);
 
 const toggleSidebar = () => {
@@ -32,14 +34,8 @@ const toggleSidebar = () => {
 };
 
 const logout = async () => {
-  try {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    resetState();
-    router.push("/login");
-  } catch {
-    // ignore
-  }
+  reset();
+  authStore.logout();
 };
 
 const navItems = computed(() => [
@@ -129,22 +125,23 @@ const navItems = computed(() => [
       </RouterLink>
     </nav>
 
-    <!-- Logout Section -->
+    <!-- Logout Section matches AdminSidebar style -->
     <div
-      class="border-t border-gray-200/30 dark:border-gray-700/30 pt-2 mt-auto">
+      class="border-t border-gray-200/50 dark:border-gray-700/50 mt-auto"
+      :class="[isCollapsed ? 'p-2' : 'p-6']">
       <button
         @click="logout"
-        class="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium relative group overflow-hidden text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 group-logout cursor-pointer"
+        class="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium relative group overflow-hidden border border-gray-200/50 dark:border-gray-700/50 text-gray-500 dark:text-gray-400 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 hover:border-red-500/20 cursor-pointer"
         :title="isCollapsed ? t('common.logout') : ''">
         <LogOut
-          class="w-5 h-5 min-w-[20px] transition-transform duration-300 group-hover:scale-110" />
+          class="w-5 h-5 min-w-[20px] transition-transform duration-300 group-hover:-translate-x-1" />
 
         <span
           class="transition-all duration-300 whitespace-nowrap font-bold"
           :class="[
             isCollapsed
-              ? 'opacity-0 w-0 translate-x-4'
-              : 'opacity-100 w-auto translate-x-0',
+              ? 'opacity-0 w-0 hidden'
+              : 'opacity-100 w-auto inline-block',
           ]">
           {{ t("common.logout") }}
         </span>

@@ -2,7 +2,8 @@
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useToast } from "../composables/useToast";
-import { useUserState } from "../composables/useUserState";
+import { useAuthStore } from "../stores/auth";
+import { storeToRefs } from "pinia";
 import api from "../services/api";
 import {
   Camera,
@@ -14,6 +15,9 @@ import {
   MapPin,
   Link as LinkIcon,
   User as UserIcon,
+  Bell,
+  Moon,
+  Smartphone,
 } from "lucide-vue-next";
 import { useSectionTheme } from "../composables/useSectionTheme";
 import SkeletonLoader from "../components/common/SkeletonLoader.vue";
@@ -21,10 +25,13 @@ import SkeletonLoader from "../components/common/SkeletonLoader.vue";
 const { t, locale } = useI18n();
 const { theme } = useSectionTheme();
 const toast = useToast();
-const { user, fetchUser, updateUserState } = useUserState();
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
+const { fetchProfile: fetchUser, updateUser: updateUserState } = authStore;
 
-const toggleLanguage = () => {
-  locale.value = locale.value === "es" ? "en" : "es";
+const changeLanguage = (lang: string) => {
+  locale.value = lang;
+  localStorage.setItem("locale", lang);
 };
 
 const isLoading = ref(true);
@@ -211,6 +218,44 @@ onMounted(loadProfile);
 
 <template>
   <div class="flex-1 flex flex-col w-full px-4 md:px-0 animate-fade-in">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-2">
+        <div class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+          <UserIcon class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 block">
+          {{ t("profile.title") }}
+        </h1>
+      </div>
+
+      <!-- Language Switcher -->
+      <div
+        class="flex bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-100 dark:border-gray-700">
+        <button
+          @click="changeLanguage('es')"
+          type="button"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all w-12 flex justify-center cursor-pointer border border-transparent"
+          :class="
+            locale === 'es'
+              ? 'bg-indigo-500 text-white shadow-md'
+              : 'text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+          ">
+          ES
+        </button>
+        <button
+          @click="changeLanguage('en')"
+          type="button"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all w-12 flex justify-center cursor-pointer border border-transparent"
+          :class="
+            locale === 'en'
+              ? 'bg-indigo-500 text-white shadow-md'
+              : 'text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+          ">
+          EN
+        </button>
+      </div>
+    </div>
     <!-- Skeleton Loading -->
     <div v-if="isLoading">
       <SkeletonLoader type="banner" class="h-64 rounded-3xl mb-6" />
@@ -593,41 +638,74 @@ onMounted(loadProfile);
                 </div>
               </div>
 
-              <div
-                class="pt-6 border-t border-white/5 flex flex-wrap gap-4 items-center justify-between">
-                <!-- Toggle Localizations -->
-                <div class="flex items-center gap-3">
-                  <div class="p-2 rounded-lg bg-white/5">
-                    <Globe class="w-5 h-5 text-indigo-300" />
-                  </div>
-                  <div>
-                    <p class="text-sm font-bold text-white">
-                      {{ t("profile.language") || "Idioma" }}
-                    </p>
-                    <button
-                      @click="toggleLanguage"
-                      class="text-[10px] text-indigo-400 font-bold uppercase hover:underline">
-                      {{
-                        locale === "es"
-                          ? "Switch to English"
-                          : "Cambiar a Español"
-                      }}
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Double Factor -->
-                <div class="flex items-center gap-4">
-                  <div class="text-right mr-2">
-                    <h4 class="text-sm font-bold text-white mb-0.5">2FA</h4>
-                    <p class="text-[10px] text-white/40">
-                      {{ t("profile.coming_soon") || "Próximamente" }}
-                    </p>
+              <div class="pt-6 border-t border-white/5 space-y-6">
+                <!-- 2FA -->
+                <div class="flex items-center justify-between group">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="p-2 rounded-lg bg-white/5 group-hover:bg-indigo-500/20 transition-colors">
+                      <Smartphone
+                        class="w-5 h-5 text-indigo-300 group-hover:text-indigo-400" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-bold text-white">2FA</p>
+                      <p class="text-[10px] text-white/40">
+                        {{ t("profile.coming_soon") || "Próximamente" }}
+                      </p>
+                    </div>
                   </div>
                   <div
                     class="w-12 h-6 bg-white/10 rounded-full relative opacity-50 cursor-not-allowed">
                     <div
                       class="absolute left-1 top-1 w-4 h-4 bg-white/20 rounded-full"></div>
+                  </div>
+                </div>
+
+                <!-- Notifications (Placeholder) -->
+                <div class="flex items-center justify-between group">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="p-2 rounded-lg bg-white/5 group-hover:bg-indigo-500/20 transition-colors">
+                      <Bell
+                        class="w-5 h-5 text-indigo-300 group-hover:text-indigo-400" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-bold text-white">
+                        {{ t("profile.notifications") || "Notificaciones" }}
+                      </p>
+                      <p class="text-[10px] text-white/40">
+                        {{ t("profile.coming_soon") || "Próximamente" }}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    class="w-12 h-6 bg-white/10 rounded-full relative opacity-50 cursor-not-allowed">
+                    <div
+                      class="absolute left-1 top-1 w-4 h-4 bg-white/20 rounded-full"></div>
+                  </div>
+                </div>
+
+                <!-- Dark Mode (Placeholder) -->
+                <div class="flex items-center justify-between group">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="p-2 rounded-lg bg-white/5 group-hover:bg-indigo-500/20 transition-colors">
+                      <Moon
+                        class="w-5 h-5 text-indigo-300 group-hover:text-indigo-400" />
+                    </div>
+                    <div>
+                      <p class="text-sm font-bold text-white">
+                        {{ t("profile.dark_mode") || "Modo Oscuro" }}
+                      </p>
+                      <p class="text-[10px] text-white/40">
+                        {{ t("profile.coming_soon") || "Próximamente" }}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    class="w-12 h-6 bg-indigo-500 rounded-full relative cursor-not-allowed opacity-80">
+                    <div
+                      class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
                   </div>
                 </div>
               </div>

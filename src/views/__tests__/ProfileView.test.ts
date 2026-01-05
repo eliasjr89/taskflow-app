@@ -1,165 +1,111 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { mount, flushPromises } from '@vue/test-utils';
-import ProfileView from '../ProfileView.vue';
-import { createI18n } from 'vue-i18n';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { mount, flushPromises } from "@vue/test-utils";
+import ProfileView from "../ProfileView.vue";
+import { createI18n } from "vue-i18n";
+import es from "../../locales/es";
+import { createTestingPinia } from "@pinia/testing";
 
 const i18n = createI18n({
   legacy: false,
-  locale: 'es',
-  messages: {
-    es: {
-      profile: {
-        title: 'Mi Perfil',
-        subtitle: 'Gestiona tu cuenta',
-        total_tasks: 'Tareas Totales',
-        completed: 'Completadas',
-        completion_rate: 'Tasa de Completitud',
-        streak: 'Racha',
-        most_productive: 'Proyecto más productivo',
-        demo_user: 'Usuario Demo',
-      },
-      nav: {
-        subtitle: 'Gestión',
-        projects: 'Proyectos',
-      },
-      analytics: {
-        title: 'Estadísticas',
-      },
-      dashboard: {
-        tasks_completed_of: '{completed} de {total} tareas completadas',
-      },
-    },
-  },
+  locale: "es",
+  messages: { es },
+  globalInjection: true,
 });
 
-describe('ProfileView', () => {
+describe("ProfileView", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   const mountView = async (props = {}) => {
     const wrapper = mount(ProfileView, {
       props,
       global: {
-        plugins: [i18n],
+        plugins: [
+          i18n,
+          createTestingPinia({
+            createSpy: vi.fn,
+            initialState: {
+              auth: {
+                user: {
+                  username: "testuser",
+                  name: "Test",
+                  lastname: "User",
+                  email: "test@example.com",
+                  role: "user",
+                  profile_image: null,
+                },
+              },
+            },
+          }),
+        ],
       },
     });
+    // Advance timers to bypass skeleton loader
+    await flushPromises();
+    vi.advanceTimersByTime(1000);
     await flushPromises();
     return wrapper;
   };
 
-  it('debe renderizar la vista correctamente', async () => {
+  it("debe renderizar la vista correctamente", async () => {
     const wrapper = await mountView();
-    expect(wrapper.find('.flex-1').exists()).toBe(true);
+    expect(wrapper.find(".flex-1").exists()).toBe(true);
   });
 
-  it('debe mostrar el título de perfil', async () => {
+  it("debe mostrar el nombre y rol del usuario", async () => {
     const wrapper = await mountView();
-    expect(wrapper.text()).toContain('Mi Perfil');
+    const text = wrapper.text();
+    expect(text).toContain("Test User");
+    expect(text).toContain("user");
   });
 
-  it('debe mostrar el avatar del usuario', async () => {
+  it('debe mostrar la sección "Sobre mí"', async () => {
     const wrapper = await mountView();
-    const avatar = wrapper.find('.rounded-full');
-    
-    expect(avatar.exists()).toBe(true);
+    const text = wrapper.text();
+    expect(text).toContain(es.profile.about_me);
   });
 
-  it('debe mostrar estadísticas del usuario', async () => {
+  it("debe mostrar la sección de identidad", async () => {
     const wrapper = await mountView();
-    
-    // Verificar que muestra estadísticas
-    const hasStats = wrapper.text().includes('Estadísticas') ||
-                     wrapper.text().includes('Tareas Totales') ||
-                     wrapper.text().includes('Completadas');
-    
-    expect(hasStats).toBe(true);
+    const text = wrapper.text();
+    expect(text).toContain(es.profile.identity);
+    expect(text).toContain("testuser"); // username
   });
 
-  it('debe calcular la tasa de completitud', async () => {
+  it("debe mostrar la sección de contacto", async () => {
     const wrapper = await mountView();
-    
-    // Buscar porcentajes en el texto
-    const hasPercentage = wrapper.text().match(/\d+%/);
-    
-    expect(hasPercentage).toBeTruthy();
+    const text = wrapper.text();
+    expect(text).toContain(es.profile.contact);
+    expect(text).toContain(es.profile.location);
+    expect(text).toContain(es.profile.website);
   });
 
-  it('debe mostrar el proyecto más productivo', async () => {
+  it("debe mostrar la sección de seguridad", async () => {
     const wrapper = await mountView();
-    
-    // Verificar que existe la sección de proyecto más productivo o que no hay proyectos
-    const hasProductiveProject = wrapper.text().includes('Proyecto Más Productivo') ||
-                                 wrapper.text().includes('productivo') ||
-                                 wrapper.text().includes('Proyectos') ||
-                                 !wrapper.text().includes('Proyecto'); // No hay proyectos
-    
-    expect(hasProductiveProject).toBe(true);
+    const text = wrapper.text();
+    expect(text).toContain(es.profile.security);
+    expect(text).toContain(es.profile.update_password);
   });
 
-  it('debe mostrar el toggle de tema', async () => {
+  it("debe permitir cambiar el idioma", async () => {
     const wrapper = await mountView();
-    
-    // Buscar el toggle de tema
-    const themeToggle = wrapper.findAll('button').find(btn => 
-      btn.attributes('class')?.includes('rounded-full') &&
-      btn.find('.inline-block').exists()
-    );
-    
-    expect(themeToggle).toBeTruthy();
-  });
+    const text = wrapper.text();
+    expect(text).toContain(es.profile.language);
 
-  it('debe mostrar preferencias', async () => {
-    const wrapper = await mountView();
-    
-    expect(wrapper.text()).toContain('Preferencias');
-  });
-
-  it('debe mostrar el modo de tema actual', () => {
-    const wrapper = mount(ProfileView, {
-      global: {
-        plugins: [i18n]
-      }
-    });
-
-    // Check if preferences section exists with theme toggle
-    const hasPreferences = wrapper.text().includes('Preferences') || 
-                          wrapper.text().includes('Preferencias');
-    
-    expect(hasPreferences).toBe(true);
-  });
-
-  it('debe mostrar tarjetas de estadísticas con iconos', async () => {
-    const wrapper = await mountView();
-    
-    // Verificar que hay iconos SVG en las tarjetas de estadísticas
-    const icons = wrapper.findAll('svg');
-    
-    expect(icons.length).toBeGreaterThan(0);
-  });
-
-  it('debe tener animación fade-in', async () => {
-    const wrapper = await mountView();
-    const mainDiv = wrapper.find('.flex-1');
-    
-    expect(mainDiv.attributes('class')).toContain('animate-fade-in');
-  });
-
-  it('debe mostrar el número de proyectos', async () => {
-    const wrapper = await mountView();
-    
-    const hasProjects = wrapper.text().includes('Proyectos') ||
-                        wrapper.text().includes('proyecto');
-    
-    expect(hasProjects).toBe(true);
-  });
-
-  it('debe mostrar la racha de tareas', async () => {
-    const wrapper = await mountView();
-    
-    const hasStreak = wrapper.text().includes('Racha') ||
-                      wrapper.text().includes('días');
-    
-    expect(hasStreak).toBe(true);
+    // Toggle button should be present
+    const toggleBtn = wrapper
+      .findAll("button")
+      .find(
+        (b) =>
+          b.text().includes("Switch to English") ||
+          b.text().includes("Cambiar a Español")
+      );
+    expect(toggleBtn?.exists()).toBe(true);
   });
 });

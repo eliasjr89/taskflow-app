@@ -8,7 +8,7 @@ import { useI18n } from "vue-i18n";
 
 const toast = useToast();
 const { confirm } = useConfirm();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const stats = ref({
   users: 0,
@@ -55,7 +55,7 @@ const getActor = (userId: number) => {
       id: u.id,
       role: u.role || "user",
     };
-  return { name: "Sistema", avatar: null, id: 0, role: "system" };
+  return { name: t("common.system"), avatar: null, id: 0, role: "system" };
 };
 
 const fetchActivities = async () => {
@@ -399,18 +399,31 @@ onMounted(async () => {
                     ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                     : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
                 }`">
-                {{ act.actor.role === "system" ? "SISTEMA" : act.actor.role }}
+                {{
+                  act.actor.role === "system"
+                    ? t("common.system").toUpperCase()
+                    : t(`admin_users.roles.${act.actor.role}`)?.toUpperCase() ||
+                      act.actor.role.toUpperCase()
+                }}
               </span>
               <span class="text-base font-bold text-white">{{
                 act.actor.name
               }}</span>
               <span class="text-xs text-text-muted ml-auto">
-                {{ act.date.toLocaleDateString() }} ·
                 {{
-                  act.date.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
+                  act.date.toLocaleDateString(
+                    locale === "es" ? "es-ES" : "en-US"
+                  )
+                }}
+                ·
+                {{
+                  act.date.toLocaleTimeString(
+                    locale === "es" ? "es-ES" : "en-US",
+                    {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )
                 }}
               </span>
             </div>

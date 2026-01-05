@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRoute } from "vue-router";
-import { useUserState } from "@/composables/useUserState";
+import { useAuthStore } from "@/stores/auth";
+import { storeToRefs } from "pinia";
 import { useI18n } from "vue-i18n";
 import { useSectionTheme } from "@/composables/useSectionTheme";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher.vue";
 
 const route = useRoute();
 const { t, locale } = useI18n();
 const { theme } = useSectionTheme();
-const { user, fetchUser } = useUserState();
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
+const { fetchProfile: fetchUser } = authStore;
 
 const currentTime = ref("");
 const currentDate = ref("");
@@ -148,6 +152,7 @@ onUnmounted(() => {
 
       <!-- Right: Clock (Left of Avatar) + Avatar (Large) -->
       <div v-if="user" class="flex items-center gap-3">
+        <LanguageSwitcher class="scale-90 origin-right" />
         <!-- Clock (Centered vertically to left of avatar) -->
         <div class="text-right flex flex-col justify-center">
           <div
@@ -221,6 +226,7 @@ onUnmounted(() => {
 
       <!-- Right Content: Clock & Avatar (Desktop Standard) -->
       <div v-if="user" class="flex items-center gap-10 mr-4">
+        <LanguageSwitcher />
         <!-- Digital Clock -->
         <div class="text-right">
           <div

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useTagState } from "../composables/useTagState";
-import { useTaskState } from "../composables/useTaskState";
+import { useTaskStore } from "../stores/tasks";
+import { storeToRefs } from "pinia";
 import AddTagModal from "../components/tags/AddTagModal.vue";
 import { Tags, Plus, Edit2, Trash2, Hash } from "lucide-vue-next";
 import type { Tag } from "../types/global";
@@ -9,7 +10,8 @@ import { useI18n } from "vue-i18n";
 
 const { tags, addTag, updateTag, deleteTag } = useTagState();
 const { t } = useI18n();
-const { tasks } = useTaskState();
+const taskStore = useTaskStore();
+const { tasks } = storeToRefs(taskStore);
 
 const isModalOpen = ref(false);
 const editingTag = ref<Tag | null>(null);
@@ -91,27 +93,30 @@ const getColorClass = (color: string) => {
 <template>
   <div class="flex-1 flex flex-col w-full px-4 md:px-6 lg:px-8 animate-fade-in">
     <!-- Header -->
-    <div
-      class="flex flex-col md:flex-row items-center md:justify-between gap-4 mb-8 text-center md:text-left">
-      <div class="flex flex-col items-center md:items-start">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-4 mb-8">
+      <div class="flex flex-col items-start gap-1">
         <h1
-          class="text-3xl md:text-4xl font-bold font-heading mb-2 flex items-center justify-center md:justify-start gap-2">
-          <span>🏷️</span>
+          class="text-2xl md:text-4xl font-bold font-heading flex items-center gap-2">
+          <div class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+            <Tags class="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+          </div>
           <span
             class="bg-linear-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent"
             >{{ $t("tags.title") }}</span
           >
         </h1>
-        <p class="text-gray-600 dark:text-gray-400">
+        <p
+          class="text-sm md:text-base text-gray-600 dark:text-gray-400 hidden md:block">
           {{ $t("tags.subtitle") }}
         </p>
       </div>
 
       <button
         @click="openCreateModal"
-        class="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 font-medium cursor-pointer">
-        <Plus class="w-5 h-5" />
-        {{ $t("tags.new_tag") }}
+        class="w-12 h-12 md:w-auto md:h-auto md:px-5 md:py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full md:rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:scale-105 font-medium cursor-pointer flex items-center justify-center gap-2">
+        <Plus class="w-6 h-6" />
+        <span class="hidden md:inline">{{ $t("tags.new_tag") }}</span>
       </button>
     </div>
 

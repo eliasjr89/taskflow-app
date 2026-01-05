@@ -1,19 +1,20 @@
-// src/composables/useTasks.ts
-import { useTaskState } from "./useTaskState";
-import { useProjectState } from "./useProjectState";
+import { storeToRefs } from "pinia";
+import { useTaskStore } from "../stores/tasks";
+import { useProjectStore } from "../stores/projects"; // New import
 import api from "../services/api";
 import type { Task } from "../types/global";
 import { useFeedback } from "./useFeedback";
 import { useI18n } from "vue-i18n";
 
 export function useTasks() {
-  const { tasks, loadData } = useTaskState();
-  const { projects } = useProjectState();
+  const taskStore = useTaskStore();
+  const projectStore = useProjectStore(); // Use store
+  const { tasks } = storeToRefs(taskStore);
+  const { projects } = storeToRefs(projectStore); // Use projects from store
   const { showFeedback } = useFeedback();
   const { t } = useI18n();
 
-  // Re-export loadTask as loadData alias to maintain compatibility if view calls loadTask
-  const loadTask = loadData;
+  const loadTask = taskStore.fetchTasks;
 
   async function addTask(
     title: string,
@@ -52,7 +53,8 @@ export function useTasks() {
       };
 
       await api.post("/tasks", payload);
-      await loadData(); // Refresh list to get the new task with ID from DB
+      // Replace loadData with loadTask
+      await loadTask(); // Refresh list to get the new task with ID from DB
 
       showFeedback(
         t("tasks.task_created"),
@@ -74,7 +76,7 @@ export function useTasks() {
     try {
       // Optimistic upate could be done here
       await api.delete(`/tasks/${id}`);
-      await loadData();
+      await loadTask();
     } catch {
       // Handle error
     }
@@ -105,13 +107,14 @@ export function useTasks() {
       if (updates.dueDate) payload.due_date = updates.dueDate;
 
       await api.put(`/tasks/${id}`, payload);
-      await loadData();
+      await loadTask();
     } catch {
       // Handle error
     }
   }
 
   return {
+    tasks,
     loadTask,
     addTask,
     removeTask,

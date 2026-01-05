@@ -36,20 +36,20 @@ const getColorClasses = (type: string) => {
 
 <template>
   <div
-    class="fixed top-4 right-4 z-9999 flex flex-col gap-3 max-w-md pointer-events-none">
+    class="fixed top-4 left-1/2 -translate-x-1/2 z-9999 flex flex-col gap-3 max-w-md w-full px-4 pointer-events-none items-center">
     <TransitionGroup name="toast">
       <div
         v-for="toast in toasts"
         :key="toast.id"
         :class="[
-          'pointer-events-auto backdrop-blur-md rounded-xl border shadow-2xl p-4 flex items-start gap-3 animate-slide-in',
+          'pointer-events-auto backdrop-blur-md rounded-xl border shadow-2xl p-4 flex items-start gap-3 w-full max-w-sm',
           getColorClasses(toast.type),
         ]">
         <div class="shrink-0 mt-0.5">
           <i :class="['fa-solid text-xl', getIcon(toast.type)]"></i>
         </div>
 
-        <div class="flex-1 min-w-0">
+        <div class="flex-1 min-w-0 text-left">
           <h4 class="font-bold text-white text-sm mb-1">{{ toast.title }}</h4>
           <p v-if="toast.message" class="text-xs text-gray-300 leading-relaxed">
             {{ toast.message }}
@@ -68,36 +68,32 @@ const getColorClasses = (type: string) => {
 
 <style scoped>
 .toast-enter-active {
-  animation: slideIn 0.3s ease-out;
+  animation: slideDown 0.3s ease-out;
 }
 
 .toast-leave-active {
-  animation: slideOut 0.3s ease-in;
+  animation: fadeOut 0.3s ease-in;
 }
 
-@keyframes slideIn {
+@keyframes slideDown {
   from {
-    transform: translateX(100%);
+    transform: translateY(-20px);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
 
-@keyframes slideOut {
+@keyframes fadeOut {
   from {
-    transform: translateX(0);
     opacity: 1;
+    transform: scale(1);
   }
   to {
-    transform: translateX(100%);
     opacity: 0;
+    transform: scale(0.95);
   }
-}
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-out;
 }
 </style>
