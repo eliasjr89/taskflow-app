@@ -1,0 +1,62 @@
+{
+  "name": "TaskFlow - Gestión de Proyectos",
+  "short_name": "TaskFlow",
+  "description": "Aplicación de gestión de proyectos y tareas con roles y permisos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/background.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Inicio",
+      "description": "Ir al dashboard principal",
+      "url": "/dashboard",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tareas",
+      "short_name": "Tareas",
+      "description": "Ver mis tareas",
+      "url": "/tasks",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Proyectos",
+      "short_name": "Proyectos",
+      "description": "Ver proyectos",
+      "url": "/projects",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
