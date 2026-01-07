@@ -34,23 +34,32 @@ const handleLogin = async () => {
     const user = await authStore.login({
       email: loginForm.value.email,
       password: loginForm.value.password,
+      loginType: flippedCard.value || "user", // 'user' or 'admin'
     });
 
+    toast.success(t("auth.welcome"), `Hola ${user.name}`);
+
+    // Redirect based on actual role
     if (user.role === "admin" || user.role === "manager") {
-      // If admin tries to log in via user card, warn? or just allow?
-      // Logic from LoginView: Prevent mixing roles if explicit.
-      // Here we assume User Card = User Role intended.
-      toast.success(t("auth.welcome"), `Hola ${user.name}`);
-      router.push("/dashboard");
+      router.push("/admin/overview");
     } else {
-      toast.success(t("auth.welcome"), `Hola ${user.name}`);
       router.push("/dashboard");
     }
   } catch (err: any) {
-    toast.error(
-      t("auth.error"),
-      err.response?.data?.message || t("auth.auth_failed")
-    );
+    const errorMessage = err.response?.data?.message || t("auth.auth_failed");
+
+    // Check for role mismatch errors
+    if (err.response?.status === 403) {
+      if (errorMessage.includes("administrator")) {
+        toast.error(t("auth.error"), t("auth.role_mismatch_user"));
+      } else if (errorMessage.includes("regular user")) {
+        toast.error(t("auth.error"), t("auth.role_mismatch_admin"));
+      } else {
+        toast.error(t("auth.error"), errorMessage);
+      }
+    } else {
+      toast.error(t("auth.error"), errorMessage);
+    }
   } finally {
     isLoading.value = false;
   }
@@ -160,7 +169,7 @@ window.addEventListener("resize", () => {
             <!-- FRONT FACE -->
             <div
               @click="selectRole('user')"
-              class="absolute inset-0 backface-hidden bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 hover:border-blue-400/50 rounded-3xl p-10 flex flex-col items-center justify-center gap-6 transition-all duration-300">
+              class="absolute inset-0 backface-hidden bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 hover:border-blue-400/50 rounded-3xl p-10 flex flex-col items-center justify-center gap-6 transition-all duration-300 cursor-pointer">
               <div
                 class="w-24 h-24 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <User class="w-10 h-10 text-white" />
@@ -335,7 +344,7 @@ window.addEventListener("resize", () => {
             <!-- FRONT FACE -->
             <div
               @click="selectRole('admin')"
-              class="absolute inset-0 backface-hidden bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 hover:border-purple-400/50 rounded-3xl p-10 flex flex-col items-center justify-center gap-6 transition-all duration-300">
+              class="absolute inset-0 backface-hidden bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 hover:border-purple-400/50 rounded-3xl p-10 flex flex-col items-center justify-center gap-6 transition-all duration-300 cursor-pointer">
               <div
                 class="w-24 h-24 rounded-full bg-linear-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <ShieldCheck class="w-10 h-10 text-white" />
@@ -411,7 +420,7 @@ window.addEventListener("resize", () => {
       <div v-if="!flippedCard" class="mt-8 md:hidden animate-fade-in-up">
         <button
           @click="activeRole = activeRole === 'user' ? 'admin' : 'user'"
-          class="text-gray-300 hover:text-white text-sm font-medium flex items-center gap-2 mx-auto transition-colors px-4 py-2 rounded-full hover:bg-white/10">
+          class="text-gray-300 hover:text-white text-sm font-medium flex items-center gap-2 mx-auto transition-colors px-4 py-2 rounded-full hover:bg-white/10 cursor-pointer">
           <span v-if="activeRole === 'user'">
             {{ t("welcome.are_you_admin") || "¿Eres administrador?" }}
             <span

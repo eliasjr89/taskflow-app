@@ -48,12 +48,26 @@ const pageTitle = computed(() => {
   const path = route.path;
 
   if (path.includes("/dashboard")) return t("nav.home");
-  if (path.includes("/projects")) return t("nav.projects");
-  if (path.includes("/tasks")) return t("nav.tasks");
+  if (path.includes("/projects") && !path.includes("/admin"))
+    return t("nav.projects");
+  if (path.includes("/tasks") && !path.includes("/admin"))
+    return t("nav.tasks");
   if (path.includes("/calendar")) return t("nav.calendar");
   if (path.includes("/tags")) return t("nav.tags");
   if (path.includes("/analytics")) return t("nav.analytics");
-  if (path.includes("/profile")) return t("nav.profile");
+  if (path.includes("/profile") && !path.includes("/admin"))
+    return t("nav.profile");
+
+  // Admin Routes
+  if (path.includes("/admin/overview")) return t("admin.overview");
+  if (path.includes("/admin/users")) return t("admin.users");
+  if (path.includes("/admin/projects")) return t("admin.projects");
+  if (path.includes("/admin/tasks")) return t("admin.tasks");
+  if (path.includes("/admin/database")) return t("admin.database");
+  if (path.includes("/admin/roles")) return t("admin.roles");
+  if (path.includes("/admin/audit")) return t("admin.audit");
+  if (path.includes("/admin/settings")) return t("admin.settings");
+  if (path.includes("/admin/profile")) return t("admin.profile");
 
   return route.meta.title?.toString() || name;
 });

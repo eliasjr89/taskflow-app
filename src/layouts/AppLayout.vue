@@ -5,10 +5,35 @@ import BottomNav from "@/components/layout/BottomNav.vue";
 import DynamicBackground from "@/components/common/DynamicBackground.vue";
 import ToastNotification from "@/components/common/ToastNotification.vue";
 import { useRoute } from "vue-router";
-import { computed } from "vue";
+import { computed, onMounted, onUnmounted } from "vue";
+import socketService from "@/services/socket";
+import { useTaskStore } from "@/stores/tasks";
 
 const route = useRoute();
 const isPublic = computed(() => route.meta.public === true);
+const taskStore = useTaskStore();
+
+onMounted(() => {
+  if (!isPublic.value) {
+    socketService.connect();
+
+    socketService.on("task:created", (newTask: any) => {
+      taskStore.handleSocketTaskCreate(newTask);
+    });
+
+    socketService.on("task:updated", (updatedTask: any) => {
+      taskStore.handleSocketTaskUpdate(updatedTask);
+    });
+
+    socketService.on("task:deleted", (taskId: string | number) => {
+      taskStore.removeTask(Number(taskId));
+    });
+  }
+});
+
+onUnmounted(() => {
+  socketService.disconnect();
+});
 </script>
 
 <template>

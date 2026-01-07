@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from "vue";
 import api from "@/services/api";
 import type { User } from "@/types";
 import BaseModal from "@/components/common/BaseModal.vue";
+import adminService from "@/services/adminService";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import EnhancedSelect from "@/components/common/EnhancedSelect.vue";
@@ -17,9 +18,35 @@ const users = ref<User[]>([]);
 const tasksList = ref<any[]>([]); // For MultiSelect
 const loading = ref(true);
 const showModal = ref(false);
+
 const submitting = ref(false);
 const imageFile = ref<File | null>(null);
 const imagePreview = ref<string>("");
+
+const impersonate = async (user: User) => {
+  const confirmed = await confirm({
+    title: t("admin_users.impersonate_confirm"),
+    message: t("admin_users.impersonate_msg", { user: user.username }),
+    confirmText: t("admin_users.impersonate_btn"),
+    type: "warning",
+  });
+
+  if (!confirmed) return;
+
+  try {
+    const res = await adminService.impersonateUser(user.id);
+    const { token, user: newUser } = res.data.data;
+
+    // Manually update session
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(newUser));
+
+    // Force reload to apply changes cleanly (simplest way to reset all stores)
+    window.location.href = "/";
+  } catch {
+    toast.error(t("common.error_title"), t("admin_users.impersonate_error"));
+  }
+};
 
 const form = ref({
   id: null as number | null,
@@ -65,7 +92,7 @@ const fetchTasksList = async () => {
     const data = res.data.data || res.data;
     tasksList.value = Array.isArray(data) ? data : data.results || [];
   } catch {
-    console.error("Failed to fetch tasks list");
+    // Silent fail or toast
   }
 };
 
@@ -317,12 +344,11 @@ onMounted(fetchUsers);
             <div class="h-3 bg-slate-700 rounded w-1/3"></div>
           </div>
         </div>
-        <div class="h-4 bg-slate-700 rounded w-full mb-4"></div>
         <div class="flex justify-between items-center mt-4">
           <div class="h-6 bg-slate-700 rounded w-20"></div>
           <div class="flex gap-2">
-            <div class="w-8 h-8 bg-slate-700 rounded"></div>
-            <div class="w-8 h-8 bg-slate-700 rounded"></div>
+            <div class="w-8 h-8 bg-slate-700 rounded cursor-pointer"></div>
+            <div class="w-8 h-8 bg-slate-700 rounded cursor-pointer"></div>
           </div>
         </div>
       </div>
@@ -341,7 +367,7 @@ onMounted(fetchUsers);
           <img
             v-if="user.profile_image"
             :src="user.profile_image"
-            alt="Avatar"
+            :alt="$t('profile.form.profile_image')"
             class="w-14 h-14 rounded-full object-cover border-2 border-slate-600 group-hover:border-indigo-500 transition-colors" />
           <div
             v-else
@@ -375,14 +401,18 @@ onMounted(fetchUsers);
           <div class="grid grid-cols-2 gap-2 pt-2">
             <div
               class="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-              <div class="text-xs text-text-muted mb-1">Tareas</div>
+              <div class="text-xs text-text-muted mb-1">
+                {{ $t("nav.tasks") }}
+              </div>
               <div class="text-lg font-bold text-white">
                 {{ user.num_tasks || 0 }}
               </div>
             </div>
             <div
               class="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-              <div class="text-xs text-text-muted mb-1">Proyectos</div>
+              <div class="text-xs text-text-muted mb-1">
+                {{ $t("nav.projects") }}
+              </div>
               <div class="text-lg font-bold text-white">
                 {{ user.num_projects || 0 }}
               </div>
@@ -416,8 +446,15 @@ onMounted(fetchUsers);
             <button
               @click="openModal(user)"
               class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-all flex items-center justify-center hover:scale-110"
-              title="Editar">
+              :title="$t('common.edit')">
               <i class="fa-solid fa-pen text-sm"></i>
+            </button>
+
+            <button
+              @click="impersonate(user)"
+              class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all flex items-center justify-center hover:scale-110"
+              :title="$t('admin_users.impersonate')">
+              <i class="fa-solid fa-user-secret text-sm"></i>
             </button>
             <button
               @click="deleteUser(user.id)"
@@ -469,7 +506,7 @@ onMounted(fetchUsers);
               <img
                 v-if="imagePreview"
                 :src="imagePreview"
-                alt="Preview"
+                :alt="$t('profile.form.profile_image')"
                 class="w-20 h-20 rounded-full object-cover border-2 border-primary" />
               <div
                 v-else
@@ -504,7 +541,7 @@ onMounted(fetchUsers);
               type="text"
               required
               class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all hover:border-slate-600"
-              placeholder="usuario123" />
+              :placeholder="$t('auth.username_placeholder')" />
           </div>
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-300">
@@ -515,7 +552,7 @@ onMounted(fetchUsers);
               type="email"
               required
               class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all hover:border-slate-600"
-              placeholder="usuario@ejemplo.com" />
+              :placeholder="$t('auth.email_placeholder')" />
           </div>
         </div>
 
@@ -530,7 +567,7 @@ onMounted(fetchUsers);
               type="text"
               required
               class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all hover:border-slate-600"
-              placeholder="Juan" />
+              :placeholder="$t('auth.first_name_placeholder')" />
           </div>
           <div class="space-y-2">
             <label class="block text-sm font-medium text-gray-300">
@@ -541,7 +578,7 @@ onMounted(fetchUsers);
               type="text"
               required
               class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 px-4 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all hover:border-slate-600"
-              placeholder="Pérez" />
+              :placeholder="$t('auth.last_name_placeholder')" />
           </div>
         </div>
 
@@ -577,8 +614,8 @@ onMounted(fetchUsers);
             :options="
               tasksList.map((t) => ({ value: t.id, label: t.description }))
             "
-            label="Asignar Tareas"
-            placeholder="Selecciona tareas..."
+            :label="$t('admin_users.assign_tasks')"
+            :placeholder="$t('admin_users.select_tasks')"
             icon="fa-list-check" />
         </div>
 

@@ -94,12 +94,36 @@ const routes: RouteRecordRaw[] = [
         meta: { layout: "AdminLayout", title: "Base de Datos" },
       },
       {
+        path: "roles",
+        name: "AdminRoles",
+        component: () => import("../views/admin/RolesView.vue"),
+        meta: { layout: "AdminLayout", title: "Roles y Permisos" },
+      },
+      {
+        path: "audit",
+        name: "AdminAudit",
+        component: () => import("../views/admin/AuditView.vue"),
+        meta: { layout: "AdminLayout", title: "Auditoría" },
+      },
+      {
+        path: "settings",
+        name: "AdminSettings",
+        component: () => import("../views/admin/SettingsView.vue"),
+        meta: { layout: "AdminLayout", title: "Configuración" },
+      },
+      {
         path: "profile",
         name: "AdminProfile",
         component: () => import("../views/admin/ProfileView.vue"),
         meta: { layout: "AdminLayout", title: "Admin Perfil" },
       },
     ],
+  },
+  {
+    path: "/maintenance",
+    name: "Maintenance",
+    component: () => import("../views/MaintenanceView.vue"),
+    meta: { title: "Mantenimiento", public: true, layout: "AuthLayout" },
   },
   {
     path: "/exit",
@@ -176,5 +200,22 @@ router.beforeEach((to, _from, next) => {
     next();
   }
 });
+
+// Global error handler for maintenance mode (503 responses)
+import api from "../services/api";
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 503 &&
+      error.response?.data?.maintenanceMode
+    ) {
+      // Redirect to maintenance page
+      router.push({ name: "Maintenance" });
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default router;

@@ -33,7 +33,7 @@ onMounted(async () => {
   } finally {
     setTimeout(() => {
       isLoading.value = false;
-    }, 500); // Small delay to show smooth transition/skeleton
+    }, 500);
   }
 });
 

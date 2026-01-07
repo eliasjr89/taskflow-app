@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from "vue";
 import api from "@/services/api";
 import StatCard from "@/components/admin/StatCard.vue";
+import SystemHealthWidget from "@/components/admin/SystemHealthWidget.vue";
 import { useToast } from "@/composables/useToast";
 import { useConfirm } from "@/composables/useConfirm";
 import { useI18n } from "vue-i18n";
@@ -252,6 +253,9 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-8">
+    <!-- Live Health Section -->
+    <SystemHealthWidget />
+
     <!-- Stats Grid -->
     <div
       v-if="loading"
@@ -301,7 +305,7 @@ onMounted(async () => {
           v-for="action in quickActions"
           :key="action.label"
           @click="$router.push(action.route)"
-          class="group relative overflow-hidden rounded-xl bg-slate-700 border border-slate-600 p-6 hover:bg-slate-600 transition-all text-left">
+          class="group relative overflow-hidden rounded-xl bg-slate-700 border border-slate-600 p-6 hover:bg-slate-600 transition-all text-left cursor-pointer">
           <div class="relative z-10 flex items-center gap-4">
             <div
               :class="`w-12 h-12 rounded-full ${action.color} flex items-center justify-center text-white shadow-lg`">

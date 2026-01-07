@@ -84,6 +84,27 @@ export const useTaskStore = defineStore("tasks", () => {
     tasks.value = tasks.value.filter((t) => t.id !== taskId);
   };
 
+  const handleSocketTaskCreate = (rawTask: any) => {
+    // Avoid duplicates if we already have it (e.g. from optimistic update or fetch)
+    if (tasks.value.find((t) => t.id === rawTask.id)) return;
+    try {
+      // Validate or just map depending on trust level. Mapping is safer.
+      const mapped = mapTask(rawTask);
+      addTask(mapped);
+    } catch (e) {
+      console.error("Socket task create error", e);
+    }
+  };
+
+  const handleSocketTaskUpdate = (rawTask: any) => {
+    try {
+      const mapped = mapTask(rawTask);
+      updateTask(mapped);
+    } catch (e) {
+      console.error("Socket task update error", e);
+    }
+  };
+
   return {
     tasks,
     isLoading,
@@ -95,5 +116,7 @@ export const useTaskStore = defineStore("tasks", () => {
     addTask,
     updateTask,
     removeTask,
+    handleSocketTaskCreate,
+    handleSocketTaskUpdate,
   };
 });

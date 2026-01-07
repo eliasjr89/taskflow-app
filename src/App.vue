@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from "vue-router";
-import { computed, defineAsyncComponent } from "vue";
+import { computed, defineAsyncComponent, onMounted, watch } from "vue";
 import AppLayout from "./layouts/AppLayout.vue";
 import AuthLayout from "./layouts/AuthLayout.vue";
 import FeedbackModal from "./components/common/FeedbackModal.vue";
 import ConfirmDialog from "./components/common/ConfirmDialog.vue";
+import { useSocket } from "@/composables/useSocket";
+import { useAuthStore } from "@/stores/auth";
 
 const AdminLayout = defineAsyncComponent(
   () => import("@/layouts/AdminLayout.vue")
@@ -17,6 +19,24 @@ const layout = computed(() => {
   // Default to AuthLayout to prevent flashing MainLayout (Dashboard) on load/transition
   return AuthLayout;
 });
+
+// Global Socket Connection
+const { connect, disconnect } = useSocket();
+const authStore = useAuthStore();
+
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    connect();
+  }
+});
+
+watch(
+  () => authStore.isAuthenticated,
+  (val) => {
+    if (val) connect();
+    else disconnect();
+  }
+);
 </script>
 
 <template>

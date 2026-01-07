@@ -84,7 +84,7 @@ const isActive = (path: string) =>
       <!-- Logout Button -->
       <button
         @click="logout"
-        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400">
+        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400 cursor-pointer">
         <LogOut
           class="w-6 h-6 transition-transform duration-300 group-active:scale-95" />
       </button>

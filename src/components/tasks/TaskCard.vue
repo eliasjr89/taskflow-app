@@ -7,12 +7,6 @@ import { storeToRefs } from "pinia";
 import { useTagState } from "../../composables/useTagState";
 import {
   Folder,
-  Briefcase,
-  Star,
-  Heart,
-  Zap,
-  Coffee,
-  Music,
   Trash2,
   Hash,
   Pencil,
@@ -152,7 +146,7 @@ function toggleComplete() {
 
 <template>
   <div
-    class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/50 rounded-2xl p-4 hover:shadow-lg transition-all duration-300 group overflow-hidden"
+    class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/50 rounded-2xl p-4 hover:shadow-lg transition-all duration-300 group overflow-hidden cursor-pointer"
     :class="{ 'opacity-75': task.completed }">
     <!-- Status/Priority Stripe -->
     <div

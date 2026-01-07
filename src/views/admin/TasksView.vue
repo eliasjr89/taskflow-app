@@ -589,7 +589,7 @@ onMounted(fetchData);
         <!-- Description -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-gray-300">
-            Descripción
+            {{ t("admin_tasks.form.description") }}
             <span class="text-red-400 ml-1">*</span>
           </label>
           <div class="relative group">
@@ -602,7 +602,9 @@ onMounted(fetchData);
               rows="3"
               class="w-full bg-slate-800/50 border border-slate-700 rounded-lg py-3 pl-11 pr-4 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none hover:border-slate-600"
               required
-              placeholder="Describe la tarea a realizar..."></textarea>
+              :placeholder="
+                t('admin_tasks.form.description_placeholder')
+              "></textarea>
           </div>
         </div>
 

@@ -9,6 +9,21 @@ const { t } = useI18n();
 const menuItems = computed(() => [
   { name: t("admin.overview"), icon: "fa-chart-pie", path: "/admin/overview" },
   { name: t("admin.users"), icon: "fa-users", path: "/admin/users" },
+  {
+    name: t("admin.roles"),
+    icon: "fa-shield-halved",
+    path: "/admin/roles",
+  },
+  {
+    name: t("admin.audit"),
+    icon: "fa-file-shield",
+    path: "/admin/audit",
+  },
+  {
+    name: t("admin.settings"),
+    icon: "fa-cogs",
+    path: "/admin/settings",
+  },
   { name: t("admin.projects"), icon: "fa-briefcase", path: "/admin/projects" },
   { name: t("admin.tasks"), icon: "fa-list-check", path: "/admin/tasks" },
   { name: t("admin.database"), icon: "fa-database", path: "/admin/database" },
@@ -177,7 +192,7 @@ const logout = async () => {
       <!-- Logout (Mobile) -->
       <button
         @click="logout"
-        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400">
+        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400 cursor-pointer">
         <div
           class="text-xl relative transition-transform duration-300 group-active:scale-95">
           <i class="fa-solid fa-arrow-right-from-bracket"></i>
