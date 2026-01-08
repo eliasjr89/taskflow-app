@@ -7,34 +7,60 @@ import { AuthResponseSchema, type User } from "../schemas/auth";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
-  const token = ref<string | null>(localStorage.getItem("token"));
+  // Load user/token from appropriate storage
+  const getStorage = () =>
+    localStorage.getItem("token") ? localStorage : sessionStorage;
+
+  const token = ref<string | null>(
+    localStorage.getItem("token") || sessionStorage.getItem("token")
+  );
   const isAdmin = computed(() => user.value?.role === "admin");
   const isAuthenticated = computed(() => !!token.value);
 
-  // Load user from localStorage if available (to prevent flicker)
-  if (localStorage.getItem("user")) {
+  // Initialize from storage to prevent flicker
+  const storage = getStorage();
+  if (storage.getItem("user")) {
     try {
-      user.value = JSON.parse(localStorage.getItem("user") || "{}");
+      user.value = JSON.parse(storage.getItem("user") || "{}");
     } catch {
-      localStorage.removeItem("user");
+      storage.removeItem("user");
     }
   }
 
-  const setSession = (newToken: string, newUser: User) => {
+  const setSession = (
+    newToken: string,
+    newUser: User,
+    remember: boolean = true
+  ) => {
     token.value = newToken;
     user.value = newUser;
-    localStorage.setItem("token", newToken);
-    localStorage.setItem("user", JSON.stringify(newUser));
+
+    const storage = remember ? localStorage : sessionStorage;
+
+    // Clear other storage to prevent sync issues
+    if (remember) {
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+    } else {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
+
+    storage.setItem("token", newToken);
+    storage.setItem("user", JSON.stringify(newUser));
   };
 
   const login = async (credentials: any) => {
-    const { data } = await api.post("/auth/login", credentials);
-    const resData = data.data || data; // Handle API wrapper
+    // Extract remember flag (not sent to API)
+    const { remember, ...apiCredentials } = credentials;
+
+    const { data } = await api.post("/auth/login", apiCredentials);
+    const resData = data.data || data;
 
     // Validate Response
     const parsedData = AuthResponseSchema.parse(resData);
 
-    setSession(parsedData.token, parsedData.user);
+    setSession(parsedData.token, parsedData.user, remember);
     return parsedData.user;
   };
 

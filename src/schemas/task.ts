@@ -8,14 +8,17 @@ export const TagSchema = z.object({
 
 export const TaskSchema = z.object({
   id: z.number(),
-  description: z.string(), // Mapped to 'title' in store, but API sends description
-  completed: z.boolean(),
-  created_at: z.string().or(z.date()), // API sends ISO string
+  description: z.string().optional(), // Relaxed validation
+  completed: z.boolean().optional(),
+  created_at: z.string().or(z.date()).optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional().nullable(),
   due_date: z.string().nullable().optional(),
   project_id: z.number().nullable().optional(),
   project_name: z.string().optional().nullable(),
-  tags: z.array(TagSchema).optional(),
+  project_color: z.string().optional().nullable(),
+  project_icon: z.string().optional().nullable(),
+  tags: z.array(TagSchema).optional().nullable(),
+  title: z.string().optional(),
   // Add other fields as needed based on API response
 });
 

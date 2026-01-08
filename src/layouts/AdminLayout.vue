@@ -2,6 +2,9 @@
 import Sidebar from "@/components/admin/AdminSidebar.vue";
 import Header from "@/components/admin/Header.vue";
 import ToastNotification from "@/components/common/ToastNotification.vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
 </script>
 
 <template>
@@ -14,7 +17,9 @@ import ToastNotification from "@/components/common/ToastNotification.vue";
     <main
       class="flex-1 md:ml-[260px] p-0 md:p-8 pb-20 md:pb-8 h-screen overflow-y-auto no-scrollbar bg-bg-dark">
       <!-- Header Banner (Adaptive) -->
-      <div class="px-4 mt-4 md:mt-0 md:px-0">
+      <div
+        v-if="route.name !== 'AdminProfile' && route.name !== 'Profile'"
+        class="px-4 mt-4 md:mt-0 md:px-0">
         <Header />
       </div>
 

@@ -1,16 +1,18 @@
 import { storeToRefs } from "pinia";
 import { useTaskStore } from "../stores/tasks";
-import { useProjectStore } from "../stores/projects"; // New import
-import api from "../services/api";
-import type { Task } from "../types/global";
+import { useProjectStore } from "../stores/projects";
 import { useFeedback } from "./useFeedback";
 import { useI18n } from "vue-i18n";
 
+/**
+ * Composable for task operations
+ * This is now a thin wrapper around the task store for convenience
+ */
 export function useTasks() {
   const taskStore = useTaskStore();
-  const projectStore = useProjectStore(); // Use store
+  const projectStore = useProjectStore();
   const { tasks } = storeToRefs(taskStore);
-  const { projects } = storeToRefs(projectStore); // Use projects from store
+  const { projects } = storeToRefs(projectStore);
   const { showFeedback } = useFeedback();
   const { t } = useI18n();
 
@@ -43,29 +45,36 @@ export function useTasks() {
         return false;
       }
 
-      const payload = {
+      // console.log("Adding task:", title, "Project:", finalProjectId);
+      const success = await taskStore.createTask({
         description: title,
         project_id: finalProjectId,
-        status_id: 1, // Defaulting to status 1 (Pending)
+        status_id: 1,
         priority: priority || "medium",
         due_date: dueDate,
-        // tags handling would go here (requires separate endpoints or advanced backend logic)
-      };
+        tag_ids: _tags ? _tags.map(Number) : undefined,
+      });
+      // console.log("Task creation result:", success);
 
-      await api.post("/tasks", payload);
-      // Replace loadData with loadTask
-      await loadTask(); // Refresh list to get the new task with ID from DB
+      if (success) {
+        showFeedback(
+          t("tasks.task_created"),
+          t("tasks.task_created_msg"),
+          "success"
+        );
+      } else {
+        showFeedback(
+          t("tasks.create_error"),
+          t("common.error_occurred"),
+          "error"
+        );
+      }
 
-      showFeedback(
-        t("tasks.task_created"),
-        t("tasks.task_created_msg"),
-        "success"
-      );
-      return true;
+      return success;
     } catch {
       showFeedback(
         t("tasks.create_error"),
-        t("common.error_occurred"), // Assuming generic error message key
+        t("common.error_occurred"),
         "error"
       );
       return false;
@@ -73,44 +82,15 @@ export function useTasks() {
   }
 
   async function removeTask(id: number) {
-    try {
-      // Optimistic upate could be done here
-      await api.delete(`/tasks/${id}`);
-      await loadTask();
-    } catch {
-      // Handle error
-    }
+    return await taskStore.deleteTask(id);
   }
 
   async function toggleTaskCompletion(id: number) {
-    const t = tasks.value.find((t) => t.id === id);
-    if (!t) return;
-
-    // Optimistic Update
-    const originalState = t.completed;
-    t.completed = !t.completed;
-
-    try {
-      await api.put(`/tasks/${id}`, { completed: t.completed });
-    } catch {
-      t.completed = originalState; // Revert
-    }
+    return await taskStore.toggleCompletion(id);
   }
 
-  async function updateTask(id: number, updates: Partial<Task>) {
-    try {
-      // Convert frontend fields to backend
-      const payload: any = {};
-      if (updates.title) payload.description = updates.title;
-      if (updates.priority) payload.priority = updates.priority;
-      if (updates.projectId) payload.project_id = Number(updates.projectId);
-      if (updates.dueDate) payload.due_date = updates.dueDate;
-
-      await api.put(`/tasks/${id}`, payload);
-      await loadTask();
-    } catch {
-      // Handle error
-    }
+  async function updateTask(id: number, updates: any) {
+    return await taskStore.updateTaskData(id, updates);
   }
 
   return {

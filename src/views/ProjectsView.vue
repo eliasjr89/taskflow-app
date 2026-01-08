@@ -173,6 +173,14 @@ const getColorClass = (color: string) => {
     teal: "text-teal-600 bg-teal-100 dark:bg-teal-900/30 dark:text-teal-400",
     cyan: "text-cyan-600 bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-400",
     blue: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
+    lime: "text-lime-600 bg-lime-100 dark:bg-lime-900/30 dark:text-lime-400",
+    emerald:
+      "text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400",
+    fuchsia:
+      "text-fuchsia-600 bg-fuchsia-100 dark:bg-fuchsia-900/30 dark:text-fuchsia-400",
+    sky: "text-sky-600 bg-sky-100 dark:bg-sky-900/30 dark:text-sky-400",
+    violet:
+      "text-violet-600 bg-violet-100 dark:bg-violet-900/30 dark:text-violet-400",
   };
   return colors[color] || colors.indigo;
 };
@@ -189,6 +197,11 @@ const getProgressColor = (color: string) => {
     teal: "bg-teal-500",
     cyan: "bg-cyan-500",
     blue: "bg-blue-500",
+    lime: "bg-lime-500",
+    emerald: "bg-emerald-500",
+    fuchsia: "bg-fuchsia-500",
+    sky: "bg-sky-500",
+    violet: "bg-violet-500",
   };
   return colors[color] || "bg-indigo-500";
 };
@@ -239,7 +252,7 @@ const getProgressColor = (color: string) => {
             <component
               :is="iconMap[project.icon] || Folder"
               class="w-24 h-24"
-              :class="project.color" />
+              :class="`text-${project.color}-500`" />
           </div>
 
           <div class="relative z-10">

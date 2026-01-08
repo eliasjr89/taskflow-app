@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import AppSidebar from "../AppSidebar.vue";
 import { createI18n } from "vue-i18n";

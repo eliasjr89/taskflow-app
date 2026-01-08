@@ -14,11 +14,11 @@ class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log("🟢 Conectado a Socket.io");
+      // console.log("🟢 Conectado a Socket.io");
     });
 
     this.socket.on("disconnect", () => {
-      console.log("🔴 Desconectado de Socket.io");
+      // console.log("🔴 Desconectado de Socket.io");
     });
   }
 

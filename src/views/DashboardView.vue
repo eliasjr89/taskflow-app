@@ -7,12 +7,19 @@ import { useI18n } from "vue-i18n";
 import { RouterLink } from "vue-router";
 import SkeletonLoader from "../components/common/SkeletonLoader.vue";
 import {
-  CheckCircle2,
-  Clock,
-  Target,
-  ListTodo,
-  ArrowRight,
   Folder,
+  Briefcase,
+  Star,
+  Heart,
+  Zap,
+  Coffee,
+  Book,
+  Camera,
+  Bell,
+  Gift,
+  Globe,
+  Home,
+  Music,
 } from "lucide-vue-next";
 
 import { useAnimatedNumber } from "../composables/useAnimatedNumber";
@@ -25,6 +32,44 @@ const { loadTask, toggleTaskCompletion } = useTasks();
 
 const { t } = useI18n();
 const isLoading = ref(true);
+
+import type { Component } from "vue";
+const iconMap: Record<string, Component> = {
+  Folder,
+  Briefcase,
+  Star,
+  Heart,
+  Zap,
+  Coffee,
+  Music,
+  Book,
+  Camera,
+  Bell,
+  Gift,
+  Globe,
+  Home,
+};
+
+const getProjectColorClass = (color?: string) => {
+  const colors: Record<string, string> = {
+    indigo: "text-indigo-500",
+    purple: "text-purple-500",
+    pink: "text-pink-500",
+    rose: "text-rose-500",
+    orange: "text-orange-500",
+    amber: "text-amber-500",
+    green: "text-green-500",
+    teal: "text-teal-500",
+    cyan: "text-cyan-500",
+    blue: "text-blue-500",
+    lime: "text-lime-500",
+    emerald: "text-emerald-500",
+    fuchsia: "text-fuchsia-500",
+    sky: "text-sky-500",
+    violet: "text-violet-500",
+  };
+  return colors[color || "indigo"] || "text-gray-400";
+};
 
 onMounted(async () => {
   // Initial fetch
@@ -225,9 +270,13 @@ const recentTasks = computed(() => tasks.value.slice(0, 5));
                 {{ task.title }}
               </p>
               <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
-                <span v-if="task.projectName" class="flex items-center gap-1"
-                  ><Folder class="w-3 h-3" /> {{ task.projectName }}</span
-                >
+                <span v-if="task.projectName" class="flex items-center gap-1">
+                  <component
+                    :is="iconMap[task.projectIcon || ''] || Folder"
+                    class="w-3 h-3"
+                    :class="getProjectColorClass(task.projectColor)" />
+                  {{ task.projectName }}
+                </span>
                 <span v-if="task.dueDate" class="flex items-center gap-1"
                   ><Clock class="w-3 h-3" />
                   {{ new Date(task.dueDate).toLocaleDateString() }}</span

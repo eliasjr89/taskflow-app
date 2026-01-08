@@ -57,7 +57,6 @@ describe("useTheme", () => {
 
   it('debe aplicar clase "dark" al HTML cuando isDark es true', async () => {
     localStorage.setItem("theme", "dark");
-    const useTheme = await getUseTheme();
 
     // Just calling it should apply theme because of initial execution or watch?
     // In useTheme.ts:
@@ -87,7 +86,6 @@ describe("useTheme", () => {
 
     // Let's modify the test to import initTheme if needed or just trigger change.
 
-    const { isDark } = useTheme();
     // Simulate App initialization
     const { initTheme } = await import("../useTheme");
     initTheme();
@@ -99,7 +97,6 @@ describe("useTheme", () => {
     localStorage.setItem("theme", "light");
     document.documentElement.classList.add("dark");
 
-    const useTheme = await getUseTheme();
     const { initTheme } = await import("../useTheme");
     initTheme();
 

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useToast } from "../composables/useToast";
 import { useAuthStore } from "../stores/auth";
 import { storeToRefs } from "pinia";
+import LanguageSwitcher from "../components/common/LanguageSwitcher.vue";
 import api from "../services/api";
 import {
   Camera,
@@ -16,8 +17,14 @@ import {
   Link as LinkIcon,
   User as UserIcon,
   Bell,
-  Moon,
   Smartphone,
+  Github,
+  Twitter,
+  Linkedin,
+  Instagram,
+  Youtube,
+  Facebook,
+  Trash2,
 } from "lucide-vue-next";
 import { useSectionTheme } from "../composables/useSectionTheme";
 import SkeletonLoader from "../components/common/SkeletonLoader.vue";
@@ -29,10 +36,36 @@ const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
 const { fetchProfile: fetchUser, updateUser: updateUserState } = authStore;
 
-const changeLanguage = (lang: string) => {
-  locale.value = lang;
-  localStorage.setItem("locale", lang);
-};
+const currentTime = ref(new Date());
+let timer: any = null;
+
+const formattedDate = computed(() => {
+  return new Intl.DateTimeFormat(locale.value, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(currentTime.value);
+});
+
+const formattedTime = computed(() => {
+  return new Intl.DateTimeFormat(locale.value, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(currentTime.value);
+});
+
+onMounted(() => {
+  timer = setInterval(() => {
+    currentTime.value = new Date();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+});
 
 const isLoading = ref(true);
 const saving = ref(false);
@@ -96,6 +129,12 @@ const hideSuggestions = () => {
   }, 200);
 };
 
+interface SocialLink {
+  id: string;
+  platform: string;
+  url: string;
+}
+
 const form = ref({
   username: "",
   name: "",
@@ -103,9 +142,53 @@ const form = ref({
   email: "",
   bio: "",
   location: "",
-  website: "",
+  website: "", // Legacy support
   password: "",
+  social_links: [] as SocialLink[],
 });
+
+const newSocial = ref({
+  platform: "github",
+  url: "",
+});
+
+const getSocialIcon = (platform: string) => {
+  const map: Record<string, any> = {
+    github: Github,
+    twitter: Twitter,
+    linkedin: Linkedin,
+    instagram: Instagram,
+    youtube: Youtube,
+    facebook: Facebook,
+    website: Globe,
+    other: LinkIcon,
+  };
+  return map[platform.toLowerCase()] || LinkIcon;
+};
+
+const addSocialLink = () => {
+  if (!newSocial.value.url) return;
+
+  const link = {
+    id: Date.now().toString(),
+    ...newSocial.value,
+  };
+
+  form.value.social_links.push(link);
+  saveField("social_links");
+
+  newSocial.value.url = ""; // Reset input
+};
+
+const removeSocialLink = (index: number) => {
+  form.value.social_links.splice(index, 1);
+  saveField("social_links");
+};
+
+const formatUrl = (url: string) => {
+  if (!url) return "#";
+  return url.startsWith("http") ? url : `https://${url}`;
+};
 
 const loadProfile = async () => {
   isLoading.value = true;
@@ -124,6 +207,7 @@ const loadProfile = async () => {
         location: user.value.location || "",
         website: user.value.website || "",
         password: "",
+        social_links: (user.value.social_links as SocialLink[]) || [],
       };
     }
   } finally {
@@ -132,16 +216,30 @@ const loadProfile = async () => {
 };
 
 const saveField = async (field: string) => {
-  if (!user.value) return;
+  if (!user.value || saving.value) return;
+
+  // Check if value actually changed (Deep check for social_links)
+  const currentValue = (user.value as any)[field];
+  const newValue = (form.value as any)[field];
+
+  if (field !== "social_links" && currentValue === newValue) {
+    editingField.value = null;
+    return;
+  }
+
   saving.value = true;
   try {
-    const payload: any = { [field]: (form.value as any)[field] };
+    const payload: any = { [field]: newValue };
     await api.put("/user/profile", payload);
     updateUserState(payload);
     editingField.value = null;
+
+    // Get translated field name
+    const fieldName = t(`profile.form.${field}`) || field;
+
     toast.success(
-      t("profile.success") || "Actualizado",
-      `${field} ${t("profile.saved_success") || "guardado correctamente"}.`
+      t("profile.success") || "Éxito",
+      `${fieldName} ${t("profile.saved_success") || "guardado correctamente"}.`
     );
   } catch (err: any) {
     toast.error(
@@ -217,45 +315,11 @@ onMounted(loadProfile);
 </script>
 
 <template>
-  <div class="flex-1 flex flex-col w-full px-4 md:px-0 animate-fade-in">
+  <div
+    class="flex-1 flex flex-col w-full px-4 md:px-0 animate-fade-in mt-4 md:mt-8">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-2">
-        <div class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-          <UserIcon class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-        </div>
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100 block">
-          {{ t("profile.title") }}
-        </h1>
-      </div>
+    <!-- Header Removed (Redundant) -->
 
-      <!-- Language Switcher -->
-      <div
-        class="flex bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-100 dark:border-gray-700">
-        <button
-          @click="changeLanguage('es')"
-          type="button"
-          class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all w-12 flex justify-center cursor-pointer border border-transparent"
-          :class="
-            locale === 'es'
-              ? 'bg-indigo-500 text-white shadow-md'
-              : 'text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-          ">
-          ES
-        </button>
-        <button
-          @click="changeLanguage('en')"
-          type="button"
-          class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all w-12 flex justify-center cursor-pointer border border-transparent"
-          :class="
-            locale === 'en'
-              ? 'bg-indigo-500 text-white shadow-md'
-              : 'text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-          ">
-          EN
-        </button>
-      </div>
-    </div>
     <!-- Skeleton Loading -->
     <div v-if="isLoading">
       <SkeletonLoader type="banner" class="h-64 rounded-3xl mb-6" />
@@ -294,86 +358,104 @@ onMounted(loadProfile);
             class="absolute inset-0 bg-[url('/img/grid.svg')] bg-center mask-[linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 z-0"></div>
         </div>
 
+        <!-- Main Layout with Flexbox for Desktop/Mobile Responsiveness -->
         <div
-          class="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-8 w-full">
-          <!-- Avatar Section -->
-          <div class="relative group shrink-0 mb-4 md:mb-0">
-            <div
-              class="w-40 h-40 md:w-48 md:h-48 rounded-full bg-slate-800 flex items-center justify-center shadow-2xl ring-4 ring-white/10 overflow-hidden relative border-4 border-white/5"
-              :class="[
-                !user?.profile_image
-                  ? theme.gradients.blob1.replace('blur', '')
-                  : '',
-              ]">
-              <img
-                v-if="user?.profile_image"
-                :src="user.profile_image"
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <span v-else class="text-7xl font-bold text-white">
-                {{ user?.username?.charAt(0).toUpperCase() }}
-              </span>
-
-              <!-- Hover Overlay -->
-              <div
-                class="absolute inset-0 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center cursor-pointer"
-                @click="fileInput?.click()">
-                <Camera class="w-10 h-10 text-white mb-1" />
-                <span
-                  class="text-[10px] text-white font-bold uppercase tracking-widest"
-                  >{{ t("common.edit") || "Editar" }}</span
-                >
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Info Section -->
-          <div class="flex-1 text-center md:text-left">
-            <div
-              class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-3">
+          class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 w-full h-full">
+          <!-- Left Content: User Primary Info -->
+          <div class="flex-1 text-center md:text-left space-y-4">
+            <div>
               <h1
-                class="text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">
+                class="text-4xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-xl mb-2">
                 {{ user?.name }} {{ user?.lastname }}
               </h1>
-              <div class="flex justify-center gap-2">
+              <div class="flex flex-wrap justify-center md:justify-start gap-2">
                 <span
-                  class="px-3 py-1 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/10 backdrop-blur-md flex items-center gap-1.5">
+                  class="px-3 py-1 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/10 backdrop-blur-md flex items-center gap-1.5 hover:bg-white/20 transition-all cursor-default">
                   <Shield class="w-3 h-3 text-indigo-300" /> {{ user?.role }}
                 </span>
                 <span
                   class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 backdrop-blur-md">
                   <span
-                    class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                    class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
                   {{ t("profile.online") || "En Línea" }}
                 </span>
               </div>
             </div>
 
             <div
-              class="flex flex-wrap justify-center md:justify-start gap-4 text-white/60 text-sm mb-6">
+              class="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-2 text-white/70 text-sm">
               <span
-                class="flex items-center gap-1.5 hover:text-white transition-colors">
-                <UserIcon class="w-4 h-4 text-indigo-400/70" />
-                @{{ user?.username }}
+                class="flex items-center gap-2 hover:text-white transition-colors group/info">
+                <UserIcon
+                  class="w-4 h-4 text-indigo-400/80 group-hover/info:scale-110 transition-transform" />
+                <span class="font-mono">@{{ user?.username }}</span>
               </span>
               <span
-                class="flex items-center gap-1.5 hover:text-white transition-colors">
-                <Mail class="w-4 h-4 text-indigo-400/70" />
+                class="flex items-center gap-2 hover:text-white transition-colors group/info">
+                <Mail
+                  class="w-4 h-4 text-indigo-400/80 group-hover/info:scale-110 transition-transform" />
                 {{ user?.email }}
               </span>
-              <a
-                v-if="user?.location"
-                :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  user.location
-                )}`"
-                target="_blank"
-                class="flex items-center gap-1.5 hover:text-white transition-colors group/loc">
-                <MapPin
-                  class="w-4 h-4 text-indigo-400 group-hover/loc:scale-110 transition-transform" />
-                <span
-                  class="border-b border-transparent group-hover/loc:border-indigo-400/50"
-                  >{{ user.location }}</span
-                >
-              </a>
+            </div>
+          </div>
+
+          <!-- Right Content: Date, Title, and Avatar -->
+          <div
+            class="flex flex-col md:flex-row items-center gap-8 text-center md:text-right">
+            <!-- Date, Time and Language Switcher -->
+            <div
+              class="hidden md:flex flex-col items-center md:items-end justify-center">
+              <p
+                class="text-xs font-bold text-white/40 uppercase tracking-[0.2em] mb-1">
+                {{ formattedDate }}
+              </p>
+              <p
+                class="text-3xl font-black text-white/90 tracking-tighter mb-4 font-mono">
+                {{ formattedTime }}
+              </p>
+              <div class="scale-90 origin-right">
+                <LanguageSwitcher />
+              </div>
+            </div>
+
+            <!-- Vertical Separator -->
+            <div
+              class="hidden md:block h-16 w-px bg-white/10 mx-2 shadow-[0_0_10px_rgba(255,255,255,0.05)]"></div>
+
+            <!-- Avatar Section -->
+            <div class="relative group shrink-0">
+              <div
+                class="w-32 h-32 md:w-36 md:h-36 rounded-2xl bg-slate-800 flex items-center justify-center shadow-2xl ring-4 ring-white/5 overflow-hidden relative border border-white/10 group-hover:border-indigo-500/50 transition-all duration-500 transform group-hover:rotate-2"
+                :class="[
+                  !user?.profile_image
+                    ? theme.gradients.blob1.replace('blur', '')
+                    : '',
+                ]">
+                <img
+                  v-if="user?.profile_image"
+                  :src="user.profile_image"
+                  class="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" />
+                <span v-else class="text-6xl font-black text-white">
+                  {{ user?.username?.charAt(0).toUpperCase() }}
+                </span>
+
+                <!-- Hover Overlay -->
+                <div
+                  class="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center cursor-pointer"
+                  @click="fileInput?.click()">
+                  <Camera class="w-8 h-8 text-white mb-1 animate-bounce" />
+                  <span
+                    class="text-[9px] text-white font-black uppercase tracking-[0.3em]"
+                    >{{ t("common.edit") || "Editar" }}</span
+                  >
+                </div>
+              </div>
+              <!-- Floating Edit Badge for Mobile -->
+              <button
+                @click="fileInput?.click()"
+                class="absolute -bottom-2 -right-2 md:hidden w-10 h-10 bg-indigo-600 text-white rounded-xl shadow-lg flex items-center justify-center border-2 border-bg-dark">
+                <Camera class="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
@@ -509,13 +591,13 @@ onMounted(loadProfile);
 
         <!-- Right Column: Contact & Security -->
         <div class="lg:col-span-2 space-y-8">
-          <!-- Social & Contact -->
+          <!-- Location and Website -->
           <div
             class="bg-bg-dark border border-white/10 rounded-2xl p-6 shadow-xl">
             <h3
               class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-              <Globe class="w-5 h-5 text-indigo-400" />
-              {{ t("profile.contact") || "Contacto y Redes" }}
+              <MapPin class="w-5 h-5 text-indigo-400" />
+              {{ t("profile.location") || "Ubicación" }}
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -569,40 +651,87 @@ onMounted(loadProfile);
                   }}
                 </div>
               </div>
+            </div>
+          </div>
 
-              <!-- Website -->
-              <div
-                class="group/field border border-white/5 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
-                @click="editingField = 'website'">
-                <div class="flex items-center gap-3 mb-2">
-                  <div
-                    class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
-                    <LinkIcon class="w-4 h-4" />
-                  </div>
-                  <span
-                    class="text-[10px] font-bold text-white/40 uppercase tracking-widest"
-                    >{{ t("profile.website") || "Sitio Web" }}</span
-                  >
-                </div>
-                <div v-if="editingField === 'website'" class="flex gap-2">
+          <!-- Social Links -->
+          <div
+            class="bg-bg-dark border border-white/10 rounded-2xl p-6 shadow-xl">
+            <h3
+              class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+              <Globe class="w-5 h-5 text-indigo-400" />
+              {{ t("profile.social_networks") || "Redes Sociales" }}
+            </h3>
+
+            <!-- Add New Link -->
+            <div class="mb-6 bg-white/5 rounded-xl p-4 border border-white/5">
+              <div class="flex flex-col gap-3">
+                <div class="flex gap-2">
+                  <select
+                    v-model="newSocial.platform"
+                    class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-indigo-500">
+                    <option value="github">GitHub</option>
+                    <option value="twitter">Twitter</option>
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="website">Website</option>
+                    <option value="other">Otro</option>
+                  </select>
                   <input
-                    v-model="form.website"
-                    @keyup.enter="saveField('website')"
-                    class="bg-transparent border-b border-indigo-500 outline-none text-white w-full text-sm" />
-                  <button
-                    @click.stop="saveField('website')"
-                    class="text-emerald-500">
-                    <Check class="w-4 h-4" />
-                  </button>
+                    v-model="newSocial.url"
+                    placeholder="https://..."
+                    class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-indigo-500"
+                    @keyup.enter="addSocialLink" />
                 </div>
-                <div v-else class="text-white text-sm font-medium h-6 truncate">
-                  {{
-                    user?.website ||
-                    t("profile.add_website") ||
-                    "Añadir sitio web..."
-                  }}
-                </div>
+                <button
+                  @click="addSocialLink"
+                  :disabled="!newSocial.url"
+                  class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  {{ t("common.add") || "Añadir" }}
+                </button>
               </div>
+            </div>
+
+            <!-- Links List -->
+            <div class="space-y-3">
+              <div
+                v-for="(link, index) in form.social_links"
+                :key="index"
+                class="group flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5 hover:border-white/10">
+                <div class="flex items-center gap-3 overflow-hidden">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                    <component
+                      :is="getSocialIcon(link.platform)"
+                      class="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span
+                      class="text-[10px] font-bold text-white/40 uppercase tracking-widest"
+                      >{{ link.platform }}</span
+                    >
+                    <a
+                      :href="formatUrl(link.url)"
+                      target="_blank"
+                      class="text-sm text-white hover:text-indigo-400 truncate transition-colors"
+                      >{{ link.url }}</a
+                    >
+                  </div>
+                </div>
+                <button
+                  @click="removeSocialLink(index)"
+                  class="p-2 text-white/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+                  <Trash2 class="w-4 h-4" />
+                </button>
+              </div>
+
+              <p
+                v-if="form.social_links.length === 0"
+                class="text-center text-white/30 text-xs py-4 italic">
+                {{ t("profile.no_socials") || "No hay redes añadidas" }}
+              </p>
             </div>
           </div>
 
@@ -631,8 +760,7 @@ onMounted(loadProfile);
                     class="flex-1 bg-black/30 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-indigo-500 outline-none transition-all" />
                   <button
                     @click="updatePassword"
-                    :disabled="!form.password || saving"
-                    class="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20">
+                    class="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 cursor-pointer">
                     {{ t("common.save") || "Guardar" }}
                   </button>
                 </div>
@@ -682,30 +810,6 @@ onMounted(loadProfile);
                     class="w-12 h-6 bg-white/10 rounded-full relative opacity-50 cursor-not-allowed">
                     <div
                       class="absolute left-1 top-1 w-4 h-4 bg-white/20 rounded-full"></div>
-                  </div>
-                </div>
-
-                <!-- Dark Mode (Placeholder) -->
-                <div class="flex items-center justify-between group">
-                  <div class="flex items-center gap-3">
-                    <div
-                      class="p-2 rounded-lg bg-white/5 group-hover:bg-indigo-500/20 transition-colors">
-                      <Moon
-                        class="w-5 h-5 text-indigo-300 group-hover:text-indigo-400" />
-                    </div>
-                    <div>
-                      <p class="text-sm font-bold text-white">
-                        {{ t("profile.dark_mode") || "Modo Oscuro" }}
-                      </p>
-                      <p class="text-[10px] text-white/40">
-                        {{ t("profile.coming_soon") || "Próximamente" }}
-                      </p>
-                    </div>
-                  </div>
-                  <div
-                    class="w-12 h-6 bg-indigo-500 rounded-full relative cursor-not-allowed opacity-80">
-                    <div
-                      class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
                   </div>
                 </div>
               </div>

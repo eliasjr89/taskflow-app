@@ -68,32 +68,32 @@ const getColorClasses = (type: string) => {
 
 <style scoped>
 .toast-enter-active {
-  animation: slideDown 0.3s ease-out;
+  animation: toast-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .toast-leave-active {
-  animation: fadeOut 0.3s ease-in;
+  animation: toast-out 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045);
 }
 
-@keyframes slideDown {
+@keyframes toast-in {
   from {
-    transform: translateY(-20px);
+    transform: translateY(-100px) scale(0.3);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
 
-@keyframes fadeOut {
+@keyframes toast-out {
   from {
-    opacity: 1;
     transform: scale(1);
+    opacity: 1;
   }
   to {
+    transform: scale(0.9) translateY(20px);
     opacity: 0;
-    transform: scale(0.95);
   }
 }
 </style>

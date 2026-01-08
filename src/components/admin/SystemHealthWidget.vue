@@ -18,8 +18,8 @@ onMounted(async () => {
   try {
     const res = await adminService.getSystemHealth();
     health.value = res.data;
-  } catch (e) {
-    console.error(e);
+  } catch {
+    // console.error(e);
   } finally {
     loading.value = false;
   }

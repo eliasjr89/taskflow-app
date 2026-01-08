@@ -33,7 +33,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const { updateTask, removeTask, toggleTaskCompletion } = useTasks();
+const { updateTask, removeTask, toggleTaskCompletion, addTask } = useTasks();
 const projectStore = useProjectStore();
 const { projects } = storeToRefs(projectStore);
 const { tags } = useTagState();
@@ -52,22 +52,63 @@ watch(
   (newTask) => {
     if (newTask) {
       editedTask.value = { ...newTask };
+    } else {
+      // Reset for new task
+      editedTask.value = {
+        title: "",
+        description: "",
+        priority: "medium",
+        projectId: undefined,
+        tags: [],
+        dueDate: undefined,
+        completed: false,
+      };
     }
   },
   { immediate: true }
 );
 
 function handleSave() {
-  if (props.task && editedTask.value) {
-    updateTask(props.task.id, editedTask.value);
-    isEditing.value = false;
+  if (props.task) {
+    // Update existing task
+    if (editedTask.value) {
+      updateTask(props.task.id, editedTask.value);
+      isEditing.value = false;
+    }
+  } else {
+    // Create new task
+    // Ensure we have at least a title
+    if (editedTask.value.title) {
+      addTask(
+        editedTask.value.title,
+        editedTask.value.projectId,
+        editedTask.value.tags, // Pass tags
+        editedTask.value.priority,
+        editedTask.value.dueDate
+      );
+      emit("close");
+    }
   }
 }
 
-function handleDelete() {
-  if (props.task && confirm(t("tasks.confirm_delete"))) {
-    removeTask(props.task.id);
-    emit("close");
+import { useConfirm } from "@/composables/useConfirm";
+
+const { confirm } = useConfirm();
+
+async function handleDelete() {
+  if (props.task) {
+    const confirmed = await confirm({
+      title: t("tasks.confirm_delete_title") || t("common.are_you_sure"),
+      message: t("tasks.confirm_delete"),
+      type: "danger",
+      confirmText: t("common.delete"),
+      cancelText: t("common.cancel"),
+    });
+
+    if (confirmed) {
+      removeTask(props.task.id);
+      emit("close");
+    }
   }
 }
 

@@ -187,42 +187,41 @@ const weekDays = computed(() => {
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center gap-2 self-end md:self-auto">
+        <div class="flex items-center gap-3 self-end md:self-auto">
           <button
             @click="goToToday"
-            class="px-4 py-2 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all text-sm font-medium text-gray-700 dark:text-gray-300">
+            class="px-4 py-2 rounded-xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
             {{ t("calendar.today") }}
           </button>
+
+          <!-- Month Navigation -->
+          <div
+            class="flex items-center gap-2 glass-card px-2 py-1.5 rounded-xl w-auto">
+            <button
+              @click="previousMonth"
+              class="p-1.5 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors"
+              :aria-label="t('calendar.prev_month')">
+              <ChevronLeft class="w-4 h-4 text-gray-700 dark:text-gray-300" />
+            </button>
+
+            <span
+              class="px-2 text-xs font-semibold text-gray-900 dark:text-gray-100 capitalize min-w-[120px] text-center">
+              {{ monthName }}
+            </span>
+
+            <button
+              @click="nextMonth"
+              class="p-1.5 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors"
+              :aria-label="t('calendar.next_month')">
+              <ChevronRight class="w-4 h-4 text-gray-700 dark:text-gray-300" />
+            </button>
+          </div>
+
           <button
             @click="isTaskModalOpen = true"
-            class="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all text-sm font-medium shadow-lg shadow-indigo-500/30 flex items-center gap-2">
-            <Plus class="w-4 h-4" />
+            class="p-2 md:px-4 md:py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all text-sm font-medium shadow-lg shadow-indigo-500/30 flex items-center gap-2">
+            <Plus class="w-5 h-5 md:w-4 md:h-4" />
             <span class="hidden md:inline">{{ t("tasks.add_task") }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Bottom Row: Navigation (Centered on mobile) -->
-      <div class="flex items-center justify-center md:justify-end">
-        <div
-          class="flex items-center gap-2 glass-card px-2 py-1.5 rounded-xl w-full md:w-auto justify-between md:justify-start">
-          <button
-            @click="previousMonth"
-            class="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors"
-            :aria-label="t('calendar.prev_month')">
-            <ChevronLeft class="w-5 h-5 text-gray-700 dark:text-gray-300" />
-          </button>
-
-          <span
-            class="px-4 text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize min-w-[140px] text-center">
-            {{ monthName }}
-          </span>
-
-          <button
-            @click="nextMonth"
-            class="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-700/50 transition-colors"
-            :aria-label="t('calendar.next_month')">
-            <ChevronRight class="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
         </div>
       </div>

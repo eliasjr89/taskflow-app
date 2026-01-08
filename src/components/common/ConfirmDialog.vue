@@ -101,28 +101,21 @@ const getTypeClasses = (type?: string) => {
 </template>
 
 <style scoped>
-.dialog-enter-active,
+.dialog-enter-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 .dialog-leave-active {
-  transition: opacity 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.36, 0, 0.66, -0.56);
 }
 
 .dialog-enter-from,
 .dialog-leave-to {
   opacity: 0;
+  transform: scale(0.9) translateY(20px);
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  animation: none; /* Handled by transition */
 }
 </style>

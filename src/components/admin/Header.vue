@@ -23,6 +23,8 @@ const updateTime = () => {
   currentTime.value = now.toLocaleTimeString(locale.value, {
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
   });
   currentDate.value = now.toLocaleDateString(locale.value, {
     weekday: "long",

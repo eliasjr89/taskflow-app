@@ -10,14 +10,9 @@ import { useI18n } from "vue-i18n";
 const toast = useToast();
 const { theme } = useSectionTheme();
 const authStore = useAuthStore();
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const { user } = storeToRefs(authStore);
 const { fetchProfile: fetchUser, updateUser: updateUserState } = authStore;
-
-const changeLanguage = (lang: string) => {
-  locale.value = lang;
-  localStorage.setItem("locale", lang);
-};
 
 const profileImage = ref<string | null>(null);
 const loading = ref(true);
@@ -203,21 +198,37 @@ const compressImage = (file: File, callback: (f: File) => void) => {
   };
 };
 
+// Fix duplicate notifications and use translations
 const saveField = async (field: string) => {
-  if (!user.value) return;
+  if (!user.value || saving.value) return;
+
+  const currentValue = (user.value as any)[field];
+  const newValue = (form.value as any)[field];
+
+  if (currentValue === newValue) {
+    editingField.value = null;
+    return;
+  }
+
   saving.value = true;
   try {
-    const payload: any = { [field]: (form.value as any)[field] };
+    const payload: any = { [field]: newValue };
     await api.put(`/users/${user.value.id}`, payload);
     updateUserState(payload);
     editingField.value = null;
-    toast.success(t("common.success"), t("profile.saved_success"));
+
+    // Get translated field name
+    const fieldName = t(`profile.form.${field}`) || field;
+
+    toast.success(
+      t("common.success"),
+      `${fieldName} ${t("profile.saved_success")}`
+    );
   } catch (err: any) {
     toast.error(
       t("common.error_title"),
       err.response?.data?.message || t("profile.error_saving")
     );
-    // Revert form state if error (optional, but good)
     loadProfile();
   } finally {
     saving.value = false;
@@ -354,13 +365,22 @@ onMounted(loadProfile);
                   user.location
                 )}`"
                 target="_blank"
-                class="flex items-center gap-1.5 hover:text-white transition-colors group/loc">
+                class="flex items-center gap-1.5 hover:text-white transition-colors group/loc cursor-pointer mb-2 md:mb-0">
                 <i
                   class="fa-solid fa-location-dot text-indigo-400/70 group-hover/loc:scale-110 transition-transform"></i>
                 <span
                   class="border-b border-transparent group-hover/loc:border-indigo-400/50"
                   >{{ user.location }}</span
                 >
+              </a>
+              <a
+                v-if="user?.website"
+                :href="`https://${user.website.replace(/^https?:\/\//, '')}`"
+                target="_blank"
+                class="flex items-center gap-1.5 hover:text-white transition-colors group/web cursor-pointer">
+                <i
+                  class="fa-solid fa-globe text-indigo-400/70 group-hover/web:text-indigo-400"></i>
+                {{ user?.website }}
               </a>
             </div>
           </div>
@@ -604,7 +624,7 @@ onMounted(loadProfile);
                 <button
                   @click="updatePassword"
                   :disabled="!form.password || saving"
-                  class="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/20">
+                  class="px-6 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/20 cursor-pointer">
                   {{ t("profile.change_password_btn") }}
                 </button>
               </div>
@@ -614,39 +634,8 @@ onMounted(loadProfile);
             </div>
 
             <div class="pt-6 border-t border-slate-700/50 space-y-6">
-              <!-- Language Switch -->
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="text-sm font-bold text-white mb-1">
-                    {{ t("profile.language") }}
-                  </h4>
-                </div>
-                <div
-                  class="flex bg-slate-900/50 rounded-lg p-1 border border-slate-700/50 w-fit">
-                  <button
-                    @click="changeLanguage('es')"
-                    type="button"
-                    class="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all w-12 flex justify-center cursor-pointer border border-transparent"
-                    :class="
-                      locale === 'es'
-                        ? 'bg-indigo-500 text-white shadow-md border-indigo-400/50'
-                        : 'text-slate-500 hover:text-white hover:bg-slate-800'
-                    ">
-                    ES
-                  </button>
-                  <button
-                    @click="changeLanguage('en')"
-                    type="button"
-                    class="px-3 py-1.5 rounded-md text-[10px] font-bold transition-all w-12 flex justify-center cursor-pointer border border-transparent"
-                    :class="
-                      locale === 'en'
-                        ? 'bg-indigo-500 text-white shadow-md border-indigo-400/50'
-                        : 'text-slate-500 hover:text-white hover:bg-slate-800'
-                    ">
-                    EN
-                  </button>
-                </div>
-              </div>
+              <!-- Language Switcher removed (in header) -->
+              <div class="hidden"></div>
 
               <!-- 2FA -->
               <div

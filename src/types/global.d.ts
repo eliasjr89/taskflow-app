@@ -27,6 +27,8 @@ export interface Task {
   dueDate?: Date;
   description?: string;
   projectName?: string;
+  projectColor?: string;
+  projectIcon?: string;
 }
 export interface FilterState {
   search: string;

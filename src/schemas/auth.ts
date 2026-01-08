@@ -11,6 +11,16 @@ export const UserSchema = z.object({
   bio: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   website: z.string().nullable().optional(),
+  social_links: z
+    .array(
+      z.object({
+        id: z.string(),
+        platform: z.string(),
+        url: z.string(),
+      })
+    )
+    .nullable()
+    .optional(),
 });
 
 export const AuthResponseSchema = z.object({

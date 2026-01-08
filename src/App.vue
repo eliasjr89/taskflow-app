@@ -43,14 +43,14 @@ watch(
   <component :is="layout">
     <RouterView v-slot="{ Component, route }">
       <transition
-        :name="(route.meta.transition as string) || 'fade'"
+        :name="(route.meta.transition as string) || 'page'"
         mode="out-in"
-        enter-active-class="transition-all duration-500 ease-out"
-        enter-from-class="transform opacity-0 scale-95 translate-y-4"
+        enter-active-class="transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)"
+        enter-from-class="transform opacity-0 scale-95 translate-y-8"
         enter-to-class="transform opacity-100 scale-100 translate-y-0"
-        leave-active-class="transition-all duration-300 ease-in"
+        leave-active-class="transition-all duration-300 cubic-bezier(0.36, 0, 0.66, -0.56)"
         leave-from-class="transform opacity-100 scale-100 translate-y-0"
-        leave-to-class="transform opacity-0 scale-95 -translate-y-4">
+        leave-to-class="transform opacity-0 scale-105 -translate-y-8">
         <component :is="Component" :key="route.path" />
       </transition>
     </RouterView>

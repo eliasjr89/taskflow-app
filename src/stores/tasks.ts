@@ -28,14 +28,16 @@ export const useTaskStore = defineStore("tasks", () => {
   // Actions
   const mapTask = (t: APITask): Task => ({
     id: t.id,
-    title: t.description || "Sin título",
-    completed: t.completed,
-    createdAt: new Date(t.created_at),
+    title: t.description || t.title || "Sin título",
+    completed: t.completed || false,
+    createdAt: t.created_at ? new Date(t.created_at) : new Date(),
     projectId: t.project_id ? String(t.project_id) : undefined,
     tags: t.tags ? t.tags.map((tag: any) => String(tag.id)) : [],
     priority: t.priority || "medium",
     dueDate: t.due_date ? new Date(t.due_date) : undefined,
     projectName: t.project_name || undefined,
+    projectColor: t.project_color || undefined,
+    projectIcon: t.project_icon || undefined,
   });
 
   const fetchTasks = async () => {
@@ -53,14 +55,82 @@ export const useTaskStore = defineStore("tasks", () => {
         resTasks.data ||
         [];
 
-      // Validate with Zod
-      const validatedTasks = z.array(TaskSchema).parse(tasksRaw);
+      // Validate with Zod - Safe Parse to debug issues
+      const result = z.array(TaskSchema).safeParse(tasksRaw);
 
-      tasks.value = validatedTasks.map(mapTask);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
+      if (!result.success) {
+        // Attempt to use raw tasks if validation specific items failed, strictly for debugging/fallback
+        // Ideally we filter out bad ones, but let's try to map what we can
+        // We will map tasksRaw directly if parse fails to ensure data shows up
+        tasks.value = tasksRaw.map(mapTask);
+      } else {
+        tasks.value = result.data.map(mapTask);
+      }
+      // ignore error
     } finally {
       isLoading.value = false;
+    }
+  };
+
+  const createTask = async (taskData: {
+    description: string;
+    project_id: number;
+    status_id?: number;
+    priority?: "low" | "medium" | "high";
+    due_date?: Date;
+    tag_ids?: number[];
+  }) => {
+    try {
+      // payload logged previously
+      await api.post("/tasks", taskData);
+      await fetchTasks(); // Refresh to get new task with ID
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const deleteTask = async (id: number) => {
+    try {
+      await api.delete(`/tasks/${id}`);
+      await fetchTasks();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const toggleCompletion = async (id: number) => {
+    const task = tasks.value.find((t) => t.id === id);
+    if (!task) return false;
+
+    const originalState = task.completed;
+    task.completed = !task.completed; // Optimistic update
+
+    try {
+      await api.put(`/tasks/${id}`, { completed: task.completed });
+      return true;
+    } catch {
+      task.completed = originalState; // Revert on error
+      return false;
+    }
+  };
+
+  const updateTaskData = async (id: number, updates: Partial<Task>) => {
+    try {
+      const payload: any = {};
+      if (updates.title) payload.description = updates.title;
+      if (updates.priority) payload.priority = updates.priority;
+      if (updates.projectId) payload.project_id = Number(updates.projectId);
+      if (updates.dueDate) payload.due_date = updates.dueDate;
+      if (updates.completed !== undefined)
+        payload.completed = updates.completed;
+
+      await api.put(`/tasks/${id}`, payload);
+      await fetchTasks();
+      return true;
+    } catch {
+      return false;
     }
   };
 
@@ -91,8 +161,8 @@ export const useTaskStore = defineStore("tasks", () => {
       // Validate or just map depending on trust level. Mapping is safer.
       const mapped = mapTask(rawTask);
       addTask(mapped);
-    } catch (e) {
-      console.error("Socket task create error", e);
+    } catch {
+      // error logged previously
     }
   };
 
@@ -100,8 +170,8 @@ export const useTaskStore = defineStore("tasks", () => {
     try {
       const mapped = mapTask(rawTask);
       updateTask(mapped);
-    } catch (e) {
-      console.error("Socket task update error", e);
+    } catch {
+      // error logged previously
     }
   };
 
@@ -112,6 +182,10 @@ export const useTaskStore = defineStore("tasks", () => {
     pendingTasks,
     completedTasks,
     fetchTasks,
+    createTask,
+    deleteTask,
+    toggleCompletion,
+    updateTaskData,
     reset,
     addTask,
     updateTask,

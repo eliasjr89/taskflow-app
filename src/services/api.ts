@@ -1,9 +1,14 @@
 import axios from "axios";
 
+const getBaseUrl = () => {
+  // DEBUG: HARCODED URL to rule out Env Var issues
+  const url = "http://localhost:3000/taskflow";
+  // console.log("FIXED BASE URL:", url);
+  return url;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/taskflow`
-    : "http://localhost:3000/taskflow",
+  baseURL: getBaseUrl(),
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

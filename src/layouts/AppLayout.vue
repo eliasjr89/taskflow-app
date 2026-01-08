@@ -53,7 +53,12 @@ onUnmounted(() => {
         <main
           class="flex-1 flex flex-col w-full min-w-0 px-4 md:px-8 pb-24 md:pb-8 h-auto md:h-screen overflow-visible md:overflow-y-auto no-scrollbar">
           <!-- Header Banner inside Main -->
-          <Header v-if="!isPublic" />
+          <Header
+            v-if="
+              !isPublic &&
+              route.name !== 'Profile' &&
+              route.name !== 'AdminProfile'
+            " />
 
           <!-- Content -->
           <div class="fade-in">

@@ -23,6 +23,8 @@ const updateTime = () => {
   currentTime.value = now.toLocaleTimeString(locale.value, {
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
   });
   currentDate.value = now.toLocaleDateString(locale.value, {
     weekday: "long",
@@ -250,7 +252,6 @@ onUnmounted(() => {
 
       <!-- Right Content: Clock & Avatar (Desktop Standard) -->
       <div v-if="user" class="flex items-center gap-10 mr-4">
-        <LanguageSwitcher />
         <!-- Digital Clock -->
         <div class="text-right">
           <div
@@ -260,6 +261,9 @@ onUnmounted(() => {
           <div
             class="text-[10px] text-indigo-200/80 font-bold uppercase tracking-widest text-right mt-1">
             {{ currentDate }}
+          </div>
+          <div class="mt-2 flex justify-end">
+            <LanguageSwitcher />
           </div>
         </div>
 

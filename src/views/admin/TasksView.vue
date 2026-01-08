@@ -61,7 +61,9 @@ const fetchData = async () => {
     try {
       const usersRes = await api.get("/users");
       users.value = usersRes.data.data || usersRes.data || [];
-    } catch (e) {}
+    } catch {
+      // Silent fail permissible or independent
+    }
   } catch {
     toast.error(t("common.error_title"), t("common.load_error"));
   } finally {

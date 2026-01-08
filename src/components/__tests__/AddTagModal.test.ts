@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { mount } from "@vue/test-utils";
 import AddTagModal from "../tags/AddTagModal.vue";
-import type { Tag } from "../../types/global";
+
 import { createI18n } from "vue-i18n";
 import es from "../../locales/es";
 

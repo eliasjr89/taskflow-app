@@ -116,17 +116,16 @@ const logout = async () => {
   <!-- Mobile Bottom Navigation (Standardized) -->
   <nav
     class="fixed bottom-0 left-0 w-full bg-bg-dark/95 backdrop-blur-xl border-t border-white/10 pb-safe z-50 md:hidden shadow-2xl">
-    <div
-      class="flex justify-between items-center px-6 py-4 overflow-x-auto no-scrollbar">
+    <div class="flex items-center px-4 py-4 overflow-x-auto no-scrollbar gap-2">
       <router-link
-        v-for="item in menuItems.slice(0, 5)"
+        v-for="item in menuItems"
         :key="item.path"
         :to="item.path"
         v-slot="{ isActive, href, navigate }">
         <a
           :href="href"
           @click="navigate"
-          class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none"
+          class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none flex-shrink-0"
           :class="isActive ? '' : 'text-white/40 hover:text-white/70'">
           <!-- Active Indicator (Glow) -->
           <div
@@ -156,43 +155,10 @@ const logout = async () => {
         </a>
       </router-link>
 
-      <router-link to="/admin/profile" v-slot="{ isActive, href, navigate }">
-        <a
-          :href="href"
-          @click="navigate"
-          class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none"
-          :class="isActive ? '' : 'text-white/40 hover:text-white/70'">
-          <!-- Active Indicator (Glow) -->
-          <div
-            v-if="isActive"
-            class="absolute -top-4 w-10 h-1 rounded-full shadow-lg transition-all duration-500 ease-out animate-slide-down bg-linear-to-r"
-            :class="
-              theme.sidebar.active
-                .split(' ')
-                .filter((c) => c.startsWith('from-') || c.startsWith('to-'))
-                .join(' ')
-            "></div>
-
-          <!-- Active Background Shape (Subtle) -->
-          <div
-            v-if="isActive"
-            class="absolute inset-0 bg-white/5 rounded-xl blur-md -z-10"></div>
-
-          <div
-            class="text-xl relative transition-transform duration-300 group-active:scale-95">
-            <i
-              :class="[
-                'fa-solid fa-user',
-                isActive ? theme.sidebar.icon : '',
-              ]"></i>
-          </div>
-        </a>
-      </router-link>
-
       <!-- Logout (Mobile) -->
       <button
         @click="logout"
-        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400 cursor-pointer">
+        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400 cursor-pointer flex-shrink-0">
         <div
           class="text-xl relative transition-transform duration-300 group-active:scale-95">
           <i class="fa-solid fa-arrow-right-from-bracket"></i>

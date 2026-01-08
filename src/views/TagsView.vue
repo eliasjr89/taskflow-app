@@ -7,6 +7,8 @@ import AddTagModal from "../components/tags/AddTagModal.vue";
 import { Tags, Plus, Edit2, Trash2, Hash } from "lucide-vue-next";
 import type { Tag } from "../types/global";
 import { useI18n } from "vue-i18n";
+import { useFeedback } from "../composables/useFeedback";
+import { useConfirm } from "../composables/useConfirm";
 
 const { tags, addTag, updateTag, deleteTag } = useTagState();
 const { t } = useI18n();
@@ -52,19 +54,47 @@ function openEditModal(tag: Tag) {
   isModalOpen.value = true;
 }
 
-function handleSaveTag(tag: Tag) {
+async function handleSaveTag(tag: Tag) {
   if (editingTag.value) {
-    updateTag(tag.id, tag);
+    await updateTag(tag.id, tag);
+    showFeedback(
+      t("tags.update_success"),
+      t("tags.update_success_msg"),
+      "success"
+    );
   } else {
-    addTag(tag);
+    await addTag(tag);
+    showFeedback(
+      t("tags.create_success"),
+      t("tags.create_success_msg"),
+      "success"
+    );
   }
   isModalOpen.value = false;
   editingTag.value = null;
 }
 
-function handleDeleteTag(tagId: string) {
-  if (confirm(t("tags.delete_confirm_msg"))) {
+const { showFeedback } = useFeedback();
+const { confirm: confirmModal } = useConfirm();
+
+async function handleDeleteTag(tagId: string) {
+  // Ensure we are using the custom modal, not window.confirm
+  // console.log("Invoking custom confirm modal");
+  const confirmed = await confirmModal({
+    title: t("tags.delete_confirm_title"),
+    message: t("tags.delete_confirm_msg"),
+    type: "danger",
+    confirmText: t("common.delete"),
+    cancelText: t("common.cancel"),
+  });
+
+  if (confirmed) {
     deleteTag(tagId);
+    showFeedback(
+      t("tags.delete_success"),
+      t("tags.delete_success_msg"),
+      "success"
+    );
   }
 }
 
@@ -85,6 +115,23 @@ const getColorClass = (color: string) => {
     teal: "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800",
     cyan: "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800",
     blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+    yellow:
+      "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800",
+    lime: "bg-lime-100 dark:bg-lime-900/30 text-lime-700 dark:text-lime-300 border-lime-200 dark:border-lime-800",
+    emerald:
+      "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    sky: "bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
+    violet:
+      "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
+    fuchsia:
+      "bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800",
+    stone:
+      "bg-stone-100 dark:bg-stone-900/30 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800",
+    gray: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700",
+    slate:
+      "bg-slate-100 dark:bg-slate-900/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800",
+    white:
+      "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 shadow-sm",
   };
   return colors[color] || colors.indigo;
 };
@@ -252,5 +299,3 @@ const getColorClass = (color: string) => {
   animation: fade-in 0.3s ease-out;
 }
 </style>
-(10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in {
-animation: fade-in 0.3s ease-out; }

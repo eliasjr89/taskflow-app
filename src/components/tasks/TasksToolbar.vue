@@ -124,11 +124,11 @@ const getProjectColor = (color: string) => {
                 v-for="project in projects"
                 :key="project.id"
                 @click="
-                  filters.projectIds.includes(project.id)
+                  filters.projectIds.includes(String(project.id))
                     ? (filters.projectIds = filters.projectIds.filter(
-                        (id) => id !== project.id
+                        (id) => id !== String(project.id)
                       ))
-                    : filters.projectIds.push(project.id)
+                    : filters.projectIds.push(String(project.id))
                 "
                 class="w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer">
                 <div
@@ -138,7 +138,7 @@ const getProjectColor = (color: string) => {
                   "></div>
                 <span class="flex-1 truncate">{{ project.title }}</span>
                 <CheckCircle2
-                  v-if="filters.projectIds.includes(project.id)"
+                  v-if="filters.projectIds.includes(String(project.id))"
                   class="w-4 h-4 text-indigo-500" />
               </button>
             </div>
@@ -215,16 +215,16 @@ const getProjectColor = (color: string) => {
                 v-for="tag in tags"
                 :key="tag.id"
                 @click="
-                  filters.tagIds.includes(tag.id)
+                  filters.tagIds.includes(String(tag.id))
                     ? (filters.tagIds = filters.tagIds.filter(
-                        (id) => id !== tag.id
+                        (id) => id !== String(tag.id)
                       ))
-                    : filters.tagIds.push(tag.id)
+                    : filters.tagIds.push(String(tag.id))
                 "
                 class="w-full text-left px-2 py-1.5 rounded-lg text-sm flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer">
                 <span class="flex-1 truncate">{{ tag.name }}</span>
                 <CheckCircle2
-                  v-if="filters.tagIds.includes(tag.id)"
+                  v-if="filters.tagIds.includes(String(tag.id))"
                   class="w-4 h-4 text-indigo-500" />
               </button>
             </div>

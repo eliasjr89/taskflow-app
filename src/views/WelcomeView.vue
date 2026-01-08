@@ -21,6 +21,7 @@ const isLoading = ref(false);
 const loginForm = ref({
   email: "",
   password: "",
+  remember: false,
 });
 
 const selectRole = (role: "user" | "admin") => {
@@ -34,6 +35,7 @@ const handleLogin = async () => {
     const user = await authStore.login({
       email: loginForm.value.email,
       password: loginForm.value.password,
+      remember: loginForm.value.remember,
       loginType: flippedCard.value || "user", // 'user' or 'admin'
     });
 
@@ -237,6 +239,19 @@ window.addEventListener("resize", () => {
                       @click.stop />
                   </div>
 
+                  <div class="flex items-center gap-2">
+                    <input
+                      id="remember-me"
+                      v-model="loginForm.remember"
+                      type="checkbox"
+                      class="w-4 h-4 rounded border-gray-500 text-blue-600 focus:ring-blue-500 bg-black/20" />
+                    <label
+                      for="remember-me"
+                      class="text-sm text-gray-300 hover:text-white cursor-pointer select-none">
+                      {{ t("auth.remember_me") }}
+                    </label>
+                  </div>
+
                   <button
                     type="submit"
                     :disabled="isLoading"
@@ -400,6 +415,19 @@ window.addEventListener("resize", () => {
                     :placeholder="t('auth.password') || 'Contraseña'"
                     class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 outline-none transition-all"
                     @click.stop />
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <input
+                    id="remember-me-admin"
+                    v-model="loginForm.remember"
+                    type="checkbox"
+                    class="w-4 h-4 rounded border-gray-500 text-purple-600 focus:ring-purple-500 bg-black/20" />
+                  <label
+                    for="remember-me-admin"
+                    class="text-sm text-gray-300 hover:text-white cursor-pointer select-none">
+                    {{ t("auth.remember_me") }}
+                  </label>
                 </div>
 
                 <button

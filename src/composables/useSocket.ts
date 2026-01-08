@@ -36,7 +36,7 @@ export function useSocket() {
       isConnected.value = false;
     });
 
-    socket.value.on("connect_error", (err) => {
+    socket.value.on("connect_error", () => {
       // console.error("Socket connection error:", err.message);
     });
   };

@@ -23,6 +23,8 @@ const form = ref({
   id: null as number | null,
   name: "",
   description: "",
+  color: "indigo",
+  icon: "Folder",
 });
 
 const fetchProjects = async () => {
@@ -43,9 +45,17 @@ const openModal = (project?: Project) => {
       id: project.id,
       name: project.name,
       description: project.description || "",
+      color: project.color || "indigo",
+      icon: project.icon || "Folder",
     };
   } else {
-    form.value = { id: null, name: "", description: "" };
+    form.value = {
+      id: null,
+      name: "",
+      description: "",
+      color: "indigo",
+      icon: "Folder",
+    };
   }
   showModal.value = true;
 };
@@ -64,7 +74,13 @@ const closeModal = async (force: boolean = false) => {
   }
 
   showModal.value = false;
-  form.value = { id: null, name: "", description: "" };
+  form.value = {
+    id: null,
+    name: "",
+    description: "",
+    color: "indigo",
+    icon: "Folder",
+  };
 };
 
 const handleSubmit = async () => {
@@ -188,11 +204,24 @@ onMounted(fetchProjects);
         v-for="project in projects"
         :key="project.id"
         class="group bg-slate-800/50 border border-slate-700 rounded-2xl p-6 hover:border-indigo-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1">
-        <!-- Header with Avatar -->
+        <!-- Header with Avatar/Icon -->
         <div class="flex items-center gap-4 mb-4">
           <div
-            class="w-14 h-14 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl border-2 border-slate-600 group-hover:border-indigo-500 transition-colors shadow-lg">
-            {{ project.name.charAt(0).toUpperCase() }}
+            :class="[
+              'w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-2xl border-2 border-white/10 group-hover:scale-110 transition-all shadow-xl bg-linear-to-br',
+              `from-${project.color || 'indigo'}-500 to-${
+                project.color || 'indigo'
+              }-600`,
+            ]">
+            <i
+              :class="[
+                'fa-solid',
+                `fa-${
+                  (project.icon || 'folder').toLowerCase() === 'folder'
+                    ? 'folder'
+                    : (project.icon || 'folder').toLowerCase()
+                }`,
+              ]"></i>
           </div>
           <div class="flex-1 min-w-0">
             <h3
@@ -359,6 +388,77 @@ onMounted(fetchProjects);
               :placeholder="
                 $t('admin_projects.form.description_placeholder')
               "></textarea>
+          </div>
+        </div>
+
+        <!-- Color & Icon Picker Group -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
+          <!-- Color -->
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-gray-300">
+              {{ $t("admin_projects.form.color") || "Color" }}
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="color in [
+                  'indigo',
+                  'purple',
+                  'pink',
+                  'rose',
+                  'orange',
+                  'amber',
+                  'green',
+                  'teal',
+                  'cyan',
+                  'blue',
+                ]"
+                :key="color"
+                type="button"
+                @click="form.color = color"
+                :class="[
+                  'w-8 h-8 rounded-full border-2 transition-all hover:scale-110',
+                  `bg-${color}-500`,
+                  form.color === color
+                    ? 'border-white scale-110 ring-2 ring-indigo-500/20'
+                    : 'border-transparent',
+                ]"></button>
+            </div>
+          </div>
+
+          <!-- Icon -->
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-gray-300">
+              {{ $t("admin_projects.form.icon") || "Icono" }}
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="icon in [
+                  'Folder',
+                  'Briefcase',
+                  'Star',
+                  'Heart',
+                  'Zap',
+                  'Coffee',
+                  'Music',
+                  'Book',
+                  'Camera',
+                  'Bell',
+                  'Gift',
+                  'Globe',
+                  'Home',
+                ]"
+                :key="icon"
+                type="button"
+                @click="form.icon = icon"
+                :class="[
+                  'w-10 h-10 rounded-lg flex items-center justify-center border transition-all hover:bg-white/10',
+                  form.icon === icon
+                    ? 'bg-indigo-600 border-indigo-500 text-white'
+                    : 'bg-slate-800/50 border-slate-700 text-gray-400',
+                ]">
+                <i :class="['fa-solid', `fa-${icon.toLowerCase()}`]"></i>
+              </button>
+            </div>
           </div>
         </div>
 

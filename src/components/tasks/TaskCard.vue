@@ -2,8 +2,6 @@
 import { ref, computed } from "vue";
 import type { Task } from "@/types/global";
 import { useConfetti } from "../../composables/useConfetti";
-import { useProjectStore } from "../../stores/projects";
-import { storeToRefs } from "pinia";
 import { useTagState } from "../../composables/useTagState";
 import {
   Folder,
@@ -15,6 +13,7 @@ import {
   Timer,
   CheckCircle2,
 } from "lucide-vue-next";
+import { PROJECT_ICONS, getProjectColorClass } from "@/utils/projectVisuals";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -28,18 +27,10 @@ const emit = defineEmits<{
 }>();
 
 const { triggerConfetti } = useConfetti();
-const projectStore = useProjectStore();
-const { projects } = storeToRefs(projectStore);
 const { tags } = useTagState();
 
 const isEditing = ref(false);
 const editTitle = ref(props.task.title);
-
-const project = computed(() => {
-  return props.task.projectId
-    ? projects.value.find((p) => p.id === props.task.projectId)
-    : null;
-});
 
 const getPriorityColorStrip = (priority?: string) => {
   const colors: Record<string, string> = {
@@ -197,9 +188,12 @@ function toggleComplete() {
         <!-- Project Badge (Subtitle) -->
         <div
           class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-          <Folder class="w-3 h-3" />
+          <component
+            :is="PROJECT_ICONS[task.projectIcon || ''] || Folder"
+            class="w-3 h-3"
+            :class="getProjectColorClass(task.projectColor)" />
           <span class="truncate max-w-[150px]">{{
-            project?.title || t("tasks.without_project")
+            task.projectName || t("tasks.without_project")
           }}</span>
         </div>
       </div>
