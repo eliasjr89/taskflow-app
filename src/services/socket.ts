@@ -4,13 +4,13 @@ class SocketService {
   socket: Socket | null = null;
 
   connect() {
-    const URL = import.meta.env.VITE_API_BASE_URL
-      ? `${import.meta.env.VITE_API_BASE_URL}`
-      : "http://localhost:3000";
+    // Force connection to Backend (3000), not Vite (5173)
+    const URL = "http://localhost:3000";
 
     this.socket = io(URL, {
       withCredentials: true,
       autoConnect: true,
+      transports: ["websocket", "polling"], // Ensure stable connection
     });
 
     this.socket.on("connect", () => {

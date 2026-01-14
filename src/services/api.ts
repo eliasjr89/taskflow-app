@@ -1,9 +1,8 @@
 import axios from "axios";
 
 const getBaseUrl = () => {
-  // DEBUG: HARCODED URL to rule out Env Var issues
-  const url = "http://localhost:3000/taskflow";
-  // console.log("FIXED BASE URL:", url);
+  // Use root URL to control path construction manually in interceptor
+  const url = "http://localhost:3000";
   return url;
 };
 
@@ -15,9 +14,17 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add the auth token header to requests
+// Request interceptor to add the auth token header to requests and normalize URL
 api.interceptors.request.use(
   (config) => {
+    // Robust URL handling: Ensure /taskflow prefix exists exactly once
+    if (config.url) {
+      if (!config.url.match(/^\/?taskflow/)) {
+        const path = config.url.startsWith("/") ? config.url : `/${config.url}`;
+        config.url = `/taskflow${path}`;
+      }
+    }
+
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
