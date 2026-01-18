@@ -52,9 +52,11 @@ describe("AppSidebar", () => {
 
   it("debe tener botón de logout", () => {
     const wrapper = mountSidebar();
-    const logoutBtn = wrapper.find(".group-logout");
-    expect(logoutBtn.exists()).toBe(true);
-    expect(logoutBtn.text()).toContain(es.common.logout);
+    const buttons = wrapper.findAll("button");
+    const logoutBtn = buttons.find((btn) =>
+      btn.text().includes(es.common.logout)
+    );
+    expect(logoutBtn?.exists()).toBe(true);
   });
 
   it("debe colapsar la sidebar al hacer clic en el botón", async () => {

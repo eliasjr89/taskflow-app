@@ -37,14 +37,15 @@ describe("TaskCard", () => {
 
   it("debe mostrar el checkbox", () => {
     const wrapper = mountCard();
-    const checkbox = wrapper.find('input[type="checkbox"]');
+    // Checkbox is now a custom div, selecting by the wrapper class which handles the click
+    const checkbox = wrapper.find(".shrink-0.w-10.h-10");
     expect(checkbox.exists()).toBe(true);
   });
 
-  it("debe marcar el checkbox si la tarea está completada", () => {
+  it("debe mostrar el checklist checked si la tarea está completada", () => {
     const wrapper = mountCard({ task: { ...mockTask, completed: true } });
-    const checkbox = wrapper.find('input[type="checkbox"]');
-    expect((checkbox.element as HTMLInputElement).checked).toBe(true);
+    const checkbox = wrapper.find(".shrink-0.w-10.h-10");
+    expect(checkbox.classes()).toContain("bg-green-500");
   });
 
   it("debe mostrar fecha formateada", () => {

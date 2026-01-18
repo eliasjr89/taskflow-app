@@ -125,7 +125,7 @@ const logout = async () => {
         <a
           :href="href"
           @click="navigate"
-          class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none flex-shrink-0"
+          class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none shrink-0"
           :class="isActive ? '' : 'text-white/40 hover:text-white/70'">
           <!-- Active Indicator (Glow) -->
           <div
@@ -158,7 +158,7 @@ const logout = async () => {
       <!-- Logout (Mobile) -->
       <button
         @click="logout"
-        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400 cursor-pointer flex-shrink-0">
+        class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-300 relative group min-w-[50px] outline-none text-white/40 hover:text-red-400 cursor-pointer shrink-0">
         <div
           class="text-xl relative transition-transform duration-300 group-active:scale-95">
           <i class="fa-solid fa-arrow-right-from-bracket"></i>

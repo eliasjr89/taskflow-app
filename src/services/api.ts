@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const getBaseUrl = () => {
-  // Use root URL to control path construction manually in interceptor
-  const url = "http://localhost:3000";
+  // Use VITE_API_BASE_URL from environment or fallback to localhost
+  const url = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
   return url;
 };
 
@@ -25,7 +25,8 @@ api.interceptors.request.use(
       }
     }
 
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -36,14 +37,13 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle common errors like 401 Unauthorized
+// Response interceptor to handle common errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (
-      error.response &&
-      (error.response.status === 401 || error.response.status === 403)
-    ) {
+  (error: any) => {
+    // Only redirect to login on 401 (Unauthorized) which implies invalid/expired token.
+    // 403 (Forbidden) should be handled by the component (e.g. show error message)
+    if (error.response && error.response.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";

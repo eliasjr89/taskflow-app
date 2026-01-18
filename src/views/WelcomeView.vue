@@ -128,7 +128,7 @@ window.addEventListener("resize", () => {
     <div
       class="absolute inset-0 bg-cover bg-center bg-no-repeat"
       style="
-        background-image: url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop');
+        background-image: url(&quot;https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop&quot;);
         filter: brightness(0.4);
       "></div>
     <div class="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
@@ -226,8 +226,7 @@ window.addEventListener("resize", () => {
                       type="email"
                       required
                       :placeholder="t('auth.email') || 'Correo electrónico'"
-                      class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all"
-                      @click.stop />
+                      class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all" />
                   </div>
                   <div>
                     <input
@@ -235,8 +234,7 @@ window.addEventListener("resize", () => {
                       type="password"
                       required
                       :placeholder="t('auth.password') || 'Contraseña'"
-                      class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all"
-                      @click.stop />
+                      class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 outline-none transition-all" />
                   </div>
 
                   <div class="flex items-center gap-2">
@@ -255,8 +253,7 @@ window.addEventListener("resize", () => {
                   <button
                     type="submit"
                     :disabled="isLoading"
-                    class="mt-2 w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                    @click.stop>
+                    class="mt-2 w-full bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
                     <Loader2 v-if="isLoading" class="w-5 h-5 animate-spin" />
                     <span v-else>{{ t("auth.sign_in") || "Entrar" }}</span>
                   </button>
@@ -396,16 +393,16 @@ window.addEventListener("resize", () => {
               </h3>
 
               <form
+                v-if="!isRegisterMode"
                 @submit.prevent="handleLogin"
-                class="flex flex-col gap-4 flex-1 justify-center">
+                class="flex flex-col gap-4">
                 <div>
                   <input
                     v-model="loginForm.email"
                     type="email"
                     required
                     :placeholder="t('auth.email') || 'Correo electrónico'"
-                    class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 outline-none transition-all"
-                    @click.stop />
+                    class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 outline-none transition-all" />
                 </div>
                 <div>
                   <input
@@ -413,8 +410,7 @@ window.addEventListener("resize", () => {
                     type="password"
                     required
                     :placeholder="t('auth.password') || 'Contraseña'"
-                    class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 outline-none transition-all"
-                    @click.stop />
+                    class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 outline-none transition-all" />
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -433,8 +429,7 @@ window.addEventListener("resize", () => {
                 <button
                   type="submit"
                   :disabled="isLoading"
-                  class="mt-2 w-full bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-600/20 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  @click.stop>
+                  class="mt-2 w-full bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-600/20 transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
                   <Loader2 v-if="isLoading" class="w-5 h-5 animate-spin" />
                   <span v-else>{{ t("auth.sign_in") || "Entrar" }}</span>
                 </button>

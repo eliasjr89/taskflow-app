@@ -142,7 +142,8 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   document.title = `${to.meta.title || "TaskFlow"} - TaskFlow`;
 
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
   const isPublic = to.meta.public;
 
   if (!isPublic && !token) {
