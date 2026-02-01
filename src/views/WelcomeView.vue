@@ -43,9 +43,9 @@ const handleLogin = async () => {
 
     // Redirect based on actual role
     if (user.role === "admin" || user.role === "manager") {
-      router.push("/admin/overview");
+      await router.push("/admin/overview");
     } else {
-      router.push("/dashboard");
+      await router.push("/dashboard");
     }
   } catch (err: any) {
     const errorMessage = err.response?.data?.message || t("auth.auth_failed");
@@ -99,7 +99,7 @@ const handleRegister = async () => {
 
     toast.success(
       t("auth.welcome"),
-      `Bienvenido, ${user.username || registerForm.value.name}`
+      `Bienvenido, ${user.username || registerForm.value.name}`,
     );
     router.push("/dashboard");
   } catch (err: any) {

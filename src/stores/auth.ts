@@ -6,26 +6,25 @@ import router from "../router";
 import { AuthResponseSchema, type User } from "../schemas/auth";
 
 export const useAuthStore = defineStore("auth", () => {
-  const user = ref<User | null>(null);
-  // Load user/token from appropriate storage
-  const getStorage = () =>
-    localStorage.getItem("token") ? localStorage : sessionStorage;
-
   const token = ref<string | null>(
     localStorage.getItem("token") || sessionStorage.getItem("token"),
   );
-  const isAdmin = computed(() => user.value?.role === "admin");
-  const isAuthenticated = computed(() => !!token.value);
 
-  // Initialize from storage to prevent flicker
-  const storage = getStorage();
-  if (storage.getItem("user")) {
+  // Initialize user from storage
+  const user = ref<User | null>(null);
+  const userStr =
+    localStorage.getItem("user") || sessionStorage.getItem("user");
+  if (userStr) {
     try {
-      user.value = JSON.parse(storage.getItem("user") || "{}");
+      user.value = JSON.parse(userStr);
     } catch {
-      storage.removeItem("user");
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
     }
   }
+
+  const isAdmin = computed(() => user.value?.role === "admin");
+  const isAuthenticated = computed(() => !!token.value);
 
   const setSession = (
     newToken: string,
@@ -60,7 +59,7 @@ export const useAuthStore = defineStore("auth", () => {
     // Validate Response
     const parsedData = AuthResponseSchema.parse(resData);
 
-    setSession(parsedData.token, parsedData.user, remember);
+    setSession(parsedData.token, parsedData.user, remember === true);
     return parsedData.user;
   };
 
@@ -89,13 +88,15 @@ export const useAuthStore = defineStore("auth", () => {
     if (!token.value) return;
     try {
       const { data } = await api.get("/user/profile");
-      // Update user data but keep token
       const userData = data.data || data;
       user.value = userData;
-      const storage = getStorage();
+
+      // Persist to current storage
+      const storage = localStorage.getItem("token")
+        ? localStorage
+        : sessionStorage;
       storage.setItem("user", JSON.stringify(userData));
     } catch {
-      // If profile fetch fails (e.g. invalid token), logout
       logout();
     }
   };
@@ -104,7 +105,10 @@ export const useAuthStore = defineStore("auth", () => {
     if (user.value) {
       const updatedUser = { ...user.value, ...updates };
       user.value = updatedUser;
-      const storage = getStorage();
+
+      const storage = localStorage.getItem("token")
+        ? localStorage
+        : sessionStorage;
       storage.setItem("user", JSON.stringify(updatedUser));
     }
   };

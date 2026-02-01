@@ -173,7 +173,6 @@ router.beforeEach((to, _from, next) => {
         if (userStr) {
           const user = JSON.parse(userStr);
           if (user.role !== "admin" && user.role !== "manager") {
-            // User trying to access Admin route
             next({ name: "Dashboard" });
             return;
           }
@@ -183,7 +182,7 @@ router.beforeEach((to, _from, next) => {
       }
     }
 
-    // Check User Access (Prevent Admin from seeing User Dashboard)
+    // Check User Access
     if (to.matched.some((record) => record.meta.requiresUser)) {
       try {
         const userStr =
@@ -191,7 +190,6 @@ router.beforeEach((to, _from, next) => {
         if (userStr) {
           const user = JSON.parse(userStr);
           if (user.role === "admin" || user.role === "manager") {
-            // Admin trying to access User route
             next({ name: "AdminOverview" });
             return;
           }
