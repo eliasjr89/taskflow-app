@@ -12,7 +12,7 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.getItem("token") ? localStorage : sessionStorage;
 
   const token = ref<string | null>(
-    localStorage.getItem("token") || sessionStorage.getItem("token")
+    localStorage.getItem("token") || sessionStorage.getItem("token"),
   );
   const isAdmin = computed(() => user.value?.role === "admin");
   const isAuthenticated = computed(() => !!token.value);
@@ -30,7 +30,7 @@ export const useAuthStore = defineStore("auth", () => {
   const setSession = (
     newToken: string,
     newUser: User,
-    remember: boolean = true
+    remember: boolean = true,
   ) => {
     token.value = newToken;
     user.value = newUser;
@@ -80,7 +80,9 @@ export const useAuthStore = defineStore("auth", () => {
     token.value = null;
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/login");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    router.push("/");
   };
 
   const fetchProfile = async () => {
@@ -90,7 +92,8 @@ export const useAuthStore = defineStore("auth", () => {
       // Update user data but keep token
       const userData = data.data || data;
       user.value = userData;
-      localStorage.setItem("user", JSON.stringify(userData));
+      const storage = getStorage();
+      storage.setItem("user", JSON.stringify(userData));
     } catch {
       // If profile fetch fails (e.g. invalid token), logout
       logout();
@@ -101,7 +104,8 @@ export const useAuthStore = defineStore("auth", () => {
     if (user.value) {
       const updatedUser = { ...user.value, ...updates };
       user.value = updatedUser;
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      const storage = getStorage();
+      storage.setItem("user", JSON.stringify(updatedUser));
     }
   };
 

@@ -151,7 +151,8 @@ router.beforeEach((to, _from, next) => {
   } else if (to.name === "Welcome" && token) {
     // If authenticated user hits Welcome, redirect to Dashboard/Admin
     try {
-      const userStr = localStorage.getItem("user");
+      const userStr =
+        localStorage.getItem("user") || sessionStorage.getItem("user");
       if (userStr) {
         const user = JSON.parse(userStr);
         if (user.role === "admin" || user.role === "manager") {
@@ -167,7 +168,8 @@ router.beforeEach((to, _from, next) => {
     // Check Admin Access
     if (to.matched.some((record) => record.meta.requiresAdmin)) {
       try {
-        const userStr = localStorage.getItem("user");
+        const userStr =
+          localStorage.getItem("user") || sessionStorage.getItem("user");
         if (userStr) {
           const user = JSON.parse(userStr);
           if (user.role !== "admin" && user.role !== "manager") {
@@ -184,7 +186,8 @@ router.beforeEach((to, _from, next) => {
     // Check User Access (Prevent Admin from seeing User Dashboard)
     if (to.matched.some((record) => record.meta.requiresUser)) {
       try {
-        const userStr = localStorage.getItem("user");
+        const userStr =
+          localStorage.getItem("user") || sessionStorage.getItem("user");
         if (userStr) {
           const user = JSON.parse(userStr);
           if (user.role === "admin" || user.role === "manager") {
@@ -216,7 +219,7 @@ api.interceptors.response.use(
       router.push({ name: "Maintenance" });
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default router;

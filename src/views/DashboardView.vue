@@ -20,6 +20,11 @@ import {
   Globe,
   Home,
   Music,
+  ListTodo,
+  CheckCircle2,
+  Clock,
+  Target,
+  ArrowRight,
 } from "lucide-vue-next";
 
 import { useAnimatedNumber } from "../composables/useAnimatedNumber";
@@ -48,6 +53,11 @@ const iconMap: Record<string, Component> = {
   Gift,
   Globe,
   Home,
+  ListTodo,
+  CheckCircle2,
+  Clock,
+  Target,
+  ArrowRight,
 };
 
 const getProjectColorClass = (color?: string) => {
@@ -90,7 +100,7 @@ const pendingCount = computed(() => pendingTasks.value.length);
 const completionRate = computed(() =>
   totalTasks.value > 0
     ? Math.round((completedCount.value / totalTasks.value) * 100)
-    : 0
+    : 0,
 );
 
 // Animated Stats

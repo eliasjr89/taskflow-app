@@ -25,7 +25,7 @@ const logout = async () => {
     taskStore.reset();
     authStore.logout();
     // AuthStore handles navigation usually, but just in case:
-    // router.push("/login"); // AuthStore does this too
+    // router.push("/"); // AuthStore does this too
   } catch {
     // ignore
   }
