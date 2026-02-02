@@ -12,6 +12,9 @@ export interface User {
   bio?: string;
   location?: string;
   website?: string;
+  socialLinks?: any;
+  projects?: { id: number; name: string }[];
+  tasks?: { id: number; description: string }[];
 }
 
 export interface Project {
@@ -28,6 +31,8 @@ export interface Project {
   num_tasks?: number;
   num_team_members?: number;
   users?: User[];
+  color?: string;
+  icon?: string;
 }
 
 export interface Tag {

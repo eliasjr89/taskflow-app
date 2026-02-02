@@ -48,6 +48,7 @@ export default {
     export: "Exportar",
     saving: "Guardando...",
     complete: "Completar",
+    more: "y {n} más",
   },
   nav: {
     home: "Inicio",
@@ -104,6 +105,7 @@ export default {
     select_project: "Selecciona un proyecto...",
     select_status: "Selecciona un estado...",
     select_priority: "Selecciona prioridad...",
+    in_progress: "En Progreso",
   },
   projects: {
     title: "Proyectos",
@@ -481,6 +483,12 @@ export default {
     },
     assign_tasks: "Asignar Tareas",
     select_tasks: "Selecciona tareas...",
+    impersonate: "Simular Usuario",
+    impersonate_confirm: "¿Simular este usuario?",
+    impersonate_msg:
+      "¿Estás seguro de que quieres entrar a la sesión de {user}? Podrás ver la plataforma como él, pero dejarás tu sesión actual.",
+    impersonate_btn: "Sí, simular",
+    impersonate_error: "No se pudo simular al usuario",
   },
   admin_projects: {
     title: "Proyectos",
@@ -500,6 +508,8 @@ export default {
       name_placeholder: "Ej: Rediseño Web",
       description: "Descripción",
       description_placeholder: "Breve descripción del proyecto...",
+      color: "Color",
+      icon: "Icono",
     },
     delete_confirm: "¿Eliminar proyecto?",
     delete_msg:
@@ -514,6 +524,7 @@ export default {
     empty_msg: "Comienza creando tu primer proyecto para organizar el trabajo.",
     create_first: "Crear Primer Proyecto",
     no_members: "Sin miembros",
+    clean_empty: "Limpiar Vacíos",
   },
   admin_database: {
     title: "Base de Datos",

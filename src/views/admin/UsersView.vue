@@ -16,6 +16,16 @@ const { t, locale } = useI18n();
 
 const users = ref<User[]>([]);
 const tasksList = ref<any[]>([]); // For MultiSelect
+const expandedUsers = ref<
+  Record<number, { projects: boolean; tasks: boolean }>
+>({});
+
+const toggleExpand = (userId: number, type: "projects" | "tasks") => {
+  if (!expandedUsers.value[userId]) {
+    expandedUsers.value[userId] = { projects: false, tasks: false };
+  }
+  expandedUsers.value[userId][type] = !expandedUsers.value[userId][type];
+};
 const loading = ref(true);
 const showModal = ref(false);
 
@@ -239,7 +249,7 @@ const handleSubmit = async () => {
       });
       toast.success(
         t("admin_users.update_success"),
-        t("admin_users.update_msg")
+        t("admin_users.update_msg"),
       );
     } else {
       await api.post("/users", formData, {
@@ -247,7 +257,7 @@ const handleSubmit = async () => {
       });
       toast.success(
         t("admin_users.create_success"),
-        t("admin_users.create_msg")
+        t("admin_users.create_msg"),
       );
     }
 
@@ -277,7 +287,7 @@ const deleteUser = async (id: number) => {
     users.value = users.value.filter((u) => u.id !== id);
     toast.success(
       t("admin_users.delete_success"),
-      t("admin_users.delete_success_msg")
+      t("admin_users.delete_success_msg"),
     );
   } catch (err: any) {
     const errorMsg = err.response?.data?.message || t("common.delete_error");
@@ -418,6 +428,70 @@ onMounted(fetchUsers);
               </div>
             </div>
           </div>
+
+          <!-- Mini Lists for Projects & Tasks -->
+          <div class="space-y-4 pt-2 border-t border-slate-700/30">
+            <!-- Projects -->
+            <div v-if="user.projects && user.projects.length > 0">
+              <h4
+                class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                <i class="fa-solid fa-folder-open text-indigo-400"></i>
+                {{ $t("nav.projects") }}
+              </h4>
+              <div class="flex flex-wrap gap-1.5">
+                <span
+                  v-for="p in expandedUsers[user.id]?.projects
+                    ? user.projects
+                    : user.projects.slice(0, 3)"
+                  :key="p.id"
+                  class="px-2 py-0.5 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded text-[10px] font-medium truncate max-w-[120px]"
+                  :title="p.name">
+                  {{ p.name }}
+                </span>
+                <span
+                  v-if="user.projects.length > 3"
+                  @click="toggleExpand(user.id, 'projects')"
+                  class="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold self-center cursor-pointer transition-colors">
+                  {{
+                    expandedUsers[user.id]?.projects
+                      ? $t("common.close")
+                      : `+${user.projects.length - 3}`
+                  }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Tasks -->
+            <div v-if="user.tasks && user.tasks.length > 0">
+              <h4
+                class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                <i class="fa-solid fa-list-check text-indigo-400"></i>
+                {{ $t("nav.tasks") }}
+              </h4>
+              <div class="space-y-1">
+                <div
+                  v-for="t in expandedUsers[user.id]?.tasks
+                    ? user.tasks
+                    : user.tasks.slice(0, 2)"
+                  :key="t.id"
+                  class="text-[11px] text-gray-300 flex items-start gap-2 line-clamp-1">
+                  <i
+                    class="fa-solid fa-circle text-[4px] mt-1.5 text-indigo-500/40"></i>
+                  <span class="truncate">{{ t.description }}</span>
+                </div>
+                <div
+                  v-if="user.tasks.length > 2"
+                  @click="toggleExpand(user.id, 'tasks')"
+                  class="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer transition-colors pl-3 mt-1 inline-block">
+                  {{
+                    expandedUsers[user.id]?.tasks
+                      ? $t("common.close")
+                      : $t("common.more", { n: user.tasks.length - 2 })
+                  }}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Footer -->
@@ -428,16 +502,16 @@ onMounted(fetchUsers);
               user.role === 'admin'
                 ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                 : user.role === 'manager'
-                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                : 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                  : 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
             }`">
             <i
               :class="
                 user.role === 'admin'
                   ? 'fa-solid fa-shield-halved'
                   : user.role === 'manager'
-                  ? 'fa-solid fa-user-tie'
-                  : 'fa-solid fa-user'
+                    ? 'fa-solid fa-user-tie'
+                    : 'fa-solid fa-user'
               "></i>
             {{ user.role }}
           </span>
@@ -641,8 +715,8 @@ onMounted(fetchUsers);
               submitting
                 ? $t("common.loading")
                 : form.id
-                ? $t("common.save")
-                : $t("common.create")
+                  ? $t("common.save")
+                  : $t("common.create")
             }}
           </button>
         </div>
@@ -650,3 +724,20 @@ onMounted(fetchUsers);
     </BaseModal>
   </div>
 </template>
+
+<style scoped>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+/* Ensure smooth transition for move */
+.list-move {
+  transition: transform 0.3s ease;
+}
+</style>

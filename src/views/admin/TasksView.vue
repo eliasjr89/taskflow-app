@@ -37,7 +37,7 @@ const form = ref({
   description: "",
   project_id: null as number | null,
   status_id: null as number | null,
-  priority: "low" as "low" | "medium" | "high",
+  priority: "low" as "low" | "medium" | "high" | "urgent",
   due_date: null as string | null,
   user_ids: [] as number[],
 });
@@ -175,13 +175,13 @@ const handleSubmit = async () => {
       await api.put(`/tasks/${form.value.id}`, payload);
       toast.success(
         t("admin_tasks.update_success"),
-        t("admin_tasks.update_msg")
+        t("admin_tasks.update_msg"),
       );
     } else {
       await api.post("/tasks", payload);
       toast.success(
         t("admin_tasks.create_success"),
-        t("admin_tasks.create_msg")
+        t("admin_tasks.create_msg"),
       );
     }
     await fetchData(); // Refresh list
@@ -210,7 +210,7 @@ const deleteTask = async (id: number) => {
     tasks.value = tasks.value.filter((t) => t.id !== id);
     toast.success(
       t("admin_tasks.delete_success"),
-      t("admin_tasks.delete_success_msg")
+      t("admin_tasks.delete_success_msg"),
     );
   } catch (err: any) {
     const errorMsg = err.response?.data?.message || t("common.delete_error");
@@ -235,7 +235,7 @@ const completeTask = async (task: Task) => {
     const completedStatus = statuses.value.find(
       (s) =>
         s.name.toLowerCase().includes("complet") ||
-        s.name.toLowerCase().includes("done")
+        s.name.toLowerCase().includes("done"),
     );
 
     if (!completedStatus) {
@@ -262,7 +262,7 @@ const completeTask = async (task: Task) => {
 
     toast.success(
       t("admin_tasks.marked_completed"),
-      t("admin_tasks.marked_completed_msg")
+      t("admin_tasks.marked_completed_msg"),
     );
   } catch (err: any) {
     const errorMsg = err.response?.data?.message || t("common.error_occurred");
@@ -287,7 +287,7 @@ const uncompleteTask = async (task: Task) => {
       (s) =>
         s.name.toLowerCase().includes("to do") ||
         s.name.toLowerCase().includes("pendiente") ||
-        s.name.toLowerCase().includes("pending")
+        s.name.toLowerCase().includes("pending"),
     );
 
     if (!pendingStatus) {
@@ -311,7 +311,7 @@ const uncompleteTask = async (task: Task) => {
 
     toast.success(
       t("admin_tasks.marked_pending"),
-      t("admin_tasks.marked_pending_msg")
+      t("admin_tasks.marked_pending_msg"),
     );
   } catch (err: any) {
     const errorMsg = err.response?.data?.message || t("common.error_occurred");
@@ -465,7 +465,7 @@ onMounted(fetchData);
           <div class="flex items-center gap-2 text-sm text-gray-300">
             <i
               class="fa-solid fa-layer-group text-blue-400 w-5 text-center"></i>
-            <span class="capitalize">{{ task.priority }}</span>
+            <span class="capitalize">{{ $t("tasks." + task.priority) }}</span>
           </div>
           <div class="flex items-center gap-2 text-sm text-gray-300">
             <i class="fa-solid fa-calendar text-blue-400 w-5 text-center"></i>
@@ -498,7 +498,17 @@ onMounted(fetchData);
                 {{ t("tasks.status") }}
               </div>
               <div class="text-sm font-bold text-white truncate px-1">
-                {{ task.status || task.status_name || "Unknown" }}
+                {{
+                  task.status === "in_progress" ||
+                  task.status === "In Progress" ||
+                  task.status === "En Progreso"
+                    ? $t("tasks.in_progress")
+                    : task.status === "pending"
+                      ? $t("common.pending")
+                      : task.status === "completed"
+                        ? $t("common.completed")
+                        : task.status || task.status_name || "Unknown"
+                }}
               </div>
             </div>
             <div
@@ -513,12 +523,12 @@ onMounted(fetchData);
                   task.priority === 'urgent'
                     ? 'text-red-400'
                     : task.priority === 'high'
-                    ? 'text-orange-400'
-                    : task.priority === 'medium'
-                    ? 'text-yellow-400'
-                    : 'text-green-400',
+                      ? 'text-orange-400'
+                      : task.priority === 'medium'
+                        ? 'text-yellow-400'
+                        : 'text-green-400',
                 ]">
-                {{ task.priority }}
+                {{ $t("tasks." + task.priority) }}
               </div>
             </div>
           </div>
@@ -625,7 +635,21 @@ onMounted(fetchData);
           <!-- Status Select -->
           <EnhancedSelect
             v-model="form.status_id"
-            :options="statuses.map((s) => ({ value: s.id, label: s.name }))"
+            :options="
+              statuses.map((s) => ({
+                value: s.id,
+                label:
+                  s.name === 'in_progress' ||
+                  s.name === 'In Progress' ||
+                  s.name === 'En Progreso'
+                    ? $t('tasks.in_progress')
+                    : s.name === 'pending'
+                      ? $t('common.pending')
+                      : s.name === 'completed'
+                        ? $t('common.completed')
+                        : s.name,
+              }))
+            "
             :label="t('tasks.status')"
             :placeholder="t('tasks.select_status', 'Selecciona un estado...')"
             icon="fa-spinner"
@@ -700,8 +724,8 @@ onMounted(fetchData);
               submitting
                 ? $t("common.loading")
                 : form.id
-                ? $t("common.save")
-                : $t("common.create")
+                  ? $t("common.save")
+                  : $t("common.create")
             }}
           </button>
         </div>

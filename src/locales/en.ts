@@ -48,6 +48,7 @@ export default {
     export: "Export",
     saving: "Saving...",
     complete: "Complete",
+    more: "and {n} more",
   },
   nav: {
     home: "Home",
@@ -109,6 +110,7 @@ export default {
     select_project: "Select a project...",
     select_status: "Select a status...",
     select_priority: "Select priority...",
+    in_progress: "In Progress",
   },
   projects: {
     title: "Projects",
@@ -464,6 +466,12 @@ export default {
     },
     assign_tasks: "Assign Tasks",
     select_tasks: "Select tasks...",
+    impersonate: "Impersonate User",
+    impersonate_confirm: "Impersonate this user?",
+    impersonate_msg:
+      "Are you sure you want to enter {user}'s session? You will see the platform as them, leaving your current session.",
+    impersonate_btn: "Yes, Impersonate",
+    impersonate_error: "Could not impersonate user",
   },
   admin_projects: {
     title: "Projects",
@@ -483,6 +491,8 @@ export default {
       name_placeholder: "Ex: Web Redesign",
       description: "Description",
       description_placeholder: "Short project description...",
+      color: "Color",
+      icon: "Icon",
     },
     delete_confirm: "Delete project?",
     delete_msg:
@@ -497,6 +507,7 @@ export default {
     empty_msg: "Start by creating your first project to organize work.",
     create_first: "Create First Project",
     no_members: "No members",
+    clean_empty: "Clean Empty",
   },
   admin_database: {
     title: "Database",

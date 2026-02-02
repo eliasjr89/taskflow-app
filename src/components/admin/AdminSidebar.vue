@@ -9,25 +9,13 @@ const { t } = useI18n();
 const menuItems = computed(() => [
   { name: t("admin.overview"), icon: "fa-chart-pie", path: "/admin/overview" },
   { name: t("admin.users"), icon: "fa-users", path: "/admin/users" },
-  {
-    name: t("admin.roles"),
-    icon: "fa-shield-halved",
-    path: "/admin/roles",
-  },
-  {
-    name: t("admin.audit"),
-    icon: "fa-file-shield",
-    path: "/admin/audit",
-  },
-  {
-    name: t("admin.settings"),
-    icon: "fa-cogs",
-    path: "/admin/settings",
-  },
-  { name: t("admin.projects"), icon: "fa-briefcase", path: "/admin/projects" },
   { name: t("admin.tasks"), icon: "fa-list-check", path: "/admin/tasks" },
-  { name: t("admin.database"), icon: "fa-database", path: "/admin/database" },
+  { name: t("admin.projects"), icon: "fa-briefcase", path: "/admin/projects" },
+  { name: t("admin.roles"), icon: "fa-shield-halved", path: "/admin/roles" },
+  { name: t("admin.audit"), icon: "fa-file-shield", path: "/admin/audit" },
   { name: t("admin.profile"), icon: "fa-id-badge", path: "/admin/profile" },
+  { name: t("admin.settings"), icon: "fa-cogs", path: "/admin/settings" },
+  { name: t("admin.database"), icon: "fa-database", path: "/admin/database" },
 ]);
 
 const logout = async () => {
@@ -58,7 +46,7 @@ const logout = async () => {
                   c.startsWith('from-') ||
                   c.startsWith('to-') ||
                   c.startsWith('via-') ||
-                  c.startsWith('dark:')
+                  c.startsWith('dark:'),
               )
               .join(' '),
           ]">

@@ -1,4 +1,3 @@
-```
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
@@ -91,13 +90,13 @@ const handleSubmit = async () => {
       await api.put(`/projects/${form.value.id}`, form.value);
       toast.success(
         t("admin_projects.update_success"),
-        t("admin_projects.update_msg")
+        t("admin_projects.update_msg"),
       );
     } else {
       await api.post("/projects", form.value);
       toast.success(
         t("admin_projects.create_success"),
-        t("admin_projects.create_msg")
+        t("admin_projects.create_msg"),
       );
     }
     await fetchProjects();
@@ -126,12 +125,72 @@ const deleteProject = async (id: number) => {
     projects.value = projects.value.filter((p) => p.id !== id);
     toast.success(
       t("admin_projects.delete_success"),
-      t("admin_projects.delete_success_msg")
+      t("admin_projects.delete_success_msg"),
     );
   } catch (err: any) {
     const errorMsg = err.response?.data?.message || t("common.delete_error");
     toast.error(t("common.error_title"), errorMsg);
   }
+};
+
+const cleanEmptyProjects = async () => {
+  const confirmed = await confirm({
+    title: t("admin_projects.clean_confirm", "Limpiar proyectos vacíos"),
+    message: t(
+      "admin_projects.clean_msg",
+      "¿Estás seguro de que quieres eliminar todos los proyectos que no tienen tareas asignadas? Esta acción no se puede deshacer.",
+    ),
+    confirmText: t("common.confirm"),
+    cancelText: t("common.cancel"),
+    type: "warning",
+  });
+
+  if (!confirmed) return;
+
+  try {
+    const res = await api.post("/projects/clean-empty");
+    const count = res.data.data.deleted_count;
+    toast.success(
+      t("admin_projects.clean_success", "Limpieza completada"),
+      t("admin_projects.clean_success_msg", `${count} proyectos eliminados.`),
+    );
+    await fetchProjects();
+  } catch (err: any) {
+    toast.error(
+      t("common.error_title"),
+      err.response?.data?.message || t("common.error_occurred"),
+    );
+  }
+};
+
+// Map color names to Tailwind v4 from/to classes for static analysis persistence
+const colorMap: Record<string, string> = {
+  slate: "from-slate-500 to-slate-600",
+  red: "from-red-500 to-red-600",
+  orange: "from-orange-500 to-orange-600",
+  amber: "from-amber-500 to-amber-600",
+  yellow: "from-yellow-500 to-yellow-600",
+  lime: "from-lime-500 to-lime-600",
+  green: "from-green-500 to-green-600",
+  emerald: "from-emerald-500 to-emerald-600",
+  teal: "from-teal-500 to-teal-600",
+  cyan: "from-cyan-500 to-cyan-600",
+  sky: "from-sky-500 to-sky-600",
+  blue: "from-blue-500 to-blue-600",
+  indigo: "from-indigo-500 to-indigo-600",
+  violet: "from-violet-500 to-violet-600",
+  purple: "from-purple-500 to-purple-600",
+  fuchsia: "from-fuchsia-500 to-fuchsia-600",
+  pink: "from-pink-500 to-pink-600",
+  rose: "from-rose-500 to-rose-600",
+};
+
+const getBgColor = (colorName: string): string => {
+  const mapping = colorMap[colorName];
+  if (typeof mapping === "string") {
+    return mapping.replace("from-", "bg-").split(" ")[0];
+  }
+  return "bg-indigo-500";
 };
 
 const formatDate = (dateString?: string) => {
@@ -170,12 +229,22 @@ onMounted(fetchProjects);
           {{ $t("admin_projects.subtitle") }}
         </p>
       </div>
-      <button
-        @click="openModal()"
-        class="bg-linear-to-r from-indigo-600 to-purple-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center gap-2">
-        <i class="fa-solid fa-plus"></i>
-        <span>{{ $t("admin_projects.new_project") }}</span>
-      </button>
+      <div class="flex gap-3">
+        <button
+          @click="cleanEmptyProjects()"
+          class="bg-slate-700 text-white px-5 py-2.5 rounded-xl font-bold border border-slate-600 hover:bg-slate-600 transition-all text-sm flex items-center gap-2">
+          <i class="fa-solid fa-broom"></i>
+          <span class="hidden md:inline">{{
+            $t("admin_projects.clean_empty")
+          }}</span>
+        </button>
+        <button
+          @click="openModal()"
+          class="bg-linear-to-r from-indigo-600 to-purple-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i>
+          <span>{{ $t("admin_projects.new_project") }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Modern Skeleton Loader -->
@@ -209,9 +278,7 @@ onMounted(fetchProjects);
           <div
             :class="[
               'w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-2xl border-2 border-white/10 group-hover:scale-110 transition-all shadow-xl bg-linear-to-br',
-              `from-${project.color || 'indigo'}-500 to-${
-                project.color || 'indigo'
-              }-600`,
+              colorMap[project.color || 'indigo'] || colorMap['indigo'],
             ]">
             <i
               :class="[
@@ -253,6 +320,17 @@ onMounted(fetchProjects);
           <div class="flex items-center gap-2 text-sm text-gray-300">
             <i class="fa-solid fa-calendar text-indigo-400 w-5 text-center"></i>
             <span>{{ formatDate(project.created_at) }}</span>
+          </div>
+          <div
+            v-if="project.users && project.users.length > 0"
+            class="flex items-start gap-2 text-sm text-gray-300">
+            <i
+              class="fa-solid fa-users text-indigo-400 w-5 text-center mt-0.5"></i>
+            <span class="text-[10px] leading-tight text-text-muted italic">
+              {{
+                project.users.map((u) => `${u.name} ${u.lastname}`).join(", ")
+              }}
+            </span>
           </div>
 
           <!-- Stats -->
@@ -400,27 +478,16 @@ onMounted(fetchProjects);
             </label>
             <div class="flex flex-wrap gap-2">
               <button
-                v-for="color in [
-                  'indigo',
-                  'purple',
-                  'pink',
-                  'rose',
-                  'orange',
-                  'amber',
-                  'green',
-                  'teal',
-                  'cyan',
-                  'blue',
-                ]"
+                v-for="color in Object.keys(colorMap)"
                 :key="color"
                 type="button"
                 @click="form.color = color"
                 :class="[
-                  'w-8 h-8 rounded-full border-2 transition-all hover:scale-110',
-                  `bg-${color}-500`,
+                  'w-8 h-8 rounded-full border-2 transition-all hover:scale-110 shadow-sm',
+                  getBgColor(color),
                   form.color === color
                     ? 'border-white scale-110 ring-2 ring-indigo-500/20'
-                    : 'border-transparent',
+                    : 'border-transparent opacity-80 hover:opacity-100',
                 ]"></button>
             </div>
           </div>
@@ -484,8 +551,8 @@ onMounted(fetchProjects);
               submitting
                 ? $t("common.loading")
                 : form.id
-                ? $t("common.save")
-                : $t("common.create")
+                  ? $t("common.save")
+                  : $t("common.create")
             }}
           </button>
         </div>
