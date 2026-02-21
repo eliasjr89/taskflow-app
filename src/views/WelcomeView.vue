@@ -49,12 +49,16 @@ const handleLogin = async () => {
     }
   } catch (err: any) {
     const errorMessage = err.response?.data?.message || t("auth.auth_failed");
+    const lowerMessage = errorMessage.toLowerCase();
 
     // Check for role mismatch errors
     if (err.response?.status === 403) {
-      if (errorMessage.includes("administrator")) {
+      if (
+        lowerMessage.includes("administrator") ||
+        lowerMessage.includes("manager")
+      ) {
         toast.error(t("auth.error"), t("auth.role_mismatch_user"));
-      } else if (errorMessage.includes("regular user")) {
+      } else if (lowerMessage.includes("regular user")) {
         toast.error(t("auth.error"), t("auth.role_mismatch_admin"));
       } else {
         toast.error(t("auth.error"), errorMessage);

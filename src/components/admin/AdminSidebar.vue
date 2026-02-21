@@ -2,9 +2,11 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useSectionTheme } from "@/composables/useSectionTheme";
+import { useAuthStore } from "@/stores/auth";
 
 const { theme } = useSectionTheme();
 const { t } = useI18n();
+const authStore = useAuthStore();
 
 const menuItems = computed(() => [
   { name: t("admin.overview"), icon: "fa-chart-pie", path: "/admin/overview" },
@@ -19,13 +21,7 @@ const menuItems = computed(() => [
 ]);
 
 const logout = async () => {
-  try {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/exit";
-  } catch {
-    // ignore
-  }
+  await authStore.logout();
 };
 </script>
 

@@ -74,14 +74,22 @@ export const useAuthStore = defineStore("auth", () => {
     return parsedData.user;
   };
 
-  const logout = () => {
-    user.value = null;
-    token.value = null;
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-    router.push("/");
+  const logout = async () => {
+    try {
+      if (token.value) {
+        await api.post("/auth/logout");
+      }
+    } catch (err) {
+      console.error("Error during server logout:", err);
+    } finally {
+      user.value = null;
+      token.value = null;
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+      router.push("/exit");
+    }
   };
 
   const fetchProfile = async () => {
