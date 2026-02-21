@@ -78,13 +78,13 @@ describe("Auth Store", () => {
     expect(localStorage.getItem("token")).toBeNull();
   });
 
-  it("logout clears state and storage", () => {
+  it("logout clears state and storage", async () => {
     const store = useAuthStore();
     store.token = "token";
     store.user = { id: 1 } as any;
     localStorage.setItem("token", "token");
 
-    store.logout();
+    await store.logout();
 
     expect(store.token).toBeNull();
     expect(store.user).toBeNull();

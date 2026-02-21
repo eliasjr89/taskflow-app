@@ -78,12 +78,13 @@ describe("WelcomeView (Login)", () => {
 
     // Click User Card (Front Face)
     const userCardFront = wrapper
-      .findAll(".cursor-pointer")
+      .findAll(".backface-hidden")
       .find((w) => w.text().includes("welcome.user_card_title"));
 
     // Attempt click on the card area
-    await userCardFront.trigger("click");
+    await userCardFront?.trigger("click");
 
+    // @ts-expect-error - Accediendo al estado interno del componente para validación
     expect(wrapper.vm.flippedCard).toBe("user");
     expect(wrapper.find("form").exists()).toBe(true);
   });

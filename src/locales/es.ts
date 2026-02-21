@@ -49,6 +49,7 @@ export default {
     saving: "Guardando...",
     complete: "Completar",
     more: "y {n} más",
+    focus: "Enfoque",
   },
   nav: {
     home: "Inicio",
@@ -60,11 +61,14 @@ export default {
     profile: "Perfil",
     menu: "Menú",
     subtitle: "Gestión de Productividad",
+    logout: "Cerrar Sesión",
   },
   tasks: {
     title: "Mis Tareas",
     subtitle: "Gestiona tus actividades diarias.",
     new_task: "Nueva Tarea",
+    find_task: "Buscar tarea...",
+    uncategorized: "Sin categoría",
     add_task: "Agregar Tarea",
     edit_task: "Editar Tarea",
     delete_task: "Eliminar Tarea",
@@ -113,6 +117,8 @@ export default {
     new_project: "Nuevo Proyecto",
     edit_project: "Editar Proyecto",
     delete_project: "Eliminar Proyecto",
+    find_task: "Buscar tarea...",
+    uncategorized: "Sin categoría",
     delete_confirm_title: "Eliminar Proyecto",
     delete_confirm_msg:
       "¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.",
@@ -129,8 +135,6 @@ export default {
     empty_state_title: "No hay proyectos aún",
     empty_state_msg:
       "Crea tu primer proyecto para organizar tus tareas de manera más eficiente y visual.",
-    find_task: "Buscar tarea...",
-    uncategorized: "Sin categoría",
     create_success: "Proyecto creado correctamente",
     create_error: "Error al crear el proyecto",
     update_success: "Proyecto actualizado correctamente",

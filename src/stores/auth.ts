@@ -4,6 +4,7 @@ import { ref, computed } from "vue";
 import api from "../services/api";
 import router from "../router";
 import { AuthResponseSchema, type User } from "../schemas/auth";
+import { logger } from "../utils/logger";
 
 export const useAuthStore = defineStore("auth", () => {
   const token = ref<string | null>(
@@ -80,7 +81,7 @@ export const useAuthStore = defineStore("auth", () => {
         await api.post("/auth/logout");
       }
     } catch (err) {
-      console.error("Error during server logout:", err);
+      logger.error("Error durante el logout del servidor:", err);
     } finally {
       user.value = null;
       token.value = null;

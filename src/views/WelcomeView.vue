@@ -51,14 +51,14 @@ const handleLogin = async () => {
     const errorMessage = err.response?.data?.message || t("auth.auth_failed");
     const lowerMessage = errorMessage.toLowerCase();
 
-    // Check for role mismatch errors
+    // Detectar errores de role mismatch (403)
     if (err.response?.status === 403) {
-      if (
-        lowerMessage.includes("administrator") ||
-        lowerMessage.includes("manager")
-      ) {
+      // "Only standard users can access the user login form" → admin intentó con card de user
+      if (lowerMessage.includes("standard users")) {
         toast.error(t("auth.error"), t("auth.role_mismatch_user"));
-      } else if (lowerMessage.includes("regular user")) {
+      }
+      // "Only administrators can access the admin login form" → user intentó con card de admin
+      else if (lowerMessage.includes("administrators")) {
         toast.error(t("auth.error"), t("auth.role_mismatch_admin"));
       } else {
         toast.error(t("auth.error"), errorMessage);

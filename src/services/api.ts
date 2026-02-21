@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logger } from "../utils/logger";
 
 const getBaseUrl = () => {
   // Use VITE_API_BASE_URL from environment or fallback to localhost
@@ -17,6 +18,9 @@ const api = axios.create({
 // Request interceptor to add the auth token header to requests and normalize URL
 api.interceptors.request.use(
   (config) => {
+    logger.debug(
+      `Realizando petición: ${config.method?.toUpperCase()} ${config.url}`,
+    );
     // Robust URL handling: Ensure /taskflow prefix exists exactly once
     if (config.url) {
       if (!config.url.match(/^\/?taskflow/)) {
@@ -39,16 +43,33 @@ api.interceptors.request.use(
 
 // Response interceptor to handle common errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    logger.debug(
+      `Respuesta recibida de: ${response.config.url}`,
+      response.data,
+    );
+    return response;
+  },
   (error: any) => {
+    logger.error(
+      `Error en respuesta (${error.response?.status}): ${error.config?.url}`,
+      error.response?.data,
+    );
     // Only redirect to login on 401 (Unauthorized) which implies invalid/expired token.
     // 403 (Forbidden) should be handled by the component (e.g. show error message)
     if (error.response && error.response.status === 401) {
+      logger.warn("Sesión expirada o inválida. Redirigiendo a login.");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("user");
       window.location.href = "/";
+    }
+
+    if (error.response && error.response.status === 403) {
+      logger.warn(
+        "Acceso denegado (RBAC): El usuario no tiene permisos suficientes.",
+      );
     }
     return Promise.reject(error);
   },

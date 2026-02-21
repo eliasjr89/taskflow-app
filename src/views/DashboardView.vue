@@ -38,8 +38,7 @@ const { loadTask, toggleTaskCompletion } = useTasks();
 const { t } = useI18n();
 const isLoading = ref(true);
 
-import type { Component } from "vue";
-const iconMap: Record<string, Component> = {
+const iconMap: Record<string, any> = {
   Folder,
   Briefcase,
   Star,

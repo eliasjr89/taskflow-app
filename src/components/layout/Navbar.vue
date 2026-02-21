@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { useTheme } from "../../composables/useTheme";
 import { useI18n } from "vue-i18n";
-import { useRouter } from "vue-router";
 import { Languages, LogOut } from "lucide-vue-next";
 import { useAuthStore } from "../../stores/auth";
-
-const router = useRouter();
 const { isDark, toggleTheme } = useTheme();
 const { locale } = useI18n();
 const authStore = useAuthStore();
