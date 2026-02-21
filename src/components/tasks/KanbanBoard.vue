@@ -30,7 +30,7 @@ watch(
     pendingTasks.value = newTasks.filter((t) => !t.completed);
     completedTasks.value = newTasks.filter((t) => t.completed);
   },
-  { immediate: true, deep: true }
+  { immediate: true, deep: true },
 );
 
 const onChange = (evt: any, isCompletedColumn: boolean) => {
@@ -46,7 +46,7 @@ const handleSelectTask = (task: Task) => {
 </script>
 
 <template>
-  <div class="flex flex-col md:h-full md:overflow-hidden">
+  <div class="flex flex-col md:min-h-full">
     <!-- Mobile Tabs -->
     <div
       class="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-4 md:hidden shrink-0">
@@ -73,11 +73,10 @@ const handleSelectTask = (task: Task) => {
     </div>
 
     <!-- Columns Container -->
-    <div
-      class="flex flex-col md:flex-row gap-6 md:h-full md:overflow-x-auto pb-4">
+    <div class="flex flex-col md:flex-row gap-0 pb-4">
       <!-- Pending Column -->
       <div
-        class="flex-1 flex-col h-full w-full md:min-w-[300px]"
+        class="flex-1 flex-col w-full md:min-w-[300px] md:px-6"
         :class="activeTab === 'pending' ? 'flex' : 'hidden md:flex'">
         <div
           class="flex items-center justify-between mb-4 bg-gray-100 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-200 dark:border-gray-700/50">
@@ -92,36 +91,37 @@ const handleSelectTask = (task: Task) => {
           </span>
         </div>
 
-        <div
-          class="md:flex-1 md:bg-gray-50/50 md:dark:bg-gray-900/30 md:rounded-2xl md:border-2 md:border-dashed md:border-gray-200 md:dark:border-gray-800 md:p-2 md:overflow-y-auto scrollbar-hide">
-          <draggable
-            v-model="pendingTasks"
-            group="tasks"
-            item-key="id"
-            @change="onChange($event, false)"
-            class="flex flex-col gap-3 min-h-[200px]"
-            ghost-class="ghost-card"
-            drag-class="drag-card"
-            :disabled="disableDrag">
-            <template #item="{ element }">
-              <div class="cursor-grab active:cursor-grabbing">
-                <TaskCard
-                  :task="element"
-                  :compact="true"
-                  @click="handleSelectTask(element)"
-                  @focus-task="emit('focus-task', $event)"
-                  @toggle-complete="
-                    () => emit('update:status', element.id, true)
-                  " />
-              </div>
-            </template>
-          </draggable>
-        </div>
+        <draggable
+          v-model="pendingTasks"
+          group="tasks"
+          item-key="id"
+          @change="onChange($event, false)"
+          class="flex flex-col gap-3 min-h-[200px]"
+          ghost-class="ghost-card"
+          drag-class="drag-card"
+          :disabled="disableDrag">
+          <template #item="{ element }">
+            <div class="cursor-grab active:cursor-grabbing">
+              <TaskCard
+                :task="element"
+                :compact="true"
+                @click="handleSelectTask(element)"
+                @focus-task="emit('focus-task', $event)"
+                @toggle-complete="
+                  () => emit('update:status', element.id, true)
+                " />
+            </div>
+          </template>
+        </draggable>
       </div>
+
+      <!-- Vertical Divider -->
+      <div
+        class="hidden md:block w-px bg-gray-100 dark:bg-gray-800/50 self-stretch my-4"></div>
 
       <!-- Completed Column -->
       <div
-        class="flex-1 flex-col h-full w-full md:min-w-[300px]"
+        class="flex-1 flex-col w-full md:min-w-[300px] md:px-6"
         :class="activeTab === 'completed' ? 'flex' : 'hidden md:flex'">
         <div
           class="flex items-center justify-between mb-4 bg-gray-100 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-200 dark:border-gray-700/50">
@@ -136,32 +136,29 @@ const handleSelectTask = (task: Task) => {
           </span>
         </div>
 
-        <div
-          class="md:flex-1 md:bg-gray-50/50 md:dark:bg-gray-900/30 md:rounded-2xl md:border-2 md:border-dashed md:border-gray-200 md:dark:border-gray-800 md:p-2 md:overflow-y-auto scrollbar-hide">
-          <draggable
-            v-model="completedTasks"
-            group="tasks"
-            item-key="id"
-            @change="onChange($event, true)"
-            class="flex flex-col gap-3 min-h-[200px]"
-            ghost-class="ghost-card"
-            drag-class="drag-card"
-            :disabled="disableDrag">
-            <template #item="{ element }">
-              <div
-                class="cursor-grab active:cursor-grabbing opacity-75 hover:opacity-100 transition-opacity">
-                <TaskCard
-                  :task="element"
-                  :compact="true"
-                  @click="handleSelectTask(element)"
-                  @focus-task="emit('focus-task', $event)"
-                  @toggle-complete="
-                    () => emit('update:status', element.id, false)
-                  " />
-              </div>
-            </template>
-          </draggable>
-        </div>
+        <draggable
+          v-model="completedTasks"
+          group="tasks"
+          item-key="id"
+          @change="onChange($event, true)"
+          class="flex flex-col gap-3 min-h-[200px]"
+          ghost-class="ghost-card"
+          drag-class="drag-card"
+          :disabled="disableDrag">
+          <template #item="{ element }">
+            <div
+              class="cursor-grab active:cursor-grabbing opacity-75 hover:opacity-100 transition-opacity">
+              <TaskCard
+                :task="element"
+                :compact="true"
+                @click="handleSelectTask(element)"
+                @focus-task="emit('focus-task', $event)"
+                @toggle-complete="
+                  () => emit('update:status', element.id, false)
+                " />
+            </div>
+          </template>
+        </draggable>
       </div>
     </div>
   </div>

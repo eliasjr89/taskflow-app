@@ -7,7 +7,7 @@ const { t } = useI18n();
 
 <template>
   <div
-    class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+    class="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
     <div class="max-w-2xl w-full text-center space-y-8">
       <!-- Icon -->
       <div class="flex justify-center">

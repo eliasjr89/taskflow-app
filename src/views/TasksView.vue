@@ -29,7 +29,7 @@ const { tasks, loadTask, toggleTaskCompletion } = useTasks();
 const viewMode = ref<"board" | "table" | "matrix" | "timeline">("board");
 const handleTaskStatusChange = async (
   taskId: number,
-  newCompletionStatus: boolean
+  newCompletionStatus: boolean,
 ) => {
   const task = tasks.value.find((t) => t.id === taskId);
   if (task && task.completed !== newCompletionStatus) {
@@ -73,13 +73,13 @@ const handleExportCSV = () => {
     ).replace(/"/g, '""')}"`,
     taskItem.dueDate
       ? new Date(taskItem.dueDate).toLocaleDateString(
-          locale.value === "es" ? "es-ES" : "en-US"
+          locale.value === "es" ? "es-ES" : "en-US",
         )
       : t("common.na"),
   ]);
 
   const csvContent = [headers.join(","), ...rows.map((e) => e.join(","))].join(
-    "\n"
+    "\n",
   );
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -89,7 +89,7 @@ const handleExportCSV = () => {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `tasks_export_${new Date().toISOString().split("T")[0]}.csv`
+      `tasks_export_${new Date().toISOString().split("T")[0]}.csv`,
     );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
@@ -125,7 +125,7 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
       </div>
 
       <!-- MAIN CONTENT -->
-      <div v-else class="h-[calc(100vh-240px)] flex flex-col">
+      <div v-else class="flex flex-col">
         <!-- Header Controls Panel -->
         <TasksToolbar
           v-model:viewMode="viewMode"
@@ -136,8 +136,7 @@ function handleSelectTask(task: (typeof tasks.value)[0]) {
           " />
 
         <!-- CONTENT AREA -->
-        <div
-          class="flex-1 overflow-y-auto md:overflow-hidden min-h-0 relative scrollbar-hide">
+        <div class="flex-1 min-h-0 relative">
           <!-- KANBAN VIEW -->
           <Transition name="fade" mode="out-in">
             <div v-if="viewMode === 'board'" class="h-full pb-4" :key="'board'">
